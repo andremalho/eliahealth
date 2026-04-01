@@ -45,17 +45,16 @@ export class PregnanciesService {
     return this.repo.save(pregnancy);
   }
 
-  getGestationalAge(pregnancy: Pregnancy) {
-    const today = new Date();
+  getGestationalAge(pregnancy: Pregnancy, referenceDate: Date = new Date()) {
     let gaDays: number;
 
     if (pregnancy.gaMethod === GaMethod.ULTRASOUND && pregnancy.usDatingGaDays != null && pregnancy.usDatingDate) {
       const usDate = new Date(pregnancy.usDatingDate);
-      const daysSinceUs = Math.floor((today.getTime() - usDate.getTime()) / 86_400_000);
+      const daysSinceUs = Math.floor((referenceDate.getTime() - usDate.getTime()) / 86_400_000);
       gaDays = pregnancy.usDatingGaDays + daysSinceUs;
     } else {
       const lmp = new Date(pregnancy.lmpDate);
-      gaDays = Math.floor((today.getTime() - lmp.getTime()) / 86_400_000);
+      gaDays = Math.floor((referenceDate.getTime() - lmp.getTime()) / 86_400_000);
     }
 
     return {

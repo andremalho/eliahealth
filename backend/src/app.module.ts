@@ -1,8 +1,12 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
+import { AuthModule } from './auth/auth.module.js';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from './auth/guards/roles.guard.js';
 import { PatientsModule } from './patients/patients.module.js';
 import { PregnanciesModule } from './pregnancies/pregnancies.module.js';
 import { ConsultationsModule } from './consultations/consultations.module.js';
@@ -28,6 +32,7 @@ import { CopilotModule } from './copilot/copilot.module.js';
         migrations: ['dist/migrations/*{.ts,.js}'],
       }),
     }),
+    AuthModule,
     PatientsModule,
     PregnanciesModule,
     ConsultationsModule,
@@ -36,6 +41,10 @@ import { CopilotModule } from './copilot/copilot.module.js';
     CopilotModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
+  ],
 })
 export class AppModule {}

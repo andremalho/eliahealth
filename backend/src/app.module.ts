@@ -6,6 +6,7 @@ import { AppService } from './app.service.js';
 import { PatientsModule } from './patients/patients.module.js';
 import { PregnanciesModule } from './pregnancies/pregnancies.module.js';
 import { ConsultationsModule } from './consultations/consultations.module.js';
+import { LabResultsModule } from './lab-results/lab-results.module.js';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { ConsultationsModule } from './consultations/consultations.module.js';
     PatientsModule,
     PregnanciesModule,
     ConsultationsModule,
+    LabResultsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

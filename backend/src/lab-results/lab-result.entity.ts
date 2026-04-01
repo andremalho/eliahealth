@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Pregnancy } from '../pregnancies/pregnancy.entity.js';
 import { Consultation } from '../consultations/consultation.entity.js';
+import { ExamSchedule } from '../clinical-protocols/exam-schedule.entity.js';
 import {
   ExamCategory,
   LabResultStatus,
@@ -33,6 +34,13 @@ export class LabResult {
   @ManyToOne(() => Consultation, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'consultation_id' })
   consultation: Consultation | null;
+
+  @Column({ name: 'schedule_id', type: 'uuid', nullable: true })
+  scheduleId: string | null;
+
+  @ManyToOne(() => ExamSchedule, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'schedule_id' })
+  schedule: ExamSchedule | null;
 
   @Column({ name: 'exam_name', type: 'varchar' })
   examName: string;

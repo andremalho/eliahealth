@@ -15,6 +15,10 @@ export class CreateLabResultDto {
   @IsUUID()
   consultationId?: string;
 
+  @IsOptional()
+  @IsUUID()
+  scheduleId?: string;
+
   @IsString()
   @IsNotEmpty()
   examName: string;

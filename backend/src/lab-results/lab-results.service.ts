@@ -119,8 +119,19 @@ export class LabResultsService {
       }
     }
 
-    // Resultado numérico com faixa de referência
+    // Alertas específicos HELLP / pré-eclâmpsia (por nome do exame)
     const numericValue = parseFloat(labResult.value ?? '');
+    if (!isNaN(numericValue)) {
+      const hellpAlert = this.evaluateHellpAlerts(labResult.examName, numericValue, labResult.unit ?? '');
+      if (hellpAlert) {
+        labResult.status = hellpAlert.status;
+        labResult.alertTriggered = true;
+        labResult.alertMessage = hellpAlert.message;
+        return;
+      }
+    }
+
+    // Resultado numérico com faixa de referência genérica
     if (!isNaN(numericValue) && (labResult.referenceMin != null || labResult.referenceMax != null)) {
       const min = labResult.referenceMin != null ? Number(labResult.referenceMin) : null;
       const max = labResult.referenceMax != null ? Number(labResult.referenceMax) : null;
@@ -158,5 +169,48 @@ export class LabResultsService {
     labResult.status = LabResultStatus.NORMAL;
     labResult.alertTriggered = false;
     labResult.alertMessage = null;
+  }
+
+  private evaluateHellpAlerts(
+    examName: string,
+    value: number,
+    unit: string,
+  ): { status: LabResultStatus; message: string } | null {
+    const name = examName.toLowerCase();
+
+    // TGO (AST)
+    if (name.includes('tgo') || name.includes('ast') || name.includes('aspartato')) {
+      if (value > 150) return { status: LabResultStatus.CRITICAL, message: `CRÍTICO: TGO gravemente elevada ${value} ${unit} — HELLP síndrome provável` };
+      if (value > 70) return { status: LabResultStatus.ATTENTION, message: `TGO elevada ${value} ${unit} — investigar HELLP síndrome` };
+    }
+
+    // TGP (ALT)
+    if (name.includes('tgp') || name.includes('alt') || name.includes('alanina')) {
+      if (value > 150) return { status: LabResultStatus.CRITICAL, message: `CRÍTICO: TGP gravemente elevada ${value} ${unit} — HELLP síndrome provável` };
+      if (value > 70) return { status: LabResultStatus.ATTENTION, message: `TGP elevada ${value} ${unit} — investigar HELLP síndrome` };
+    }
+
+    // DHL (LDH)
+    if (name.includes('dhl') || name.includes('ldh') || name.includes('desidrogenase')) {
+      if (value > 600) return { status: LabResultStatus.CRITICAL, message: `CRÍTICO: DHL elevada ${value} ${unit} — hemólise, investigar HELLP` };
+    }
+
+    // Plaquetas
+    if (name.includes('plaqueta')) {
+      if (value < 100000) return { status: LabResultStatus.CRITICAL, message: `CRÍTICO: Plaquetopenia grave ${value}/mm³ — HELLP síndrome` };
+      if (value < 150000) return { status: LabResultStatus.ATTENTION, message: `Plaquetopenia ${value}/mm³ — monitorar HELLP` };
+    }
+
+    // Bilirrubina Total
+    if ((name.includes('bilirrubina') && name.includes('total')) || name === 'bt') {
+      if (value > 1.2) return { status: LabResultStatus.ATTENTION, message: `Bilirrubina total elevada ${value} ${unit} — investigar hemólise` };
+    }
+
+    // Ácido úrico
+    if (name.includes('ácido úrico') || name.includes('acido urico') || name.includes('urato')) {
+      if (value > 5.5) return { status: LabResultStatus.ATTENTION, message: `Hiperuricemia ${value} ${unit} — risco aumentado de pré-eclâmpsia/HELLP` };
+    }
+
+    return null;
   }
 }

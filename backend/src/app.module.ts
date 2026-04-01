@@ -16,6 +16,7 @@ import { CopilotModule } from './copilot/copilot.module.js';
 import { UltrasoundModule } from './ultrasound/ultrasound.module.js';
 import { GeneticCounselingModule } from './genetic-counseling/genetic-counseling.module.js';
 import { GlucoseMonitoringModule } from './glucose-monitoring/glucose-monitoring.module.js';
+import { BpMonitoringModule } from './bp-monitoring/bp-monitoring.module.js';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { GlucoseMonitoringModule } from './glucose-monitoring/glucose-monitoring
     UltrasoundModule,
     GeneticCounselingModule,
     GlucoseMonitoringModule,
+    BpMonitoringModule,
   ],
   controllers: [AppController],
   providers: [

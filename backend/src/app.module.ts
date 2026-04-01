@@ -8,10 +8,11 @@ import { PregnanciesModule } from './pregnancies/pregnancies.module.js';
 import { ConsultationsModule } from './consultations/consultations.module.js';
 import { LabResultsModule } from './lab-results/lab-results.module.js';
 import { ClinicalProtocolsModule } from './clinical-protocols/clinical-protocols.module.js';
+import { CopilotModule } from './copilot/copilot.module.js';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env', '../.env'] }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
@@ -32,6 +33,7 @@ import { ClinicalProtocolsModule } from './clinical-protocols/clinical-protocols
     ConsultationsModule,
     LabResultsModule,
     ClinicalProtocolsModule,
+    CopilotModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -13,6 +13,8 @@ import { ConsultationsModule } from './consultations/consultations.module.js';
 import { LabResultsModule } from './lab-results/lab-results.module.js';
 import { ClinicalProtocolsModule } from './clinical-protocols/clinical-protocols.module.js';
 import { CopilotModule } from './copilot/copilot.module.js';
+import { UltrasoundModule } from './ultrasound/ultrasound.module.js';
+import { GeneticCounselingModule } from './genetic-counseling/genetic-counseling.module.js';
 
 @Module({
   imports: [
@@ -39,6 +41,8 @@ import { CopilotModule } from './copilot/copilot.module.js';
     LabResultsModule,
     ClinicalProtocolsModule,
     CopilotModule,
+    UltrasoundModule,
+    GeneticCounselingModule,
   ],
   controllers: [AppController],
   providers: [

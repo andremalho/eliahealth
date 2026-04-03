@@ -11,6 +11,9 @@ export class Patient {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ name: 'tenant_id', type: 'uuid', nullable: true })
+  tenantId: string | null;
+
   @Column({ name: 'full_name' })
   fullName: string;
 
@@ -49,6 +52,9 @@ export class Patient {
 
   @Column({ name: 'family_history', type: 'text', nullable: true })
   familyHistory: string | null;
+
+  @Column({ name: 'preferred_language', type: 'varchar', default: 'pt_BR' })
+  preferredLanguage: string;
 
   @Column({
     name: 'lgpd_consent_at',

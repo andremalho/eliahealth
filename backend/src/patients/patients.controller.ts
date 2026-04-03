@@ -26,6 +26,11 @@ export class PatientsController {
     return this.patientsService.findAll();
   }
 
+  @Get('portal-access-stats')
+  portalAccessStats() {
+    return this.patientsService.getPortalAccessStats();
+  }
+
   @Get('search')
   search(@Query('q') query: string) {
     return this.patientsService.search(query ?? '');

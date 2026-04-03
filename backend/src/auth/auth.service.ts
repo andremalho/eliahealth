@@ -11,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from './user.entity.js';
 import { UserRole } from './auth.enums.js';
 import { PatientsService } from '../patients/patients.service.js';
+import { OnboardingService } from '../onboarding/onboarding.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { PatientLoginDto } from './dto/patient-login.dto.js';
@@ -28,6 +29,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly patientsService: PatientsService,
+    private readonly onboardingService: OnboardingService,
   ) {}
 
   // ── Register ──
@@ -39,6 +41,7 @@ export class AuthService {
     const hash = await bcrypt.hash(dto.password, SALT_ROUNDS);
     const user = this.userRepo.create({ ...dto, password: hash });
     const saved = await this.userRepo.save(user);
+    await this.onboardingService.seedForUser(saved.id);
 
     const { password, refreshTokenHash, ...result } = saved;
     return result;

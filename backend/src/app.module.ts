@@ -29,6 +29,9 @@ import { VaginalSwabsModule } from './vaginal-swabs/vaginal-swabs.module.js';
 import { BiologicalFatherModule } from './biological-father/biological-father.module.js';
 import { FilesModule } from './files/files.module.js';
 import { PrescriptionsModule } from './prescriptions/prescriptions.module.js';
+import { TenantModule } from './tenant/tenant.module.js';
+import { I18nModule } from './i18n/i18n.module.js';
+import { OnboardingModule } from './onboarding/onboarding.module.js';
 
 @Module({
   imports: [
@@ -71,6 +74,9 @@ import { PrescriptionsModule } from './prescriptions/prescriptions.module.js';
     BiologicalFatherModule,
     FilesModule,
     PrescriptionsModule,
+    TenantModule,
+    I18nModule,
+    OnboardingModule,
   ],
   controllers: [AppController],
   providers: [

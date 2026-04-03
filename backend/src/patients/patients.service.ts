@@ -55,6 +55,20 @@ export class PatientsService {
     });
   }
 
+  async getPortalAccessStats() {
+    const total = await this.repo.count();
+    const withAccess = await this.repo
+      .createQueryBuilder('p')
+      .where('p.email IS NOT NULL')
+      .andWhere('p.lgpd_consent_at IS NOT NULL')
+      .getCount();
+    return {
+      total,
+      withAccess,
+      percentage: total > 0 ? Math.round((withAccess / total) * 100) : 0,
+    };
+  }
+
   async update(id: string, dto: UpdatePatientDto): Promise<Patient> {
     const patient = await this.findOne(id);
 

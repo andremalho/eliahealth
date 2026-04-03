@@ -39,6 +39,9 @@ export class User {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
+  @Column({ name: 'preferred_language', type: 'varchar', default: 'pt_BR' })
+  preferredLanguage: string;
+
   @Column({ name: 'refresh_token_hash', type: 'varchar', nullable: true })
   refreshTokenHash: string | null;
 

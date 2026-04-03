@@ -8,6 +8,7 @@ import { AuthService } from './auth.service.js';
 import { AuthController } from './auth.controller.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
 import { PatientsModule } from '../patients/patients.module.js';
+import { OnboardingModule } from '../onboarding/onboarding.module.js';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { PatientsModule } from '../patients/patients.module.js';
       }),
     }),
     PatientsModule,
+    OnboardingModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

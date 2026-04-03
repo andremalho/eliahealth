@@ -15,6 +15,9 @@ export class Pregnancy {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ name: 'tenant_id', type: 'uuid', nullable: true })
+  tenantId: string | null;
+
   @Column({ name: 'patient_id', type: 'uuid' })
   patientId: string;
 

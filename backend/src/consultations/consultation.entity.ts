@@ -15,6 +15,9 @@ export class Consultation {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ name: 'tenant_id', type: 'uuid', nullable: true })
+  tenantId: string | null;
+
   @Column({ name: 'pregnancy_id', type: 'uuid' })
   pregnancyId: string;
 

@@ -103,6 +103,16 @@ export class LabResult {
   @Column({ name: 'lab_name', type: 'varchar', nullable: true })
   labName: string | null;
 
+  // Laudos podem ser assinados digitalmente via ICP-Brasil
+  @Column({ name: 'digital_signature_id', type: 'varchar', nullable: true })
+  digitalSignatureId: string | null;
+
+  @Column({ name: 'signed_at', type: 'timestamptz', nullable: true })
+  signedAt: Date | null;
+
+  @Column({ name: 'signed_document_url', type: 'varchar', nullable: true })
+  signedDocumentUrl: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

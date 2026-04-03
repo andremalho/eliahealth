@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Prescription, PrescriptionStatus } from './prescription.entity.js';
+import { Prescription, PrescriptionStatus, DigitalSignatureProvider } from './prescription.entity.js';
 import { CreatePrescriptionDto } from './dto/create-prescription.dto.js';
 import { UpdatePrescriptionDto } from './dto/update-prescription.dto.js';
 
@@ -35,5 +35,26 @@ export class PrescriptionsService {
       where: { pregnancyId, status: PrescriptionStatus.ACTIVE },
       order: { prescriptionDate: 'DESC' },
     });
+  }
+
+  async sign(id: string, provider: string, signatureToken: string) {
+    const rx = await this.findOne(id);
+
+    rx.digitalSignatureId = signatureToken;
+    rx.digitalSignatureProvider = provider as DigitalSignatureProvider;
+    rx.signedAt = new Date();
+    // In production, call the provider API to generate the signed PDF URL
+    rx.signedDocumentUrl = `https://api.eliahealth.com/signed/${id}.pdf`;
+
+    return this.repo.save(rx);
+  }
+
+  // Implement real Memed API call when integration is activated
+  async generateMemedToken(prescribedBy: string) {
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 min
+    return {
+      token: `memed_tmp_${prescribedBy}_${Date.now()}`,
+      expiresAt,
+    };
   }
 }

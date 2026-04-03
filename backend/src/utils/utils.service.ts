@@ -140,6 +140,15 @@ const CLINICAL_OPTIONS = {
     { value: 'post_dinner_2h', label: 'Apos o jantar (2h)' },
     { value: 'bedtime', label: 'Antes de dormir' },
   ],
+  ultrasoundTypes: [
+    { value: 'obstetric_initial_tv', label: 'Obstetrico Transvaginal' },
+    { value: 'morphological_1st', label: 'Morfologico 1o Trimestre' },
+    { value: 'morphological_2nd', label: 'Morfologico 2o Trimestre' },
+    { value: 'echodoppler', label: 'Ecodoppler Fetal' },
+    { value: 'obstetric_doppler', label: 'Obstetrico com Doppler Colorido' },
+    { value: 'biophysical_profile', label: 'Perfil Biofisico Fetal' },
+    { value: 'other', label: 'Outro' },
+  ],
 };
 
 @Injectable()

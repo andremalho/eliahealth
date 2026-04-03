@@ -36,6 +36,10 @@ import { PortalModule } from './portal/portal.module.js';
 import { PatientVerificationModule } from './patient-verification/patient-verification.module.js';
 import { UtilsModule } from './utils/utils.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
+import { OtherExamsModule } from './other-exams/other-exams.module.js';
+import { PregnancyDashboardModule } from './dashboard/pregnancy-dashboard.module.js';
+import { AnnotationsModule } from './annotations/annotations.module.js';
+import { ExportModule } from './export/export.module.js';
 
 @Module({
   imports: [
@@ -85,6 +89,10 @@ import { NotificationsModule } from './notifications/notifications.module.js';
     PatientVerificationModule,
     UtilsModule,
     NotificationsModule,
+    OtherExamsModule,
+    PregnancyDashboardModule,
+    AnnotationsModule,
+    ExportModule,
   ],
   controllers: [AppController],
   providers: [

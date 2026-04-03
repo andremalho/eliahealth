@@ -12,6 +12,10 @@ export class CreateNoteDto {
 
   @IsOptional()
   @IsString()
+  formattedContent?: string;
+
+  @IsOptional()
+  @IsString()
   color?: string;
 
   @IsOptional()
@@ -21,4 +25,8 @@ export class CreateNoteDto {
   @IsOptional()
   @IsBoolean()
   isPrivate?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isSharedWithPatient?: boolean;
 }

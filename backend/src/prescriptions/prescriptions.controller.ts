@@ -28,4 +28,20 @@ export class PrescriptionsController {
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdatePrescriptionDto) {
     return this.service.update(id, dto);
   }
+
+  @Post('prescriptions/:id/sign')
+  sign(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: { provider: string; signatureToken: string },
+  ) {
+    return this.service.sign(id, body.provider, body.signatureToken);
+  }
+
+  @Get('prescriptions/:id/memed-token')
+  memedToken(
+    @Param('id', ParseUUIDPipe) _id: string,
+    @CurrentUser('userId') userId: string,
+  ) {
+    return this.service.generateMemedToken(userId);
+  }
 }

@@ -11,6 +11,7 @@ export enum SummaryExamType {
 export enum SummaryAttachmentType {
   PDF = 'pdf',
   IMAGE = 'image',
+  DICOM = 'dicom',
 }
 
 export enum SummaryReportStatus {

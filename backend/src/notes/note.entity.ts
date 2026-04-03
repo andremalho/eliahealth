@@ -32,14 +32,20 @@ export class Note {
   @Column({ type: 'text' })
   content: string;
 
-  @Column({ type: 'varchar', nullable: true })
-  color: string | null;
+  @Column({ name: 'formatted_content', type: 'text', nullable: true })
+  formattedContent: string | null;
+
+  @Column({ type: 'varchar', default: '#FFF4B8' })
+  color: string;
 
   @Column({ name: 'is_pinned', type: 'boolean', default: false })
   isPinned: boolean;
 
   @Column({ name: 'is_private', type: 'boolean', default: true })
   isPrivate: boolean;
+
+  @Column({ name: 'is_shared_with_patient', type: 'boolean', default: false })
+  isSharedWithPatient: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

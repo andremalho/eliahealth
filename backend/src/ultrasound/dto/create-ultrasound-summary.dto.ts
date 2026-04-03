@@ -53,6 +53,10 @@ export class CreateUltrasoundSummaryDto {
 
   @IsOptional()
   @IsString()
+  dicomStudyUID?: string;
+
+  @IsOptional()
+  @IsString()
   generalObservations?: string;
 
   @IsOptional()

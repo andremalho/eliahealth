@@ -1,0 +1,16 @@
+import { IsString, IsNotEmpty, IsEnum, IsOptional, IsInt, IsDateString, Min } from 'class-validator';
+import { VaccineType, VaccineStatus } from '../vaccine.entity.js';
+
+export class CreateVaccineDto {
+  @IsString() @IsNotEmpty() vaccineName: string;
+  @IsEnum(VaccineType) vaccineType: VaccineType;
+  @IsOptional() @IsInt() @Min(1) doseNumber?: number;
+  @IsOptional() @IsDateString() scheduledDate?: string;
+  @IsOptional() @IsDateString() administeredDate?: string;
+  @IsOptional() @IsEnum(VaccineStatus) status?: VaccineStatus;
+  @IsOptional() @IsString() batchNumber?: string;
+  @IsOptional() @IsString() administeredBy?: string;
+  @IsOptional() @IsString() location?: string;
+  @IsOptional() @IsDateString() nextDoseDate?: string;
+  @IsOptional() @IsString() notes?: string;
+}

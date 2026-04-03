@@ -5,6 +5,7 @@ import {
   IsEmail,
   IsDateString,
   IsIn,
+  IsNumber,
   Matches,
 } from 'class-validator';
 
@@ -37,6 +38,34 @@ export class CreatePatientDto {
   @IsOptional()
   @IsIn(BLOOD_TYPES)
   bloodType?: string;
+
+  @IsOptional()
+  @IsString()
+  zipCode?: string;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 1 })
+  height?: number;
+
+  @IsOptional()
+  @IsString()
+  comorbidities?: string;
+
+  @IsOptional()
+  @IsString()
+  allergies?: string;
+
+  @IsOptional()
+  @IsString()
+  addictions?: string;
+
+  @IsOptional()
+  @IsString()
+  surgeries?: string;
+
+  @IsOptional()
+  @IsString()
+  familyHistory?: string;
 
   @IsOptional()
   @IsDateString()

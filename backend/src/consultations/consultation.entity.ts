@@ -8,7 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Pregnancy } from '../pregnancies/pregnancy.entity.js';
-import { EdemaGrade } from './consultation.enums.js';
+import { EdemaGrade, FetalPresentation, UmbilicalDopplerResult } from './consultation.enums.js';
 
 @Entity('consultations')
 export class Consultation {
@@ -60,6 +60,33 @@ export class Consultation {
 
   @Column({ name: 'ai_suggestions', type: 'jsonb', nullable: true })
   aiSuggestions: Record<string, unknown> | null;
+
+  @Column({ name: 'fetal_movements', type: 'varchar', nullable: true })
+  fetalMovements: string | null;
+
+  @Column({ name: 'vaginal_exam', type: 'varchar', nullable: true })
+  vaginalExam: string | null;
+
+  @Column({ name: 'fetal_presentation', type: 'enum', enum: FetalPresentation, nullable: true })
+  fetalPresentation: FetalPresentation | null;
+
+  @Column({ name: 'estimated_fetal_weight', type: 'varchar', nullable: true })
+  estimatedFetalWeight: string | null;
+
+  @Column({ name: 'umbilical_doppler', type: 'enum', enum: UmbilicalDopplerResult, nullable: true })
+  umbilicalDoppler: UmbilicalDopplerResult | null;
+
+  @Column({ name: 'biophysical_profile', type: 'int', nullable: true })
+  biophysicalProfile: number | null;
+
+  @Column({ name: 'physical_exam_notes', type: 'text', nullable: true })
+  physicalExamNotes: string | null;
+
+  @Column({ name: 'next_appointment_date', type: 'date', nullable: true })
+  nextAppointmentDate: string | null;
+
+  @Column({ name: 'confidential_notes', type: 'text', nullable: true })
+  confidentialNotes: string | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

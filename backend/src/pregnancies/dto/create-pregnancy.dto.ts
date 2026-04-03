@@ -2,6 +2,7 @@ import {
   IsDateString,
   IsEnum,
   IsInt,
+  IsBoolean,
   IsOptional,
   IsArray,
   IsString,
@@ -50,4 +51,34 @@ export class CreatePregnancyDto {
   @IsArray()
   @IsString({ each: true })
   highRiskFlags?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  isHighRisk?: boolean;
+
+  @IsOptional()
+  @IsString()
+  currentPathologies?: string;
+
+  @IsOptional()
+  @IsString()
+  currentMedications?: string;
+
+  @IsOptional()
+  @IsString()
+  habits?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  cesareans?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  vaginalDeliveries?: number;
+
+  @IsOptional()
+  @IsString()
+  previousPregnanciesNotes?: string;
 }

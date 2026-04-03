@@ -17,6 +17,18 @@ import { UltrasoundModule } from './ultrasound/ultrasound.module.js';
 import { GeneticCounselingModule } from './genetic-counseling/genetic-counseling.module.js';
 import { GlucoseMonitoringModule } from './glucose-monitoring/glucose-monitoring.module.js';
 import { BpMonitoringModule } from './bp-monitoring/bp-monitoring.module.js';
+import { NotesModule } from './notes/notes.module.js';
+import { PregnancyOutcomeModule } from './pregnancy-outcome/pregnancy-outcome.module.js';
+import { EmergencyContactsModule } from './emergency-contacts/emergency-contacts.module.js';
+import { AiFillModule } from './ai-fill/ai-fill.module.js';
+import { BirthCalendarModule } from './birth-calendar/birth-calendar.module.js';
+import { TeamsModule } from './teams/teams.module.js';
+import { ResearchModule } from './research/research.module.js';
+import { VaccinesModule } from './vaccines/vaccines.module.js';
+import { VaginalSwabsModule } from './vaginal-swabs/vaginal-swabs.module.js';
+import { BiologicalFatherModule } from './biological-father/biological-father.module.js';
+import { FilesModule } from './files/files.module.js';
+import { PrescriptionsModule } from './prescriptions/prescriptions.module.js';
 
 @Module({
   imports: [
@@ -47,6 +59,18 @@ import { BpMonitoringModule } from './bp-monitoring/bp-monitoring.module.js';
     GeneticCounselingModule,
     GlucoseMonitoringModule,
     BpMonitoringModule,
+    NotesModule,
+    PregnancyOutcomeModule,
+    EmergencyContactsModule,
+    AiFillModule,
+    BirthCalendarModule,
+    TeamsModule,
+    ResearchModule,
+    VaccinesModule,
+    VaginalSwabsModule,
+    BiologicalFatherModule,
+    FilesModule,
+    PrescriptionsModule,
   ],
   controllers: [AppController],
   providers: [

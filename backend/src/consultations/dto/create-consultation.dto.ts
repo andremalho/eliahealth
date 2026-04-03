@@ -9,7 +9,7 @@ import {
   Max,
   IsObject,
 } from 'class-validator';
-import { EdemaGrade } from '../consultation.enums.js';
+import { EdemaGrade, FetalPresentation, UmbilicalDopplerResult } from '../consultation.enums.js';
 
 export class CreateConsultationDto {
   @IsDateString()
@@ -66,4 +66,42 @@ export class CreateConsultationDto {
   @IsOptional()
   @IsObject()
   aiSuggestions?: Record<string, unknown>;
+
+  @IsOptional()
+  @IsString()
+  fetalMovements?: string;
+
+  @IsOptional()
+  @IsString()
+  vaginalExam?: string;
+
+  @IsOptional()
+  @IsEnum(FetalPresentation)
+  fetalPresentation?: FetalPresentation;
+
+  @IsOptional()
+  @IsString()
+  estimatedFetalWeight?: string;
+
+  @IsOptional()
+  @IsEnum(UmbilicalDopplerResult)
+  umbilicalDoppler?: UmbilicalDopplerResult;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(10)
+  biophysicalProfile?: number;
+
+  @IsOptional()
+  @IsString()
+  physicalExamNotes?: string;
+
+  @IsOptional()
+  @IsDateString()
+  nextAppointmentDate?: string;
+
+  @IsOptional()
+  @IsString()
+  confidentialNotes?: string;
 }

@@ -58,6 +58,27 @@ export class Pregnancy {
   @Column({ name: 'high_risk_flags', type: 'jsonb', default: [] })
   highRiskFlags: string[];
 
+  @Column({ name: 'is_high_risk', type: 'boolean', default: false })
+  isHighRisk: boolean;
+
+  @Column({ name: 'current_pathologies', type: 'text', nullable: true })
+  currentPathologies: string | null;
+
+  @Column({ name: 'current_medications', type: 'text', nullable: true })
+  currentMedications: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  habits: string | null;
+
+  @Column({ type: 'int', nullable: true })
+  cesareans: number | null;
+
+  @Column({ name: 'vaginal_deliveries', type: 'int', nullable: true })
+  vaginalDeliveries: number | null;
+
+  @Column({ name: 'previous_pregnancies_notes', type: 'text', nullable: true })
+  previousPregnanciesNotes: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

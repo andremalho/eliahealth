@@ -29,6 +29,27 @@ export class Patient {
   @Column({ name: 'blood_type', type: 'varchar', nullable: true })
   bloodType: string | null;
 
+  @Column({ name: 'zip_code', type: 'varchar', nullable: true })
+  zipCode: string | null;
+
+  @Column({ type: 'decimal', precision: 5, scale: 1, nullable: true })
+  height: number | null;
+
+  @Column({ type: 'text', nullable: true })
+  comorbidities: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  allergies: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  addictions: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  surgeries: string | null;
+
+  @Column({ name: 'family_history', type: 'text', nullable: true })
+  familyHistory: string | null;
+
   @Column({
     name: 'lgpd_consent_at',
     type: 'timestamptz',

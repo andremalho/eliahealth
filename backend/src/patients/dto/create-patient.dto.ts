@@ -4,10 +4,13 @@ import {
   IsOptional,
   IsEmail,
   IsDateString,
+  IsEnum,
   IsIn,
   IsNumber,
+  IsArray,
   Matches,
 } from 'class-validator';
+import { BloodTypeABO, BloodTypeRH, HemoglobinElectrophoresis } from '../patient.enums.js';
 
 const BLOOD_TYPES = [
   'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-',
@@ -40,8 +43,32 @@ export class CreatePatientDto {
   bloodType?: string;
 
   @IsOptional()
+  @IsEnum(BloodTypeABO)
+  bloodTypeABO?: BloodTypeABO;
+
+  @IsOptional()
+  @IsEnum(BloodTypeRH)
+  bloodTypeRH?: BloodTypeRH;
+
+  @IsOptional()
+  @IsEnum(HemoglobinElectrophoresis)
+  hemoglobinElectrophoresis?: HemoglobinElectrophoresis;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
   @IsString()
   zipCode?: string;
+
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  state?: string;
 
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 1 })
@@ -52,12 +79,39 @@ export class CreatePatientDto {
   comorbidities?: string;
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  comorbiditiesSelected?: string[];
+
+  @IsOptional()
+  @IsString()
+  comorbiditiesNotes?: string;
+
+  @IsOptional()
   @IsString()
   allergies?: string;
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  allergiesSelected?: string[];
+
+  @IsOptional()
+  @IsString()
+  allergiesNotes?: string;
+
+  @IsOptional()
   @IsString()
   addictions?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  addictionsSelected?: string[];
+
+  @IsOptional()
+  @IsString()
+  addictionsNotes?: string;
 
   @IsOptional()
   @IsString()
@@ -66,6 +120,10 @@ export class CreatePatientDto {
   @IsOptional()
   @IsString()
   familyHistory?: string;
+
+  @IsOptional()
+  @IsString()
+  profileNotes?: string;
 
   @IsOptional()
   @IsDateString()

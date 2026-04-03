@@ -13,6 +13,8 @@ import { CreateGlucoseConfigDto } from './dto/create-glucose-config.dto.js';
 import { UpdateGlucoseConfigDto } from './dto/update-glucose-config.dto.js';
 import { CreateGlucoseReadingDto } from './dto/create-glucose-reading.dto.js';
 import { CreateInsulinDoseDto } from './dto/create-insulin-dose.dto.js';
+import { DeviceSyncDto } from './dto/device-sync.dto.js';
+import { DeviceConfigDto } from './dto/device-config.dto.js';
 
 @Controller('pregnancies/:pregnancyId')
 export class GlucoseMonitoringController {
@@ -42,7 +44,6 @@ export class GlucoseMonitoringController {
   }
 
   // ── Glucose Readings ──
-  // TODO: integração com glicosímetros — adicionar endpoint POST /glucose/device-sync para receber leituras via Bluetooth/API
 
   @Post('glucose')
   createReading(
@@ -62,8 +63,12 @@ export class GlucoseMonitoringController {
   }
 
   @Get('glucose/summary')
-  getSummary(@Param('pregnancyId', ParseUUIDPipe) pregnancyId: string) {
-    return this.service.getSummary(pregnancyId);
+  getSummary(
+    @Param('pregnancyId', ParseUUIDPipe) pregnancyId: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.service.getSummary(pregnancyId, startDate, endDate);
   }
 
   @Get('glucose/alerts')
@@ -77,8 +82,38 @@ export class GlucoseMonitoringController {
   }
 
   @Get('glucose/daily-table')
-  getDailyTable(@Param('pregnancyId', ParseUUIDPipe) pregnancyId: string) {
-    return this.service.getDailyTable(pregnancyId);
+  getDailyTable(
+    @Param('pregnancyId', ParseUUIDPipe) pregnancyId: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.service.getDailyTable(pregnancyId, startDate, endDate);
+  }
+
+  @Get('glucose/export')
+  exportCsv(
+    @Param('pregnancyId', ParseUUIDPipe) pregnancyId: string,
+    @Query('includeInsulin') includeInsulin?: string,
+  ) {
+    return this.service.exportCsv(pregnancyId, includeInsulin === 'true');
+  }
+
+  // ── Device Integration ──
+
+  @Post('glucose/device-sync')
+  deviceSync(
+    @Param('pregnancyId', ParseUUIDPipe) pregnancyId: string,
+    @Body() dto: DeviceSyncDto,
+  ) {
+    return this.service.deviceSync(pregnancyId, dto);
+  }
+
+  @Post('glucose/config/device')
+  configureDevice(
+    @Param('pregnancyId', ParseUUIDPipe) pregnancyId: string,
+    @Body() dto: DeviceConfigDto,
+  ) {
+    return this.service.configureDevice(pregnancyId, dto);
   }
 
   // ── Insulin Doses ──

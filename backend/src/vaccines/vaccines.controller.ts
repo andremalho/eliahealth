@@ -22,6 +22,11 @@ export class VaccinesController {
     return this.service.findPending(id);
   }
 
+  @Get('pregnancies/:pregnancyId/vaccines/card')
+  getVaccineCard(@Param('pregnancyId', ParseUUIDPipe) id: string) {
+    return this.service.getVaccineCard(id);
+  }
+
   @Patch('vaccines/:id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateVaccineDto) {
     return this.service.update(id, dto);

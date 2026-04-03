@@ -4,6 +4,13 @@ export enum GaMethod {
   IVF = 'ivf',
 }
 
+export enum IvfTransferType {
+  D3 = 'd3',
+  D5 = 'd5',
+  BLASTOCYST = 'blastocyst',
+  NATURAL_CYCLE = 'natural_cycle',
+}
+
 export enum Chorionicity {
   NA = 'na',
   DC = 'dc',
@@ -16,4 +23,5 @@ export enum PregnancyStatus {
   ACTIVE = 'active',
   COMPLETED = 'completed',
   INTERRUPTED = 'interrupted',
+  PREGNANCY_LOSS = 'pregnancy_loss',
 }

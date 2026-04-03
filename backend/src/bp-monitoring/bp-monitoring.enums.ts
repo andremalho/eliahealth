@@ -30,6 +30,21 @@ export enum BpReadingSource {
   PATIENT_APP = 'patient_app',
 }
 
+export enum BpMeasurementLocation {
+  HOME = 'home',
+  CONSULTATION = 'consultation',
+  PHARMACY = 'pharmacy',
+  HOSPITAL = 'hospital',
+  OTHER = 'other',
+}
+
+export enum BpMeasurementMethod {
+  MANUAL = 'manual',
+  DIGITAL_WRIST = 'digital_wrist',
+  DIGITAL_ARM = 'digital_arm',
+  AUTOMATIC_DEVICE = 'automatic_device',
+}
+
 export const BP_ALARM_SYMPTOMS = [
   'cefaleia', 'escotomas', 'epigastralgia',
 ] as const;

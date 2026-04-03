@@ -32,6 +32,10 @@ import { PrescriptionsModule } from './prescriptions/prescriptions.module.js';
 import { TenantModule } from './tenant/tenant.module.js';
 import { I18nModule } from './i18n/i18n.module.js';
 import { OnboardingModule } from './onboarding/onboarding.module.js';
+import { PortalModule } from './portal/portal.module.js';
+import { PatientVerificationModule } from './patient-verification/patient-verification.module.js';
+import { UtilsModule } from './utils/utils.module.js';
+import { NotificationsModule } from './notifications/notifications.module.js';
 
 @Module({
   imports: [
@@ -77,6 +81,10 @@ import { OnboardingModule } from './onboarding/onboarding.module.js';
     TenantModule,
     I18nModule,
     OnboardingModule,
+    PortalModule,
+    PatientVerificationModule,
+    UtilsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,5 +1,7 @@
-import { IsString, IsNotEmpty, IsEnum, IsOptional, IsInt, IsDateString, Min } from 'class-validator';
-import { VaccineType, VaccineStatus } from '../vaccine.entity.js';
+import {
+  IsString, IsNotEmpty, IsEnum, IsOptional, IsInt, IsDateString, IsArray, Min,
+} from 'class-validator';
+import { VaccineType, VaccineStatus, DoseStatus } from '../vaccine.entity.js';
 
 export class CreateVaccineDto {
   @IsString() @IsNotEmpty() vaccineName: string;
@@ -13,4 +15,7 @@ export class CreateVaccineDto {
   @IsOptional() @IsString() location?: string;
   @IsOptional() @IsDateString() nextDoseDate?: string;
   @IsOptional() @IsString() notes?: string;
+  @IsOptional() @IsInt() @Min(1) totalDosesRequired?: number;
+  @IsOptional() @IsArray() doseSequence?: DoseStatus[];
+  @IsOptional() @IsDateString() lastDoseDate?: string;
 }

@@ -8,8 +8,12 @@ import {
   Min,
   Max,
   IsObject,
+  IsIn,
 } from 'class-validator';
-import { EdemaGrade, FetalPresentation, UmbilicalDopplerResult } from '../consultation.enums.js';
+import {
+  EdemaGrade, FetalPresentation, UmbilicalDopplerResult,
+  CervicalPosition, CervicalConsistency, FetalStation, Membranes, FhrStatus,
+} from '../consultation.enums.js';
 
 export class CreateConsultationDto {
   @IsDateString()
@@ -44,6 +48,16 @@ export class CreateConsultationDto {
   fetalHeartRate?: number;
 
   @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(300)
+  fhrValue?: number;
+
+  @IsOptional()
+  @IsEnum(FhrStatus)
+  fhrStatus?: FhrStatus;
+
+  @IsOptional()
   @IsEnum(EdemaGrade)
   edemaGrade?: EdemaGrade;
 
@@ -75,6 +89,35 @@ export class CreateConsultationDto {
   @IsString()
   vaginalExam?: string;
 
+  // Structured cervical exam
+  @IsOptional()
+  @IsEnum(CervicalPosition)
+  cervicalPosition?: CervicalPosition;
+
+  @IsOptional()
+  @IsEnum(CervicalConsistency)
+  cervicalConsistency?: CervicalConsistency;
+
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 1 })
+  @Min(0)
+  @Max(10)
+  cervicalDilation?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  cervicalEffacement?: number;
+
+  @IsOptional()
+  @IsEnum(FetalStation)
+  fetalStation?: FetalStation;
+
+  @IsOptional()
+  @IsEnum(Membranes)
+  membranes?: Membranes;
+
   @IsOptional()
   @IsEnum(FetalPresentation)
   fetalPresentation?: FetalPresentation;
@@ -89,8 +132,7 @@ export class CreateConsultationDto {
 
   @IsOptional()
   @IsInt()
-  @Min(0)
-  @Max(10)
+  @IsIn([2, 4, 6, 8, 10])
   biophysicalProfile?: number;
 
   @IsOptional()

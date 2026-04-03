@@ -4,12 +4,15 @@ import {
   Post,
   Patch,
   Param,
+  Query,
   Body,
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { PregnanciesService } from './pregnancies.service.js';
 import { CreatePregnancyDto } from './dto/create-pregnancy.dto.js';
 import { UpdatePregnancyDto } from './dto/update-pregnancy.dto.js';
+import { QuickCreatePregnancyDto } from './dto/quick-create-pregnancy.dto.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 
 @Controller()
 export class PregnanciesController {
@@ -24,13 +27,44 @@ export class PregnanciesController {
   }
 
   @Get('patients/:patientId/pregnancies')
-  findAllByPatient(@Param('patientId', ParseUUIDPipe) patientId: string) {
-    return this.pregnanciesService.findAllByPatient(patientId);
+  findAllByPatient(
+    @Param('patientId', ParseUUIDPipe) patientId: string,
+    @Query('status') status?: string,
+    @Query('sort') sort?: string,
+    @Query('ownership') ownership?: string,
+  ) {
+    return this.pregnanciesService.findAllByPatient(patientId, {
+      status,
+      sort,
+      ownership,
+    });
+  }
+
+  @Post('pregnancies/quick-create')
+  quickCreate(@Body() dto: QuickCreatePregnancyDto) {
+    return this.pregnanciesService.quickCreate(dto);
+  }
+
+  @Get('pregnancies/list')
+  list(
+    @CurrentUser('userId') userId: string,
+    @Query('status') status?: string,
+    @Query('sort') sort?: string,
+    @Query('ownership') ownership?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.pregnanciesService.list({
+      status,
+      sort,
+      ownership,
+      search,
+      userId,
+    });
   }
 
   @Get('pregnancies/:id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.pregnanciesService.findOne(id);
+    return this.pregnanciesService.findOneWithStats(id);
   }
 
   @Patch('pregnancies/:id')

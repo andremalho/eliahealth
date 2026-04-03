@@ -9,10 +9,12 @@ export enum DiabetesType {
 export enum MeasurementType {
   FASTING = 'fasting',
   POST_BREAKFAST_1H = 'post_breakfast_1h',
-  POST_LUNCH_1H = 'post_lunch_1h',
-  POST_DINNER_1H = 'post_dinner_1h',
   POST_BREAKFAST_2H = 'post_breakfast_2h',
+  PRE_LUNCH = 'pre_lunch',
+  POST_LUNCH_1H = 'post_lunch_1h',
   POST_LUNCH_2H = 'post_lunch_2h',
+  PRE_DINNER = 'pre_dinner',
+  POST_DINNER_1H = 'post_dinner_1h',
   POST_DINNER_2H = 'post_dinner_2h',
   BEDTIME = 'bedtime',
   RANDOM = 'random',
@@ -28,7 +30,17 @@ export enum GlucoseStatus {
 export enum ReadingSource {
   MANUAL = 'manual',
   DEVICE_SYNC = 'device_sync',
+  DEVICE_BLUETOOTH = 'device_bluetooth',
+  DEVICE_API = 'device_api',
+  DEVICE_USB = 'device_usb',
   PATIENT_APP = 'patient_app',
+}
+
+export enum IntegrationProtocol {
+  BLUETOOTH = 'bluetooth',
+  API = 'api',
+  USB = 'usb',
+  NFC = 'nfc',
 }
 
 export enum AdministrationTimeLabel {

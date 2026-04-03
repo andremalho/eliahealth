@@ -7,12 +7,14 @@ import {
   IsArray,
   IsString,
   Min,
+  Max,
 } from 'class-validator';
-import { GaMethod, Chorionicity } from '../pregnancy.enums.js';
+import { GaMethod, Chorionicity, IvfTransferType } from '../pregnancy.enums.js';
 
 export class CreatePregnancyDto {
+  @IsOptional()
   @IsDateString()
-  lmpDate: string;
+  lmpDate?: string;
 
   @IsOptional()
   @IsDateString()
@@ -22,6 +24,30 @@ export class CreatePregnancyDto {
   @IsInt()
   @Min(0)
   usDatingGaDays?: number;
+
+  @IsOptional()
+  @IsEnum(IvfTransferType)
+  ivfTransferType?: IvfTransferType;
+
+  @IsOptional()
+  @IsDateString()
+  ivfTransferDate?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(45)
+  gaWeeks?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(6)
+  gaDays?: number;
+
+  @IsOptional()
+  @IsDateString()
+  edd?: string;
 
   @IsEnum(GaMethod)
   gaMethod: GaMethod;

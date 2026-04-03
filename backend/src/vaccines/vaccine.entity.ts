@@ -4,8 +4,30 @@ import {
 } from 'typeorm';
 import { Pregnancy } from '../pregnancies/pregnancy.entity.js';
 
-export enum VaccineType { INFLUENZA = 'influenza', TDAP = 'tdap', HEPATITIS_B = 'hepatitis_b', COVID19 = 'covid19', VSR = 'vsr', OTHER = 'other' }
-export enum VaccineStatus { SCHEDULED = 'scheduled', ADMINISTERED = 'administered', OVERDUE = 'overdue', REFUSED = 'refused' }
+export enum VaccineType {
+  INFLUENZA = 'influenza',
+  TDAP = 'tdap',
+  HEPATITIS_B = 'hepatitis_b',
+  COVID19 = 'covid19',
+  VSR = 'vsr',
+  RHOGAM = 'rhogam',
+  OTHER = 'other',
+}
+
+export enum VaccineStatus {
+  SCHEDULED = 'scheduled',
+  ADMINISTERED = 'administered',
+  OVERDUE = 'overdue',
+  REFUSED = 'refused',
+  PENDING = 'pending',
+  NOT_APPLICABLE = 'not_applicable',
+}
+
+export interface DoseStatus {
+  doseNumber: number;
+  status: string;
+  date: string | null;
+}
 
 @Entity('vaccines')
 export class Vaccine {
@@ -25,6 +47,10 @@ export class Vaccine {
   @Column({ type: 'varchar', nullable: true }) location: string | null;
   @Column({ name: 'next_dose_date', type: 'date', nullable: true }) nextDoseDate: string | null;
   @Column({ type: 'varchar', nullable: true }) notes: string | null;
+
+  @Column({ name: 'total_doses_required', type: 'int', nullable: true }) totalDosesRequired: number | null;
+  @Column({ name: 'dose_sequence', type: 'jsonb', nullable: true }) doseSequence: DoseStatus[] | null;
+  @Column({ name: 'last_dose_date', type: 'date', nullable: true }) lastDoseDate: string | null;
 
   @CreateDateColumn({ name: 'created_at' }) createdAt: Date;
   @UpdateDateColumn({ name: 'updated_at' }) updatedAt: Date;

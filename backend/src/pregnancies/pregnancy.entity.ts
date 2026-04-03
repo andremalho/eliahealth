@@ -8,7 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Patient } from '../patients/patient.entity.js';
-import { GaMethod, Chorionicity, PregnancyStatus } from './pregnancy.enums.js';
+import { GaMethod, Chorionicity, PregnancyStatus, IvfTransferType } from './pregnancy.enums.js';
 
 @Entity('pregnancies')
 export class Pregnancy {
@@ -39,6 +39,12 @@ export class Pregnancy {
 
   @Column({ name: 'ga_method', type: 'enum', enum: GaMethod })
   gaMethod: GaMethod;
+
+  @Column({ name: 'ivf_transfer_type', type: 'enum', enum: IvfTransferType, nullable: true })
+  ivfTransferType: IvfTransferType | null;
+
+  @Column({ name: 'ivf_transfer_date', type: 'date', nullable: true })
+  ivfTransferDate: string | null;
 
   @Column({ type: 'int' })
   gravida: number;

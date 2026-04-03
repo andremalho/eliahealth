@@ -1,7 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { VaginalSwab, SwabExamType, SwabStatus, DST_TYPES } from './vaginal-swab.entity.js';
+import {
+  VaginalSwab, SwabExamType, SwabStatus, SwabResultDropdown,
+  DST_TYPES, DROPDOWN_EXAM_TYPES,
+} from './vaginal-swab.entity.js';
 import { CreateVaginalSwabDto } from './dto/create-vaginal-swab.dto.js';
 import { UpdateVaginalSwabDto } from './dto/update-vaginal-swab.dto.js';
 
@@ -28,25 +31,66 @@ export class VaginalSwabsService {
   }
 
   private evaluateAlert(swab: VaginalSwab): void {
+    // For dropdown-based exams, use resultDropdown
+    if (DROPDOWN_EXAM_TYPES.includes(swab.examType) && swab.resultDropdown) {
+      this.evaluateDropdownResult(swab);
+      return;
+    }
+
     if (!swab.result) { swab.status = SwabStatus.PENDING; return; }
     const lower = swab.result.toLowerCase();
     const isPositive = lower.includes('positivo') || lower.includes('reagente') || lower.includes('presente');
 
-    if (swab.examType === SwabExamType.STREPTOCOCCUS_B && isPositive) {
+    if (
+      (swab.examType === SwabExamType.STREPTOCOCCUS_B || swab.examType === SwabExamType.PCR_STREPTOCOCCUS) &&
+      isPositive
+    ) {
       swab.status = SwabStatus.CRITICAL; swab.alertTriggered = true;
-      swab.alertMessage = 'GBS positivo — profilaxia intraparto obrigatória';
+      swab.alertMessage = 'GBS positivo — profilaxia intraparto obrigatoria';
       return;
     }
     if (DST_TYPES.includes(swab.examType) && isPositive) {
       swab.status = SwabStatus.CRITICAL; swab.alertTriggered = true;
-      swab.alertMessage = `${swab.examType} positivo — tratamento imediato necessário`;
+      swab.alertMessage = `${swab.examType} positivo — tratamento imediato necessario`;
       return;
     }
-    if (swab.examType === SwabExamType.ONCOTIC_CYTOLOGY && (lower.includes('alterado') || lower.includes('asc') || lower.includes('lsil') || lower.includes('hsil'))) {
+    if (
+      (swab.examType === SwabExamType.ONCOTIC_CYTOLOGY || swab.examType === SwabExamType.COLPOCITOLOGIA_ONCOTICA) &&
+      (lower.includes('alterado') || lower.includes('asc') || lower.includes('lsil') || lower.includes('hsil'))
+    ) {
       swab.status = SwabStatus.ALTERED; swab.alertTriggered = true;
-      swab.alertMessage = 'Citologia oncótica alterada — encaminhar para colposcopia';
+      swab.alertMessage = 'Citologia oncotica alterada — encaminhar para colposcopia';
       return;
     }
+    swab.status = SwabStatus.NORMAL; swab.alertTriggered = false; swab.alertMessage = null;
+  }
+
+  private evaluateDropdownResult(swab: VaginalSwab): void {
+    const dd = swab.resultDropdown!;
+
+    if (swab.examType === SwabExamType.PCR_STREPTOCOCCUS) {
+      if (dd === SwabResultDropdown.POSITIVE) {
+        swab.status = SwabStatus.CRITICAL; swab.alertTriggered = true;
+        swab.alertMessage = 'GBS positivo — profilaxia intraparto obrigatoria';
+      } else {
+        swab.status = SwabStatus.NORMAL; swab.alertTriggered = false; swab.alertMessage = null;
+      }
+      return;
+    }
+
+    if (swab.examType === SwabExamType.PCR_HPV) {
+      if (dd === SwabResultDropdown.HIGH_RISK) {
+        swab.status = SwabStatus.CRITICAL; swab.alertTriggered = true;
+        swab.alertMessage = 'HPV alto risco detectado — encaminhar para colposcopia';
+      } else if (dd === SwabResultDropdown.POSITIVE || dd === SwabResultDropdown.LOW_RISK) {
+        swab.status = SwabStatus.ALTERED; swab.alertTriggered = true;
+        swab.alertMessage = 'HPV detectado — acompanhamento recomendado';
+      } else {
+        swab.status = SwabStatus.NORMAL; swab.alertTriggered = false; swab.alertMessage = null;
+      }
+      return;
+    }
+
     swab.status = SwabStatus.NORMAL; swab.alertTriggered = false; swab.alertMessage = null;
   }
 }

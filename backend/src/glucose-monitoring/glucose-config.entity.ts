@@ -8,7 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Pregnancy } from '../pregnancies/pregnancy.entity.js';
-import { DiabetesType } from './glucose-monitoring.enums.js';
+import { DiabetesType, IntegrationProtocol } from './glucose-monitoring.enums.js';
 
 @Entity('glucose_monitoring_configs')
 export class GlucoseMonitoringConfig {
@@ -43,12 +43,29 @@ export class GlucoseMonitoringConfig {
   @Column({ name: 'insulin_protocol', type: 'text', nullable: true })
   insulinProtocol: string | null;
 
-  // TODO: integração com glicosímetros — usar deviceIntegrationId para vincular via Bluetooth/API
-  @Column({ name: 'device_integration_id', type: 'varchar', nullable: true })
-  deviceIntegrationId: string | null;
+  @Column({ name: 'device_integration_enabled', type: 'boolean', default: false })
+  deviceIntegrationEnabled: boolean;
 
   @Column({ name: 'device_brand', type: 'varchar', nullable: true })
   deviceBrand: string | null;
+
+  @Column({ name: 'device_model', type: 'varchar', nullable: true })
+  deviceModel: string | null;
+
+  @Column({ name: 'device_serial_number', type: 'varchar', nullable: true })
+  deviceSerialNumber: string | null;
+
+  @Column({ name: 'integration_protocol', type: 'enum', enum: IntegrationProtocol, nullable: true })
+  integrationProtocol: IntegrationProtocol | null;
+
+  @Column({ name: 'integration_api_key', type: 'varchar', nullable: true })
+  integrationApiKey: string | null;
+
+  @Column({ name: 'last_sync_at', type: 'timestamptz', nullable: true })
+  lastSyncAt: Date | null;
+
+  @Column({ name: 'auto_sync_enabled', type: 'boolean', default: false })
+  autoSyncEnabled: boolean;
 
   @Column({ type: 'text', nullable: true })
   notes: string | null;

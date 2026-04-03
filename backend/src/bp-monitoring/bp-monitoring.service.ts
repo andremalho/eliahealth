@@ -4,6 +4,8 @@ import { Repository, Between } from 'typeorm';
 import { BpMonitoringConfig } from './bp-config.entity.js';
 import { BpReading } from './bp-reading.entity.js';
 import { BpStatus, BP_ALARM_SYMPTOMS } from './bp-monitoring.enums.js';
+import { Pregnancy } from '../pregnancies/pregnancy.entity.js';
+import { PregnanciesService } from '../pregnancies/pregnancies.service.js';
 import { CreateBpConfigDto } from './dto/create-bp-config.dto.js';
 import { UpdateBpConfigDto } from './dto/update-bp-config.dto.js';
 import { CreateBpReadingDto } from './dto/create-bp-reading.dto.js';
@@ -15,6 +17,7 @@ export class BpMonitoringService {
     private readonly configRepo: Repository<BpMonitoringConfig>,
     @InjectRepository(BpReading)
     private readonly readingRepo: Repository<BpReading>,
+    private readonly pregnanciesService: PregnanciesService,
   ) {}
 
   // ── Config CRUD ──
@@ -42,6 +45,19 @@ export class BpMonitoringService {
   async createReading(pregnancyId: string, dto: CreateBpReadingDto): Promise<BpReading> {
     const config = await this.getConfigOrDefaults(pregnancyId);
     const reading = this.readingRepo.create({ ...dto, pregnancyId });
+
+    // Compute combined readingDateTime
+    reading.readingDateTime = new Date(`${dto.readingDate}T${dto.readingTime}:00`);
+
+    // Auto-calculate gestational age at the time of reading
+    try {
+      const pregnancy = await this.pregnanciesService.findOne(pregnancyId);
+      const ga = this.pregnanciesService.getGestationalAge(pregnancy, reading.readingDateTime);
+      reading.gestationalAgeDays = ga.totalDays;
+    } catch {
+      // Non-critical — leave null if pregnancy lookup fails
+    }
+
     this.evaluateAlert(reading, config);
     return this.readingRepo.save(reading);
   }
@@ -111,12 +127,34 @@ export class BpMonitoringService {
       order: { readingDate: 'ASC', readingTime: 'ASC' },
     });
 
-    const grouped: Record<string, BpReading[]> = {};
-    for (const r of readings) {
-      if (!grouped[r.readingDate]) grouped[r.readingDate] = [];
-      grouped[r.readingDate].push(r);
-    }
-    return grouped;
+    const config = await this.getConfigOrDefaults(pregnancyId);
+
+    const data = readings.map((r) => ({
+      id: r.id,
+      dateTime: r.readingDateTime ?? `${r.readingDate}T${r.readingTime}`,
+      systolic: r.systolic,
+      diastolic: r.diastolic,
+      heartRate: r.heartRate,
+      gestationalAgeDays: r.gestationalAgeDays,
+      status: r.status,
+      alertTriggered: r.alertTriggered,
+      measurementLocation: r.measurementLocation,
+      measurementMethod: r.measurementMethod,
+    }));
+
+    return {
+      readings: data,
+      referenceLines: {
+        hypertension: {
+          systolic: config.targetSystolicMax,
+          diastolic: config.targetDiastolicMax,
+        },
+        critical: {
+          systolic: config.criticalSystolic,
+          diastolic: config.criticalDiastolic,
+        },
+      },
+    };
   }
 
   async getDailyTable(pregnancyId: string) {

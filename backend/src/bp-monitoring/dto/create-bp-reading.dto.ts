@@ -10,7 +10,10 @@ import {
   Min,
   Max,
 } from 'class-validator';
-import { BpArm, BpPosition, BpReadingSource } from '../bp-monitoring.enums.js';
+import {
+  BpArm, BpPosition, BpReadingSource,
+  BpMeasurementLocation, BpMeasurementMethod,
+} from '../bp-monitoring.enums.js';
 
 export class CreateBpReadingDto {
   @IsDateString()
@@ -55,6 +58,18 @@ export class CreateBpReadingDto {
   @IsOptional()
   @IsEnum(BpReadingSource)
   source?: BpReadingSource;
+
+  @IsOptional()
+  @IsEnum(BpMeasurementLocation)
+  measurementLocation?: BpMeasurementLocation;
+
+  @IsOptional()
+  @IsEnum(BpMeasurementMethod)
+  measurementMethod?: BpMeasurementMethod;
+
+  @IsOptional()
+  @IsString()
+  deviceId?: string;
 
   @IsOptional()
   @IsObject()

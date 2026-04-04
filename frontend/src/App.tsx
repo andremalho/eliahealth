@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import LoginPage from './pages/auth/LoginPage';
 import PrivateRoute from './components/PrivateRoute';
+import Logo from './components/Logo';
 import { useAuthStore } from './store/auth.store';
 
 const queryClient = new QueryClient({
@@ -12,11 +13,8 @@ function DashboardPlaceholder() {
   const { user, logout } = useAuthStore();
   return (
     <div className="min-h-screen bg-cream-light flex flex-col items-center justify-center gap-6">
-      <h1 className="text-4xl">
-        <span className="font-bold text-primary">elia</span>
-        <span className="font-light text-teal">health</span>
-      </h1>
-      <p className="text-gray-600">Dashboard em construcao</p>
+      <Logo size="md" />
+      <p className="text-gray-600">Dashboard em construção</p>
       <p className="text-sm text-gray-400">Logado como: {user?.email}</p>
       <button
         onClick={logout}

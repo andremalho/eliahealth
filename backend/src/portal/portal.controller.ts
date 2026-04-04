@@ -6,6 +6,7 @@ import { CompleteProfileDto } from './dto/complete-profile.dto.js';
 import { CreatePortalBpDto } from './dto/portal-bp.dto.js';
 import { CreatePortalGlucoseDto } from './dto/portal-glucose.dto.js';
 import { CreatePublicShareDto } from './dto/create-public-share.dto.js';
+import { CreateGuestAccessDto } from './dto/create-guest-access.dto.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { Public } from '../auth/decorators/public.decorator.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
@@ -186,5 +187,51 @@ export class PortalController {
   @Roles(UserRole.PATIENT)
   listPublicShares(@CurrentUser('patientId') patientId: string) {
     return this.dataService.listPublicShares(patientId);
+  }
+
+  // ── Guests ──
+
+  @Post('guests')
+  @Roles(UserRole.PATIENT)
+  createGuestAccess(@CurrentUser('patientId') patientId: string, @Body() dto: CreateGuestAccessDto) {
+    return this.dataService.createGuestAccess(patientId, dto);
+  }
+
+  @Get('guests')
+  @Roles(UserRole.PATIENT)
+  listGuests(@CurrentUser('patientId') patientId: string) {
+    return this.dataService.listGuests(patientId);
+  }
+
+  @Delete('guests/:id')
+  @Roles(UserRole.PATIENT)
+  revokeGuest(@CurrentUser('patientId') patientId: string, @Param('id') id: string) {
+    return this.dataService.revokeGuestAccess(patientId, id);
+  }
+
+  @Public()
+  @Get('guests/:accessToken')
+  getGuestData(@Param('accessToken') accessToken: string, @Req() req: any) {
+    return this.dataService.getGuestData(accessToken, req.ip ?? req.socket?.remoteAddress);
+  }
+
+  // ── Patient Exams ──
+
+  @Post('patient-exams')
+  @Roles(UserRole.PATIENT)
+  createPatientExam(@CurrentUser('patientId') patientId: string, @Body() body: Record<string, unknown>) {
+    return this.dataService.createPatientExam(patientId, body as any);
+  }
+
+  @Get('patient-exams')
+  @Roles(UserRole.PATIENT)
+  listPatientExams(@CurrentUser('patientId') patientId: string) {
+    return this.dataService.listPatientExams(patientId);
+  }
+
+  @Delete('patient-exams/:id')
+  @Roles(UserRole.PATIENT)
+  deletePatientExam(@CurrentUser('patientId') patientId: string, @Param('id') id: string) {
+    return this.dataService.deletePatientExam(patientId, id);
   }
 }

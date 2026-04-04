@@ -46,6 +46,10 @@ import { AuditModule } from './audit/audit.module.js';
 import { AuditInterceptor } from './audit/audit.interceptor.js';
 import { LgpdModule } from './lgpd/lgpd.module.js';
 import { AdminModule } from './admin/admin.module.js';
+import { LabIntegrationsModule } from './lab-integrations/lab-integrations.module.js';
+import { WhatsAppModule } from './shared/whatsapp/whatsapp.module.js';
+import { FhirModule } from './shared/fhir/fhir.module.js';
+import { RndsModule } from './shared/rnds/rnds.module.js';
 
 @Module({
   imports: [
@@ -107,6 +111,10 @@ import { AdminModule } from './admin/admin.module.js';
     ExportModule,
     LgpdModule,
     AdminModule,
+    LabIntegrationsModule,
+    WhatsAppModule,
+    FhirModule,
+    RndsModule,
   ],
   controllers: [AppController],
   providers: [

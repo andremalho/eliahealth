@@ -88,6 +88,15 @@ export class LabResultsService {
     return this.resultRepo.save(labResult);
   }
 
+  async reviewPatientExam(id: string, reviewStatus: string, notes?: string) {
+    const exam = await this.findOne(id);
+    await this.resultRepo.query(
+      `UPDATE lab_results SET review_status = $1, notes = COALESCE($2, notes) WHERE id = $3`,
+      [reviewStatus, notes ?? null, id],
+    );
+    return { id, reviewStatus, notes };
+  }
+
   // ── LabDocument CRUD ──
 
   async createDocument(pregnancyId: string, dto: CreateLabDocumentDto): Promise<LabDocument> {

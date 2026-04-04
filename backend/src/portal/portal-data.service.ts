@@ -10,6 +10,7 @@ import { randomUUID } from 'crypto';
 import { Patient } from '../patients/patient.entity.js';
 import { Pregnancy } from '../pregnancies/pregnancy.entity.js';
 import { PublicShare } from './public-share.entity.js';
+import { GuestAccess, GuestAccessType } from './guest-access.entity.js';
 import { PregnanciesService } from '../pregnancies/pregnancies.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import { AuditAction } from '../audit/audit-log.entity.js';
@@ -20,6 +21,7 @@ export class PortalDataService {
     @InjectRepository(Patient) private readonly patientRepo: Repository<Patient>,
     @InjectRepository(Pregnancy) private readonly pregnancyRepo: Repository<Pregnancy>,
     @InjectRepository(PublicShare) private readonly shareRepo: Repository<PublicShare>,
+    @InjectRepository(GuestAccess) private readonly guestRepo: Repository<GuestAccess>,
     private readonly pregnanciesService: PregnanciesService,
     private readonly auditService: AuditService,
   ) {}
@@ -508,5 +510,149 @@ export class PortalDataService {
       where: { patientId, revoked: false },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  // ── GUESTS ──
+
+  async createGuestAccess(patientId: string, dto: {
+    inviteMethod: string; inviteContact: string; accessType?: string;
+    showWeightChart?: boolean; expiresAt?: string;
+  }) {
+    const pregnancy = await this.getActivePregnancy(patientId);
+
+    const guest = this.guestRepo.create({
+      pregnancyId: pregnancy.id,
+      grantedBy: patientId,
+      inviteMethod: dto.inviteMethod as any,
+      inviteContact: dto.inviteContact,
+      accessType: (dto.accessType ?? 'readonly') as any,
+      showWeightChart: dto.showWeightChart ?? false,
+      accessToken: randomUUID(),
+      expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
+    });
+    const saved = await this.guestRepo.save(guest);
+
+    this.auditService.log({
+      userId: patientId, patientId, pregnancyId: pregnancy.id,
+      action: AuditAction.SHARE, resource: 'portal:guests',
+      ipAddress: 'portal', responseStatus: 201,
+    }).catch(() => {});
+
+    return { ...saved, accessUrl: `https://app.eliahealth.com/convidado?token=${saved.accessToken}` };
+  }
+
+  async listGuests(patientId: string) {
+    const pregnancy = await this.getActivePregnancy(patientId);
+    return this.guestRepo.find({
+      where: { pregnancyId: pregnancy.id, isActive: true },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async revokeGuestAccess(patientId: string, guestId: string) {
+    const guest = await this.guestRepo.findOneBy({ id: guestId, grantedBy: patientId });
+    if (!guest) throw new NotFoundException('Convidado nao encontrado');
+    guest.isActive = false;
+    guest.revokedAt = new Date();
+    return this.guestRepo.save(guest);
+  }
+
+  async getGuestData(accessToken: string, ipAddress?: string) {
+    const guest = await this.guestRepo.findOneBy({ accessToken, isActive: true });
+    if (!guest) throw new NotFoundException('Link invalido ou revogado');
+    if (guest.expiresAt && new Date() > guest.expiresAt) throw new ForbiddenException('Acesso expirado');
+
+    if (!guest.acceptedAt) {
+      guest.acceptedAt = new Date();
+      await this.guestRepo.save(guest);
+    }
+
+    this.auditService.log({
+      patientId: guest.grantedBy, pregnancyId: guest.pregnancyId,
+      action: AuditAction.READ, resource: 'portal:guest-view',
+      ipAddress: ipAddress ?? 'unknown', responseStatus: 200,
+      requestData: { accessToken, accessType: guest.accessType },
+    }).catch(() => {});
+
+    const pregnancy = await this.pregnancyRepo.findOne({
+      where: { id: guest.pregnancyId }, relations: ['patient'],
+    });
+    if (!pregnancy) throw new NotFoundException('Gestacao nao encontrada');
+
+    const ga = this.pregnanciesService.getGestationalAge(pregnancy);
+    const [consultations, vaccines] = await Promise.all([
+      this.pregnancyRepo.query(
+        `SELECT date, weight_kg, bp_systolic, bp_diastolic, fetal_heart_rate
+         FROM consultations WHERE pregnancy_id = $1 ORDER BY date DESC LIMIT 10`,
+        [guest.pregnancyId],
+      ),
+      this.pregnancyRepo.query(
+        `SELECT vaccine_name, status FROM vaccines WHERE pregnancy_id = $1`,
+        [guest.pregnancyId],
+      ),
+    ]);
+
+    const result: Record<string, unknown> = {
+      patient: { name: pregnancy.patient.fullName },
+      pregnancy: { gestationalAge: { weeks: ga.weeks, days: ga.days }, edd: pregnancy.edd, trimester: this.getTrimester(ga.totalDays) },
+      consultations,
+      vaccines,
+      accessType: guest.accessType,
+    };
+
+    if (guest.showWeightChart) {
+      result.weightChart = consultations
+        .filter((c: any) => c.weight_kg)
+        .map((c: any) => ({ date: c.date, weight: c.weight_kg }));
+    }
+
+    return result;
+  }
+
+  // ── PATIENT EXAMS ──
+
+  async createPatientExam(patientId: string, dto: {
+    examName: string; examDate: string; result?: string; unit?: string;
+    referenceRange?: string; labName?: string; attachmentUrl?: string;
+  }) {
+    const pregnancy = await this.getActivePregnancy(patientId);
+
+    const [exam] = await this.pregnancyRepo.query(
+      `INSERT INTO lab_results (pregnancy_id, exam_name, exam_category, requested_at, value, unit, reference_text, lab_name, attachment_url, source, review_status)
+       VALUES ($1, $2, 'other', $3, $4, $5, $6, $7, $8, 'patient_upload', 'pending_review')
+       RETURNING *`,
+      [pregnancy.id, dto.examName, dto.examDate, dto.result ?? null, dto.unit ?? null,
+       dto.referenceRange ?? null, dto.labName ?? null, dto.attachmentUrl ?? null],
+    );
+
+    this.auditService.log({
+      userId: patientId, patientId, pregnancyId: pregnancy.id,
+      action: AuditAction.CREATE, resource: 'portal:patient-exams',
+      ipAddress: 'portal', responseStatus: 201,
+    }).catch(() => {});
+
+    return exam;
+  }
+
+  async listPatientExams(patientId: string) {
+    const pregnancy = await this.getActivePregnancy(patientId);
+    return this.pregnancyRepo.query(
+      `SELECT id, exam_name, requested_at AS exam_date, value, unit, status, review_status, lab_name
+       FROM lab_results WHERE pregnancy_id = $1 AND source = 'patient_upload'
+       ORDER BY requested_at DESC`,
+      [pregnancy.id],
+    );
+  }
+
+  async deletePatientExam(patientId: string, examId: string) {
+    const pregnancy = await this.getActivePregnancy(patientId);
+    const [exam] = await this.pregnancyRepo.query(
+      `SELECT id, review_status FROM lab_results WHERE id = $1 AND pregnancy_id = $2 AND source = 'patient_upload'`,
+      [examId, pregnancy.id],
+    );
+    if (!exam) throw new NotFoundException('Exame nao encontrado');
+    if (exam.review_status === 'confirmed') throw new BadRequestException('Exame ja confirmado pelo medico');
+    await this.pregnancyRepo.query(`DELETE FROM lab_results WHERE id = $1`, [examId]);
+    return { deleted: true };
   }
 }

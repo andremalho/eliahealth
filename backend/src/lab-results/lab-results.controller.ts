@@ -69,8 +69,15 @@ export class LabResultsController {
     return this.labResultsService.update(id, dto);
   }
 
+  @Patch('lab-results/:id/review')
+  review(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: { status: string; notes?: string },
+  ) {
+    return this.labResultsService.reviewPatientExam(id, body.status, body.notes);
+  }
+
   // ── LabDocument endpoints ──
-  // TODO: integração com laboratórios — adicionar endpoint POST /lab-results/webhook para receber resultados de sistemas externos
 
   @Post('pregnancies/:pregnancyId/lab-documents')
   createDocument(

@@ -180,6 +180,58 @@ export class AuthService {
     return result;
   }
 
+  // ── Login by phone (OTP verified) ──
+
+  async loginByPhone(phone: string) {
+    const [patient] = await this.userRepo.query(
+      `SELECT id, email FROM patients WHERE phone = $1 LIMIT 1`,
+      [phone],
+    );
+    if (!patient) throw new UnauthorizedException('Paciente nao encontrado com este telefone');
+
+    const payload = {
+      sub: patient.id,
+      email: patient.email ?? '',
+      role: UserRole.PATIENT,
+      patientId: patient.id,
+    };
+    const accessToken = this.jwtService.sign(payload, { expiresIn: 30 * 24 * 60 * 60 });
+    return { accessToken, role: UserRole.PATIENT, patientId: patient.id };
+  }
+
+  // ── Login by Google OAuth ──
+
+  async loginByGoogle(profile: { email: string; name: string }) {
+    let user = await this.userRepo.findOneBy({ email: profile.email });
+    if (!user) {
+      // Auto-create patient user
+      const hash = await bcrypt.hash(Math.random().toString(36), SALT_ROUNDS);
+      user = this.userRepo.create({
+        name: profile.name,
+        email: profile.email,
+        password: hash,
+        role: UserRole.PATIENT,
+      });
+      user = await this.userRepo.save(user);
+    }
+
+    if (user.role === UserRole.PATIENT) {
+      const [patient] = await this.userRepo.query(
+        `SELECT id FROM patients WHERE email = $1 LIMIT 1`,
+        [profile.email],
+      );
+      const payload = {
+        sub: patient?.id ?? user.id,
+        email: user.email,
+        role: UserRole.PATIENT,
+        patientId: patient?.id ?? user.id,
+      };
+      return { accessToken: this.jwtService.sign(payload, { expiresIn: 30 * 24 * 60 * 60 }), role: UserRole.PATIENT };
+    }
+
+    return this.generateTokens(user, 'google-oauth', null);
+  }
+
   // ── Password validation ──
 
   private validatePasswordStrength(password: string): void {

@@ -22,20 +22,26 @@ export class ExpandVaccinesModule1711900021000
       ADD VALUE IF NOT EXISTS 'not_applicable'
     `);
 
-    // Add multi-dose tracking columns
-    await queryRunner.query(`
-      ALTER TABLE "vaccines"
-        ADD COLUMN "total_doses_required" integer,
-        ADD COLUMN "dose_sequence" jsonb,
-        ADD COLUMN "last_dose_date" date
+    // Add multi-dose tracking columns (idempotent)
+    const cols = await queryRunner.query(`
+      SELECT column_name FROM information_schema.columns
+      WHERE table_name = 'vaccines' AND column_name = 'total_doses_required'
     `);
+    if (cols.length === 0) {
+      await queryRunner.query(`
+        ALTER TABLE "vaccines"
+          ADD COLUMN "total_doses_required" integer,
+          ADD COLUMN "dose_sequence" jsonb,
+          ADD COLUMN "last_dose_date" date
+      `);
+    }
 
-    // Seed Rhogam into exam_schedules
+    // Seed Rhogam into exam_schedules (idempotent, using correct column name)
     await queryRunner.query(`
-      INSERT INTO "exam_schedules" (
-        "exam_name", "exam_type", "ga_weeks_min", "ga_weeks_max",
-        "ga_weeks_ideal", "trimester", "is_routine", "source", "notes"
-      ) VALUES (
+      INSERT INTO "exam_schedules"
+        ("exam_name", "exam_category", "ga_weeks_min", "ga_weeks_max",
+         "ga_weeks_ideal", "trimester", "is_routine", "source", "notes")
+      SELECT
         'Rhogam (Imunoglobulina Anti-D)',
         'vaccine',
         28, 34, 30,
@@ -43,6 +49,9 @@ export class ExpandVaccinesModule1711900021000
         false,
         'FEBRASGO 2023',
         'Gestantes Rh negativo — administrar apos procedimentos invasivos (amniocentese, CVS) e no 3o trimestre (28-34 semanas) se Coombs indireto negativo. Dose: 300mcg IM'
+      WHERE NOT EXISTS (
+        SELECT 1 FROM "exam_schedules"
+        WHERE "exam_name" = 'Rhogam (Imunoglobulina Anti-D)'
       )
     `);
   }
@@ -55,9 +64,9 @@ export class ExpandVaccinesModule1711900021000
 
     await queryRunner.query(`
       ALTER TABLE "vaccines"
-        DROP COLUMN "last_dose_date",
-        DROP COLUMN "dose_sequence",
-        DROP COLUMN "total_doses_required"
+        DROP COLUMN IF EXISTS "last_dose_date",
+        DROP COLUMN IF EXISTS "dose_sequence",
+        DROP COLUMN IF EXISTS "total_doses_required"
     `);
 
     // Enum values cannot be removed without recreating the type

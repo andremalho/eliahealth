@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './auth/auth.module.js';
@@ -40,10 +41,19 @@ import { OtherExamsModule } from './other-exams/other-exams.module.js';
 import { PregnancyDashboardModule } from './dashboard/pregnancy-dashboard.module.js';
 import { AnnotationsModule } from './annotations/annotations.module.js';
 import { ExportModule } from './export/export.module.js';
+import { SecurityModule } from './security/security.module.js';
+import { AuditModule } from './audit/audit.module.js';
+import { AuditInterceptor } from './audit/audit.interceptor.js';
+import { LgpdModule } from './lgpd/lgpd.module.js';
+import { AdminModule } from './admin/admin.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: ['.env', '../.env'] }),
+    ThrottlerModule.forRoot([
+      { name: 'default', ttl: 60000, limit: 100 },
+      { name: 'auth', ttl: 60000, limit: 20 },
+    ]),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
@@ -59,6 +69,8 @@ import { ExportModule } from './export/export.module.js';
         migrations: ['dist/migrations/*{.ts,.js}'],
       }),
     }),
+    SecurityModule,
+    AuditModule,
     AuthModule,
     PatientsModule,
     PregnanciesModule,
@@ -93,12 +105,16 @@ import { ExportModule } from './export/export.module.js';
     PregnancyDashboardModule,
     AnnotationsModule,
     ExportModule,
+    LgpdModule,
+    AdminModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
   ],
 })
 export class AppModule {}

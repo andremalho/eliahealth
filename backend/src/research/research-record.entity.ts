@@ -101,6 +101,10 @@ export class ResearchRecord {
   @Column({ name: 'data_version', type: 'varchar', default: '1.0' })
   dataVersion: string;
 
+  // Hash of record data for tamper detection — verify integrity on read
+  @Column({ name: 'data_hash', type: 'varchar', nullable: true })
+  dataHash: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

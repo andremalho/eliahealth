@@ -12,6 +12,7 @@ import { ConsultationsService } from './consultations.service.js';
 import { CreateConsultationDto } from './dto/create-consultation.dto.js';
 import { UpdateConsultationDto } from './dto/update-consultation.dto.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
@@ -39,15 +40,16 @@ export class ConsultationsController {
   }
 
   @Get('consultations/:id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.consultationsService.findOne(id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('tenantId') tenantId: string) {
+    return this.consultationsService.findOne(id, tenantId);
   }
 
   @Patch('consultations/:id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('tenantId') tenantId: string,
     @Body() dto: UpdateConsultationDto,
   ) {
-    return this.consultationsService.update(id, dto);
+    return this.consultationsService.update(id, dto, tenantId);
   }
 }

@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { verifySubResourceTenant } from '../common/tenant.js';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LabResult } from './lab-result.entity.js';
@@ -70,11 +71,12 @@ export class LabResultsService {
     return grouped;
   }
 
-  async findOne(id: string): Promise<LabResult> {
+  async findOne(id: string, tenantId?: string | null): Promise<LabResult> {
     const result = await this.resultRepo.findOneBy({ id });
     if (!result) {
       throw new NotFoundException(`Exame ${id} nao encontrado`);
     }
+    await verifySubResourceTenant(this.resultRepo, 'lab_results', id, tenantId ?? null);
     return result;
   }
 

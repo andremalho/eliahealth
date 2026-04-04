@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Pregnancy } from './pregnancy.entity.js';
@@ -124,16 +124,22 @@ export class PregnanciesService {
     return qb.getMany();
   }
 
-  async findOne(id: string): Promise<Pregnancy> {
+  async findOne(id: string, tenantId?: string | null): Promise<Pregnancy> {
     const pregnancy = await this.repo.findOneBy({ id });
     if (!pregnancy) {
       throw new NotFoundException(`Gestacao ${id} nao encontrada`);
     }
+    if (tenantId) {
+      const patient = await this.patientRepo.findOneBy({ id: pregnancy.patientId });
+      if (patient && patient.tenantId !== tenantId) {
+        throw new ForbiddenException('Acesso negado');
+      }
+    }
     return pregnancy;
   }
 
-  async findOneWithStats(id: string) {
-    const pregnancy = await this.findOne(id);
+  async findOneWithStats(id: string, tenantId?: string | null) {
+    const pregnancy = await this.findOne(id, tenantId);
 
     const [bpStats] = await this.repo.query(
       `SELECT COUNT(*)::int AS count FROM bp_readings WHERE pregnancy_id = $1`,
@@ -162,8 +168,8 @@ export class PregnanciesService {
     };
   }
 
-  async update(id: string, dto: UpdatePregnancyDto): Promise<Pregnancy> {
-    const pregnancy = await this.findOne(id);
+  async update(id: string, dto: UpdatePregnancyDto, tenantId?: string | null): Promise<Pregnancy> {
+    const pregnancy = await this.findOne(id, tenantId);
     Object.assign(pregnancy, dto);
 
     if (dto.lmpDate || dto.gaMethod || dto.usDatingDate || dto.usDatingGaDays !== undefined) {

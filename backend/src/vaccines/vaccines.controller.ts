@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Patch, Param, Query, Body, ParseUUIDPipe } from '@nestjs/common';
 import { VaccinesService } from './vaccines.service.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { CreateVaccineDto } from './dto/create-vaccine.dto.js';
 import { UpdateVaccineDto } from './dto/update-vaccine.dto.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
@@ -33,7 +34,7 @@ export class VaccinesController {
   }
 
   @Patch('vaccines/:id')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateVaccineDto) {
-    return this.service.update(id, dto);
+  update(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('tenantId') tenantId: string, @Body() dto: UpdateVaccineDto) {
+    return this.service.update(id, dto, tenantId);
   }
 }

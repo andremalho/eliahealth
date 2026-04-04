@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Prescription, PrescriptionStatus, DigitalSignatureProvider } from './prescription.entity.js';
+import { verifySubResourceTenant } from '../common/tenant.js';
 import { CreatePrescriptionDto } from './dto/create-prescription.dto.js';
 import { UpdatePrescriptionDto } from './dto/update-prescription.dto.js';
 
@@ -24,14 +25,15 @@ export class PrescriptionsService {
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  async findOne(id: string): Promise<Prescription> {
+  async findOne(id: string, tenantId?: string | null): Promise<Prescription> {
     const rx = await this.repo.findOneBy({ id });
     if (!rx) throw new NotFoundException(`Prescricao ${id} nao encontrada`);
+    await verifySubResourceTenant(this.repo, 'prescriptions', id, tenantId ?? null);
     return rx;
   }
 
-  async update(id: string, dto: UpdatePrescriptionDto): Promise<Prescription> {
-    const rx = await this.findOne(id);
+  async update(id: string, dto: UpdatePrescriptionDto, tenantId?: string | null): Promise<Prescription> {
+    const rx = await this.findOne(id, tenantId);
     Object.assign(rx, dto);
     return this.repo.save(rx);
   }

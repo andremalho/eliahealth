@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Vaccine, VaccineType, VaccineStatus } from './vaccine.entity.js';
+import { verifySubResourceTenant } from '../common/tenant.js';
 import { PregnanciesService } from '../pregnancies/pregnancies.service.js';
 import { CreateVaccineDto } from './dto/create-vaccine.dto.js';
 import { UpdateVaccineDto } from './dto/update-vaccine.dto.js';
@@ -28,14 +29,15 @@ export class VaccinesService {
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  async findOne(id: string): Promise<Vaccine> {
+  async findOne(id: string, tenantId?: string | null): Promise<Vaccine> {
     const v = await this.repo.findOneBy({ id });
     if (!v) throw new NotFoundException(`Vacina ${id} nao encontrada`);
+    await verifySubResourceTenant(this.repo, 'vaccines', id, tenantId ?? null);
     return v;
   }
 
-  async update(id: string, dto: UpdateVaccineDto): Promise<Vaccine> {
-    const v = await this.findOne(id);
+  async update(id: string, dto: UpdateVaccineDto, tenantId?: string | null): Promise<Vaccine> {
+    const v = await this.findOne(id, tenantId);
     Object.assign(v, dto);
     return this.repo.save(v);
   }

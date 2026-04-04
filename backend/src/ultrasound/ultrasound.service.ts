@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import Anthropic from '@anthropic-ai/sdk';
+import { verifySubResourceTenant } from '../common/tenant.js';
 import { Ultrasound } from './ultrasound.entity.js';
 import { FetalBiometry } from './fetal-biometry.entity.js';
 import { DopplerData } from './doppler-data.entity.js';
@@ -85,17 +86,18 @@ export class UltrasoundService {
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  async findOne(id: string): Promise<Ultrasound> {
+  async findOne(id: string, tenantId?: string | null): Promise<Ultrasound> {
     const us = await this.usRepo.findOne({
       where: { id },
       relations: ['biometries', 'dopplers', 'biophysicalProfiles'],
     });
     if (!us) throw new NotFoundException(`Ultrassom ${id} nao encontrado`);
+    await verifySubResourceTenant(this.usRepo, 'ultrasounds', id, tenantId ?? null);
     return us;
   }
 
-  async update(id: string, dto: UpdateUltrasoundDto): Promise<Ultrasound> {
-    const us = await this.findOne(id);
+  async update(id: string, dto: UpdateUltrasoundDto, tenantId?: string | null): Promise<Ultrasound> {
+    const us = await this.findOne(id, tenantId);
     Object.assign(us, dto);
     return this.usRepo.save(us);
   }

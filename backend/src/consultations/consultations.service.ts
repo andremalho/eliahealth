@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { verifySubResourceTenant } from '../common/tenant.js';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Consultation } from './consultation.entity.js';
@@ -39,16 +40,17 @@ export class ConsultationsService {
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
-  async findOne(id: string): Promise<Consultation> {
+  async findOne(id: string, tenantId?: string | null): Promise<Consultation> {
     const consultation = await this.repo.findOneBy({ id });
     if (!consultation) {
       throw new NotFoundException(`Consulta ${id} nao encontrada`);
     }
+    await verifySubResourceTenant(this.repo, 'consultations', id, tenantId ?? null);
     return consultation;
   }
 
-  async update(id: string, dto: UpdateConsultationDto): Promise<Consultation> {
-    const consultation = await this.findOne(id);
+  async update(id: string, dto: UpdateConsultationDto, tenantId?: string | null): Promise<Consultation> {
+    const consultation = await this.findOne(id, tenantId);
 
     if (dto.date && dto.date !== consultation.date) {
       const pregnancy = await this.pregnanciesService.findOne(consultation.pregnancyId);

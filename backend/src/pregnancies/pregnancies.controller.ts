@@ -66,21 +66,22 @@ export class PregnanciesController {
   }
 
   @Get('pregnancies/:id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.pregnanciesService.findOneWithStats(id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('tenantId') tenantId: string) {
+    return this.pregnanciesService.findOneWithStats(id, tenantId);
   }
 
   @Patch('pregnancies/:id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('tenantId') tenantId: string,
     @Body() dto: UpdatePregnancyDto,
   ) {
-    return this.pregnanciesService.update(id, dto);
+    return this.pregnanciesService.update(id, dto, tenantId);
   }
 
   @Get('pregnancies/:id/gestational-age')
-  async getGestationalAge(@Param('id', ParseUUIDPipe) id: string) {
-    const pregnancy = await this.pregnanciesService.findOne(id);
+  async getGestationalAge(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('tenantId') tenantId: string) {
+    const pregnancy = await this.pregnanciesService.findOne(id, tenantId);
     return this.pregnanciesService.getGestationalAge(pregnancy);
   }
 }

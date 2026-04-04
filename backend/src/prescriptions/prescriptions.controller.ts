@@ -29,11 +29,13 @@ export class PrescriptionsController {
   findActive(@Param('pregnancyId', ParseUUIDPipe) id: string) { return this.service.findActive(id); }
 
   @Get('prescriptions/:id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) { return this.service.findOne(id); }
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('tenantId') tenantId: string) {
+    return this.service.findOne(id, tenantId);
+  }
 
   @Patch('prescriptions/:id')
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdatePrescriptionDto) {
-    return this.service.update(id, dto);
+  update(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('tenantId') tenantId: string, @Body() dto: UpdatePrescriptionDto) {
+    return this.service.update(id, dto, tenantId);
   }
 
   @Post('prescriptions/:id/sign')

@@ -18,6 +18,7 @@ import { UpdateDopplerDto } from './dto/update-doppler.dto.js';
 import { CreateBiophysicalDto } from './dto/create-biophysical.dto.js';
 import { UpdateBiophysicalDto } from './dto/update-biophysical.dto.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
@@ -41,16 +42,17 @@ export class UltrasoundController {
   }
 
   @Get('ultrasounds/:id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.ultrasoundService.findOne(id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('tenantId') tenantId: string) {
+    return this.ultrasoundService.findOne(id, tenantId);
   }
 
   @Patch('ultrasounds/:id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('tenantId') tenantId: string,
     @Body() dto: UpdateUltrasoundDto,
   ) {
-    return this.ultrasoundService.update(id, dto);
+    return this.ultrasoundService.update(id, dto, tenantId);
   }
 
   @Post('ultrasounds/:id/biometry')

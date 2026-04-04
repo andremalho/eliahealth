@@ -14,6 +14,7 @@ import { CreateLabResultDto } from './dto/create-lab-result.dto.js';
 import { UpdateLabResultDto } from './dto/update-lab-result.dto.js';
 import { CreateLabDocumentDto } from './dto/create-lab-document.dto.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
@@ -55,13 +56,14 @@ export class LabResultsController {
   }
 
   @Get('lab-results/:id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.labResultsService.findOne(id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('tenantId') tenantId: string) {
+    return this.labResultsService.findOne(id, tenantId);
   }
 
   @Patch('lab-results/:id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('tenantId') tenantId: string,
     @Body() dto: UpdateLabResultDto,
   ) {
     return this.labResultsService.update(id, dto);

@@ -39,8 +39,13 @@ export class PatientsService {
     }
   }
 
-  async findAll(): Promise<Patient[]> {
-    return this.repo.find({ order: { createdAt: 'DESC' } });
+  async findAll(page = 1, limit = 50) {
+    const [data, total] = await this.repo.findAndCount({
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findOne(id: string): Promise<Patient> {
@@ -51,16 +56,19 @@ export class PatientsService {
     return patient;
   }
 
-  async search(query: string): Promise<Patient[]> {
+  async search(query: string, page = 1, limit = 50) {
     const normalized = query.replace(/[.\-]/g, '');
 
-    return this.repo.find({
+    const [data, total] = await this.repo.findAndCount({
       where: [
         { fullName: ILike(`%${query}%`) },
         { cpf: ILike(`%${normalized}%`) },
       ],
       order: { fullName: 'ASC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async getPortalAccessStats() {

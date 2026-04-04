@@ -65,54 +65,39 @@ export class OnboardingService {
     const steps = await this.repo.findBy({ userId });
     if (steps.length === 0) return;
 
-    for (const step of steps) {
-      if (step.isCompleted) continue;
+    const pendingSteps = steps.filter((s) => !s.isCompleted);
+    if (pendingSteps.length === 0) return;
 
-      let done = false;
-      switch (step.step) {
-        case OnboardingStepName.ADD_PATIENT: {
-          const count = await this.patientRepo.count();
-          done = count > 0;
-          break;
-        }
-        case OnboardingStepName.ADD_CONSULTATION: {
-          const count = await this.consultationRepo.count();
-          done = count > 0;
-          break;
-        }
-        case OnboardingStepName.PATIENT_PORTAL_ACCESS: {
-          const count = await this.patientRepo
-            .createQueryBuilder('p')
-            .where('p.email IS NOT NULL')
-            .andWhere('p.lgpd_consent_at IS NOT NULL')
-            .getCount();
-          done = count > 0;
-          break;
-        }
-        case OnboardingStepName.ADD_LAB_EXAM: {
-          const exists = await this.checkTableHasRows('lab_results');
-          done = exists;
-          break;
-        }
-        case OnboardingStepName.ADD_ULTRASOUND: {
-          const exists = await this.checkTableHasRows('ultrasounds');
-          done = exists;
-          break;
-        }
-      }
+    // Single query to check all conditions at once
+    const [checks] = await this.repo.query(`
+      SELECT
+        (SELECT COUNT(*)::int > 0 FROM patients) AS has_patient,
+        (SELECT COUNT(*)::int > 0 FROM consultations) AS has_consultation,
+        (SELECT COUNT(*)::int > 0 FROM patients WHERE email IS NOT NULL AND lgpd_consent_at IS NOT NULL) AS has_portal_access,
+        (SELECT COUNT(*)::int > 0 FROM lab_results) AS has_lab_exam,
+        (SELECT COUNT(*)::int > 0 FROM ultrasounds) AS has_ultrasound
+    `);
 
-      if (done) {
+    const completionMap: Record<string, boolean> = {
+      [OnboardingStepName.ADD_PATIENT]: checks.has_patient,
+      [OnboardingStepName.ADD_CONSULTATION]: checks.has_consultation,
+      [OnboardingStepName.PATIENT_PORTAL_ACCESS]: checks.has_portal_access,
+      [OnboardingStepName.ADD_LAB_EXAM]: checks.has_lab_exam,
+      [OnboardingStepName.ADD_ULTRASOUND]: checks.has_ultrasound,
+    };
+
+    const toUpdate: OnboardingStep[] = [];
+    const now = new Date();
+    for (const step of pendingSteps) {
+      if (completionMap[step.step]) {
         step.isCompleted = true;
-        step.completedAt = new Date();
-        await this.repo.save(step);
+        step.completedAt = now;
+        toUpdate.push(step);
       }
     }
-  }
 
-  private async checkTableHasRows(table: string): Promise<boolean> {
-    const result = await this.repo.query(
-      `SELECT EXISTS (SELECT 1 FROM "${table}" LIMIT 1) AS has_rows`,
-    );
-    return result[0]?.has_rows === true;
+    if (toUpdate.length > 0) {
+      await this.repo.save(toUpdate);
+    }
   }
 }

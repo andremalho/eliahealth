@@ -32,28 +32,36 @@ export class DashboardStatsService {
   }
 
   async getOverview() {
-    const total = await this.repo.count();
+    // Single query for all counts (replaces 8 separate queries)
+    const [stats] = await this.repo.query(`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE preeclampsia = true)::int AS preeclampsia,
+        COUNT(*) FILTER (WHERE gestational_diabetes = true)::int AS gestational_diabetes,
+        COUNT(*) FILTER (WHERE hellp_syndrome = true)::int AS hellp_syndrome,
+        COUNT(*) FILTER (WHERE fgr = true)::int AS fgr,
+        COUNT(*) FILTER (WHERE preterm_birth = true)::int AS preterm_birth,
+        COUNT(*) FILTER (WHERE hypertension = true)::int AS hypertension,
+        COUNT(*) FILTER (WHERE delivery_type = 'cesarean')::int AS cesarean_count,
+        ROUND(AVG(ga_at_delivery))::int AS avg_ga
+      FROM research_records
+    `);
+
+    const total: number = stats?.total ?? 0;
     if (total === 0) return { totalRecords: 0 };
 
     const conditions = ['preeclampsia', 'gestational_diabetes', 'hellp_syndrome', 'fgr', 'preterm_birth', 'hypertension'];
     const rates: Record<string, { count: number; percent: number }> = {};
-
     for (const c of conditions) {
-      const count = await this.repo.count({ where: { [c]: true } as any });
+      const count: number = stats[c] ?? 0;
       rates[c] = { count, percent: Math.round((count / total) * 100) };
     }
-
-    const cesareanCount = await this.repo.count({ where: { deliveryType: 'cesarean' } });
-    const avgGa = await this.repo.createQueryBuilder('r')
-      .select('AVG(r.ga_at_delivery)', 'avg')
-      .where('r.ga_at_delivery IS NOT NULL')
-      .getRawOne();
 
     return {
       totalRecords: total,
       conditionRates: rates,
-      cesareanRate: Math.round((cesareanCount / total) * 100),
-      averageGestationalAgeDays: avgGa?.avg ? Math.round(Number(avgGa.avg)) : null,
+      cesareanRate: Math.round(((stats.cesarean_count ?? 0) / total) * 100),
+      averageGestationalAgeDays: stats.avg_ga ?? null,
     };
   }
 

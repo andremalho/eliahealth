@@ -14,8 +14,14 @@ export class FilesService {
     return this.repo.save(file);
   }
 
-  async findAll(pregnancyId: string): Promise<PregnancyFile[]> {
-    return this.repo.find({ where: { pregnancyId }, order: { createdAt: 'DESC' } });
+  async findAll(pregnancyId: string, page = 1, limit = 50) {
+    const [data, total] = await this.repo.findAndCount({
+      where: { pregnancyId },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async update(id: string, dto: UpdateFileDto): Promise<PregnancyFile> {

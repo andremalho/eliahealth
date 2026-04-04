@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, ParseUUIDPipe } from '@nestjs/common';
 import { OtherExamsService } from './other-exams.service.js';
 import { CreateOtherExamDto } from './dto/create-other-exam.dto.js';
 import { UpdateOtherExamDto } from './dto/update-other-exam.dto.js';
@@ -19,8 +19,10 @@ export class OtherExamsController {
   }
 
   @Get('pregnancies/:pregnancyId/other-exams')
-  findAll(@Param('pregnancyId', ParseUUIDPipe) id: string) {
-    return this.service.findAll(id);
+  findAll(@Param('pregnancyId', ParseUUIDPipe) id: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    const p = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const l = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
+    return this.service.findAll(id, p, l);
   }
 
   @Patch('other-exams/:id')

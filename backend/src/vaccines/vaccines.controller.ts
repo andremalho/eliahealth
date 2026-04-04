@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Body, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Query, Body, ParseUUIDPipe } from '@nestjs/common';
 import { VaccinesService } from './vaccines.service.js';
 import { CreateVaccineDto } from './dto/create-vaccine.dto.js';
 import { UpdateVaccineDto } from './dto/update-vaccine.dto.js';
@@ -16,8 +16,10 @@ export class VaccinesController {
   }
 
   @Get('pregnancies/:pregnancyId/vaccines')
-  findAll(@Param('pregnancyId', ParseUUIDPipe) id: string) {
-    return this.service.findAll(id);
+  findAll(@Param('pregnancyId', ParseUUIDPipe) id: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    const p = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const l = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
+    return this.service.findAll(id, p, l);
   }
 
   @Get('pregnancies/:pregnancyId/vaccines/pending')

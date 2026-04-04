@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, ParseUUIDPipe } from '@nestjs/common';
 import { NotesService } from './notes.service.js';
 import { CreateNoteDto } from './dto/create-note.dto.js';
 import { UpdateNoteDto } from './dto/update-note.dto.js';
@@ -19,8 +19,10 @@ export class NotesController {
   ) { return this.service.create(pregnancyId, authorId, dto); }
 
   @Get('pregnancies/:pregnancyId/notes')
-  findAll(@Param('pregnancyId', ParseUUIDPipe) pregnancyId: string) {
-    return this.service.findAll(pregnancyId);
+  findAll(@Param('pregnancyId', ParseUUIDPipe) pregnancyId: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    const p = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const l = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
+    return this.service.findAll(pregnancyId, p, l);
   }
 
   @Patch('notes/:id')

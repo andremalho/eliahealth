@@ -25,8 +25,10 @@ export class PatientsController {
   }
 
   @Get()
-  findAll() {
-    return this.patientsService.findAll();
+  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+    const p = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const l = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
+    return this.patientsService.findAll(p, l);
   }
 
   @Get('portal-access-stats')
@@ -35,8 +37,14 @@ export class PatientsController {
   }
 
   @Get('search')
-  search(@Query('q') query: string) {
-    return this.patientsService.search(query ?? '');
+  search(
+    @Query('q') query: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const p = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const l = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
+    return this.patientsService.search(query ?? '', p, l);
   }
 
   @Get(':id')

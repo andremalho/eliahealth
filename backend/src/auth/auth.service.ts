@@ -85,8 +85,8 @@ export class AuthService {
   // ── Login paciente ──
 
   async patientLogin(dto: PatientLoginDto) {
-    const patients = await this.patientsService.search(dto.email);
-    const patient = patients.find(
+    const result = await this.patientsService.search(dto.email);
+    const patient = result.data.find(
       (p) => p.email?.toLowerCase() === dto.email.toLowerCase(),
     );
 

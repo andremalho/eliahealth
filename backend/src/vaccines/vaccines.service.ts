@@ -18,8 +18,14 @@ export class VaccinesService {
     return this.repo.save(vaccine);
   }
 
-  async findAll(pregnancyId: string): Promise<Vaccine[]> {
-    return this.repo.find({ where: { pregnancyId }, order: { scheduledDate: 'ASC' } });
+  async findAll(pregnancyId: string, page = 1, limit = 50) {
+    const [data, total] = await this.repo.findAndCount({
+      where: { pregnancyId },
+      order: { scheduledDate: 'ASC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findOne(id: string): Promise<Vaccine> {
@@ -48,7 +54,7 @@ export class VaccinesService {
   async getVaccineCard(pregnancyId: string) {
     const pregnancy = await this.pregnanciesService.findOne(pregnancyId);
     const ga = this.pregnanciesService.getGestationalAge(pregnancy);
-    const vaccines = await this.findAll(pregnancyId);
+    const vaccines = await this.repo.find({ where: { pregnancyId }, order: { scheduledDate: 'ASC' } });
 
     // Group by vaccine type
     const grouped = new Map<string, typeof vaccines>();

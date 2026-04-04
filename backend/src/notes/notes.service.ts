@@ -14,8 +14,14 @@ export class NotesService {
     return this.repo.save(note);
   }
 
-  async findAll(pregnancyId: string): Promise<Note[]> {
-    return this.repo.find({ where: { pregnancyId }, order: { isPinned: 'DESC', createdAt: 'DESC' } });
+  async findAll(pregnancyId: string, page = 1, limit = 50) {
+    const [data, total] = await this.repo.findAndCount({
+      where: { pregnancyId },
+      order: { isPinned: 'DESC', createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findOne(id: string): Promise<Note> {

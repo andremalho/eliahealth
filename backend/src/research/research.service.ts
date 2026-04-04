@@ -102,15 +102,19 @@ export class ResearchService {
   // ── Consent ──
 
   async registerConsent(patientId: string): Promise<{ message: string; anonymized: number }> {
-    const pregnancies = await this.pregnancyRepo.find({ where: { patientId } });
-    let anonymized = 0;
-    for (const p of pregnancies) {
-      const existing = await this.repo.findOneBy({ pregnancyId: p.id });
-      if (!existing) {
-        await this.anonymizeAndSave(p.id);
-        anonymized++;
-      }
-    }
+    // Single query: find pregnancies without research records (avoids N+1)
+    const unprocessed: { id: string }[] = await this.pregnancyRepo.query(
+      `SELECT p.id FROM pregnancies p
+       WHERE p.patient_id = $1
+         AND NOT EXISTS (SELECT 1 FROM research_records r WHERE r.pregnancy_id = p.id)`,
+      [patientId],
+    );
+
+    const results = await Promise.allSettled(
+      unprocessed.map((p) => this.anonymizeAndSave(p.id)),
+    );
+    const anonymized = results.filter((r) => r.status === 'fulfilled').length;
+
     return { message: `Consentimento registrado. ${anonymized} gestacoes anonimizadas.`, anonymized };
   }
 

@@ -39,8 +39,11 @@ export class PatientsService {
     }
   }
 
-  async findAll(page = 1, limit = 50) {
+  async findAll(tenantId: string | null, page = 1, limit = 50) {
+    const where: Record<string, unknown> = {};
+    if (tenantId) where.tenantId = tenantId;
     const [data, total] = await this.repo.findAndCount({
+      where,
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -56,14 +59,16 @@ export class PatientsService {
     return patient;
   }
 
-  async search(query: string, page = 1, limit = 50) {
+  async search(query: string, tenantId: string | null, page = 1, limit = 50) {
     const normalized = query.replace(/[.\-]/g, '');
 
+    const where: Record<string, unknown>[] = [
+      { fullName: ILike(`%${query}%`), ...(tenantId ? { tenantId } : {}) },
+      { cpf: ILike(`%${normalized}%`), ...(tenantId ? { tenantId } : {}) },
+    ];
+
     const [data, total] = await this.repo.findAndCount({
-      where: [
-        { fullName: ILike(`%${query}%`) },
-        { cpf: ILike(`%${normalized}%`) },
-      ],
+      where,
       order: { fullName: 'ASC' },
       skip: (page - 1) * limit,
       take: limit,

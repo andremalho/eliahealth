@@ -13,12 +13,15 @@ export class AnnotationsService {
     return this.repo.save(annotation);
   }
 
-  async findAll(pregnancyId: string): Promise<Annotation[]> {
-    return this.repo.find({
+  async findAll(pregnancyId: string, page = 1, limit = 50) {
+    const [data, total] = await this.repo.findAndCount({
       where: { pregnancyId },
       relations: ['author'],
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async remove(id: string): Promise<void> {

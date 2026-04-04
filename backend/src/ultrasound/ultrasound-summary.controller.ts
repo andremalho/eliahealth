@@ -4,6 +4,7 @@ import {
   Post,
   Patch,
   Param,
+  Query,
   Body,
   ParseUUIDPipe,
 } from '@nestjs/common';
@@ -27,8 +28,10 @@ export class UltrasoundSummaryController {
   }
 
   @Get('pregnancies/:pregnancyId/ultrasound-summaries')
-  findAll(@Param('pregnancyId', ParseUUIDPipe) pregnancyId: string) {
-    return this.service.findAllByPregnancy(pregnancyId);
+  findAll(@Param('pregnancyId', ParseUUIDPipe) pregnancyId: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    const p = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const l = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
+    return this.service.findAllByPregnancy(pregnancyId, p, l);
   }
 
   @Get('ultrasound-summaries/:id')

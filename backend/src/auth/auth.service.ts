@@ -85,7 +85,7 @@ export class AuthService {
   // ── Login paciente ──
 
   async patientLogin(dto: PatientLoginDto) {
-    const result = await this.patientsService.search(dto.email);
+    const result = await this.patientsService.search(dto.email, null);
     const patient = result.data.find(
       (p) => p.email?.toLowerCase() === dto.email.toLowerCase(),
     );
@@ -214,6 +214,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       role: user.role,
+      tenantId: user.tenantId,
     };
 
     const accessToken = this.jwtService.sign(payload, {

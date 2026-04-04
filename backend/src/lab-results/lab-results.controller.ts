@@ -46,8 +46,12 @@ export class LabResultsController {
     @Param('pregnancyId', ParseUUIDPipe) pregnancyId: string,
     @Query('category') category?: ExamCategory,
     @Query('status') status?: LabResultStatus,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.labResultsService.findAllByPregnancy(pregnancyId, { category, status });
+    const p = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const l = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
+    return this.labResultsService.findAllByPregnancy(pregnancyId, { category, status, page: p, limit: l });
   }
 
   @Get('lab-results/:id')

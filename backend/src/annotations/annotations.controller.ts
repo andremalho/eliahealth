@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, Body, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Query, Body, ParseUUIDPipe } from '@nestjs/common';
 import { AnnotationsService } from './annotations.service.js';
 import { CreateAnnotationDto } from './dto/create-annotation.dto.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
@@ -20,8 +20,10 @@ export class AnnotationsController {
   }
 
   @Get('pregnancies/:pregnancyId/annotations')
-  findAll(@Param('pregnancyId', ParseUUIDPipe) pregnancyId: string) {
-    return this.service.findAll(pregnancyId);
+  findAll(@Param('pregnancyId', ParseUUIDPipe) pregnancyId: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    const p = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const l = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
+    return this.service.findAll(pregnancyId, p, l);
   }
 
   @Delete('annotations/:id')

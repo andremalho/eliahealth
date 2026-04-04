@@ -47,8 +47,8 @@ export class CopilotService {
   async analyzePregnancy(pregnancyId: string) {
     const pregnancy = await this.pregnanciesService.findOne(pregnancyId);
     const ga = this.pregnanciesService.getGestationalAge(pregnancy);
-    const consultations = await this.consultationsService.findAllByPregnancy(pregnancyId);
-    const lastConsultations = consultations.slice(-5);
+    const consultationsPage = await this.consultationsService.findAllByPregnancy(pregnancyId, 1, 500);
+    const lastConsultations = consultationsPage.data.slice(-5);
     const labAlerts = await this.labResultsService.findAlerts(pregnancyId);
     const examCheck = await this.clinicalProtocolsService.checkExamSchedule(pregnancyId);
 
@@ -175,8 +175,8 @@ export class CopilotService {
 
   async detectPatterns(consultationId: string) {
     const consultation = await this.consultationsService.findOne(consultationId);
-    const allConsultations = await this.consultationsService.findAllByPregnancy(consultation.pregnancyId);
-    const last3 = allConsultations.slice(-3);
+    const allConsultationsPage = await this.consultationsService.findAllByPregnancy(consultation.pregnancyId, 1, 500);
+    const last3 = allConsultationsPage.data.slice(-3);
     const savedAlerts: CopilotAlert[] = [];
     const gaWeeks = Math.floor(consultation.gestationalAgeDays / 7);
 

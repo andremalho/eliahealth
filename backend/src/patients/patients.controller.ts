@@ -13,6 +13,7 @@ import { CreatePatientDto } from './dto/create-patient.dto.js';
 import { UpdatePatientDto } from './dto/update-patient.dto.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../auth/auth.enums.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 
 @Controller('patients')
 @Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
@@ -25,10 +26,14 @@ export class PatientsController {
   }
 
   @Get()
-  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+  findAll(
+    @CurrentUser('tenantId') tenantId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
     const p = Math.max(1, parseInt(page ?? '1', 10) || 1);
     const l = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
-    return this.patientsService.findAll(p, l);
+    return this.patientsService.findAll(tenantId, p, l);
   }
 
   @Get('portal-access-stats')
@@ -38,13 +43,14 @@ export class PatientsController {
 
   @Get('search')
   search(
+    @CurrentUser('tenantId') tenantId: string,
     @Query('q') query: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
     const p = Math.max(1, parseInt(page ?? '1', 10) || 1);
     const l = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
-    return this.patientsService.search(query ?? '', p, l);
+    return this.patientsService.search(query ?? '', tenantId, p, l);
   }
 
   @Get(':id')

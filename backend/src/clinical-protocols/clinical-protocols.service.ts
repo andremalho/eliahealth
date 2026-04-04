@@ -98,7 +98,8 @@ export class ClinicalProtocolsService {
     const ga = this.pregnanciesService.getGestationalAge(pregnancy);
 
     const schedules = await this.scheduleRepo.find({ where: { isActive: true } });
-    const labResults = await this.labResultsService.findAllByPregnancy(pregnancyId, {});
+    const labResultsPage = await this.labResultsService.findAllByPregnancy(pregnancyId, { limit: 500 });
+    const labResults = labResultsPage.data;
 
     const completed: ExamCheckItem[] = [];
     const pending: ExamCheckItem[] = [];

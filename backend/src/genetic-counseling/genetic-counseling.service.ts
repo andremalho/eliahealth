@@ -52,11 +52,14 @@ export class GeneticCounselingService {
     return this.repo.save(record);
   }
 
-  async findAllByPregnancy(pregnancyId: string): Promise<GeneticCounseling[]> {
-    return this.repo.find({
+  async findAllByPregnancy(pregnancyId: string, page = 1, limit = 50) {
+    const [data, total] = await this.repo.findAndCount({
       where: { pregnancyId },
       order: { counselingDate: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findOne(id: string): Promise<GeneticCounseling> {

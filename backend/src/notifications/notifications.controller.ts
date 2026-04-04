@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, ParseUUIDPipe } from '@nestjs/common';
 import { NotificationsService } from './notifications.service.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../auth/auth.enums.js';
@@ -19,7 +19,9 @@ export class NotificationsController {
   }
 
   @Get('pregnancies/:pregnancyId/notifications')
-  findAll(@Param('pregnancyId', ParseUUIDPipe) id: string) {
-    return this.service.findAll(id);
+  findAll(@Param('pregnancyId', ParseUUIDPipe) id: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    const p = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const l = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
+    return this.service.findAll(id, p, l);
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, ParseUUIDPipe } from '@nestjs/common';
 import { EmergencyContactsService } from './emergency-contacts.service.js';
 import { CreateEmergencyContactDto } from './dto/create-emergency-contact.dto.js';
 import { UpdateEmergencyContactDto } from './dto/update-emergency-contact.dto.js';
@@ -16,8 +16,10 @@ export class EmergencyContactsController {
   }
 
   @Get('patients/:patientId/emergency-contacts')
-  findAll(@Param('patientId', ParseUUIDPipe) patientId: string) {
-    return this.service.findAll(patientId);
+  findAll(@Param('patientId', ParseUUIDPipe) patientId: string, @Query('page') page?: string, @Query('limit') limit?: string) {
+    const p = Math.max(1, parseInt(page ?? '1', 10) || 1);
+    const l = Math.min(100, Math.max(1, parseInt(limit ?? '50', 10) || 50));
+    return this.service.findAll(patientId, p, l);
   }
 
   @Patch('emergency-contacts/:id')

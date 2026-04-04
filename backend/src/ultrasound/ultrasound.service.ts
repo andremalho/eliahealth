@@ -75,11 +75,14 @@ export class UltrasoundService {
     return this.usRepo.save(us);
   }
 
-  async findAllByPregnancy(pregnancyId: string): Promise<Ultrasound[]> {
-    return this.usRepo.find({
+  async findAllByPregnancy(pregnancyId: string, page = 1, limit = 50) {
+    const [data, total] = await this.usRepo.findAndCount({
       where: { pregnancyId },
       order: { examDate: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findOne(id: string): Promise<Ultrasound> {

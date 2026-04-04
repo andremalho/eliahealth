@@ -31,16 +31,21 @@ export class LabResultsService {
 
   async findAllByPregnancy(
     pregnancyId: string,
-    filters: { category?: ExamCategory; status?: LabResultStatus },
-  ): Promise<LabResult[]> {
+    filters: { category?: ExamCategory; status?: LabResultStatus; page?: number; limit?: number },
+  ) {
     const where: Record<string, unknown> = { pregnancyId };
     if (filters.category) where.examCategory = filters.category;
     if (filters.status) where.status = filters.status;
 
-    return this.resultRepo.find({
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 50;
+    const [data, total] = await this.resultRepo.findAndCount({
       where,
       order: { requestedAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findAlerts(pregnancyId: string): Promise<LabResult[]> {

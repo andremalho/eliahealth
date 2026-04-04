@@ -75,10 +75,13 @@ export class NotificationsService {
     return { whatsappUrl, notificationId: notification.id };
   }
 
-  async findAll(pregnancyId: string): Promise<Notification[]> {
-    return this.repo.find({
+  async findAll(pregnancyId: string, page = 1, limit = 50) {
+    const [data, total] = await this.repo.findAndCount({
       where: { pregnancyId },
       order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 }

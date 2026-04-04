@@ -14,8 +14,14 @@ export class EmergencyContactsService {
     return this.repo.save(contact);
   }
 
-  async findAll(patientId: string): Promise<EmergencyContact[]> {
-    return this.repo.find({ where: { patientId }, order: { isMainContact: 'DESC', createdAt: 'ASC' } });
+  async findAll(patientId: string, page = 1, limit = 50) {
+    const [data, total] = await this.repo.findAndCount({
+      where: { patientId },
+      order: { isMainContact: 'DESC', createdAt: 'ASC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findOne(id: string): Promise<EmergencyContact> {

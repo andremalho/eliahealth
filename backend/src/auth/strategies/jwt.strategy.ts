@@ -7,6 +7,7 @@ export interface AuthTokenPayload {
   sub: string;
   email: string;
   role: string;
+  tenantId?: string;
   patientId?: string;
 }
 
@@ -25,6 +26,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       userId: payload.sub,
       email: payload.email,
       role: payload.role,
+      tenantId: payload.tenantId ?? null,
       patientId: payload.patientId,
     };
   }

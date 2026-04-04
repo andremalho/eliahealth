@@ -7,10 +7,9 @@ interface LogoProps {
 }
 
 export default function Logo({ size = 'md', className = '' }: LogoProps) {
-  const sizeMap = { sm: 'text-2xl', md: 'text-4xl', lg: 'text-5xl' };
-  const circleSize = { sm: 'w-20 h-20', md: 'w-28 h-28', lg: 'w-36 h-36' };
+  const sizeMap = { sm: 'text-3xl', md: 'text-[48px]', lg: 'text-[56px]' };
   const dotSize = { sm: 'w-1.5 h-1.5', md: 'w-2 h-2', lg: 'w-2.5 h-2.5' };
-  const dotOffset = { sm: '-top-0.5', md: '-top-1', lg: '-top-1' };
+  const dotOffset = { sm: '-top-0.5', md: '-top-1', lg: '-top-1.5' };
 
   if (isWhiteLabel) {
     return (
@@ -21,20 +20,16 @@ export default function Logo({ size = 'md', className = '' }: LogoProps) {
   }
 
   return (
-    <div className={`inline-flex items-center justify-center ${className}`}>
-      <div className={`${circleSize[size]} rounded-full border-[3px] border-lilac flex items-center justify-center`}>
-        <span className={`font-bold text-navy ${sizeMap[size]} tracking-tight`}>
-          el
-          <span className="relative inline-block">
-            <span className="invisible">i</span>
-            <span className="absolute inset-0 flex flex-col items-center justify-end">
-              <span className={`${dotSize[size]} rounded-full bg-lilac ${dotOffset[size]} absolute`} />
-              <span className="text-navy">ı</span>
-            </span>
-          </span>
-          ahealth
+    <span className={`font-bold text-navy ${sizeMap[size]} tracking-tight leading-none whitespace-nowrap ${className}`}>
+      el
+      <span className="relative inline-block">
+        <span className="invisible">i</span>
+        <span className="absolute inset-0 flex flex-col items-center justify-end">
+          <span className={`${dotSize[size]} rounded-full bg-lilac ${dotOffset[size]} absolute`} />
+          <span className="text-navy">ı</span>
         </span>
-      </div>
-    </div>
+      </span>
+      ahealth
+    </span>
   );
 }

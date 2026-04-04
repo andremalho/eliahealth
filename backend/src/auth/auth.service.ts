@@ -7,7 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './user.entity.js';
 import { UserRole } from './auth.enums.js';
@@ -157,9 +157,9 @@ export class AuthService {
   // ── Logout ──
 
   async logout(userId: string) {
-    // Revoke all refresh tokens for this user
+    // Revoke all non-revoked refresh tokens for this user
     await this.refreshTokenRepo.update(
-      { userId, revokedAt: undefined as any },
+      { userId, revokedAt: IsNull() },
       { revokedAt: new Date() },
     );
     await this.userRepo.update(userId, { refreshTokenHash: null });

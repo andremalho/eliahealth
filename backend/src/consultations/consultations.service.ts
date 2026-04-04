@@ -91,7 +91,6 @@ export class ConsultationsService {
     // Edema alerts
     if (consultation.edemaGrade) {
       const severeEdema: string[] = [
-        EdemaGrade.PLUS_3, EdemaGrade.PLUS_4,
         EdemaGrade.THREE_PLUS, EdemaGrade.FOUR_PLUS,
       ];
       if (severeEdema.includes(consultation.edemaGrade)) {

@@ -233,11 +233,11 @@ export class ExportService {
 
     const accessToken = randomBytes(32).toString('hex');
 
-    // Create a pregnancy_share record with guest role
+    // Store guest share with token — no userId needed for external guests
     await this.pregnancyRepo.query(
-      `INSERT INTO pregnancy_shares (pregnancy_id, shared_by, shared_with, permission, expires_at)
-       VALUES ($1, $2, $2, 'view', $3)`,
-      [pregnancyId, sharedBy, guest.expiresAt],
+      `INSERT INTO guest_shares (pregnancy_id, shared_by, guest_name, guest_email, access_token, permission, expires_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [pregnancyId, sharedBy, guest.name, guest.email, accessToken, guest.accessLevel, guest.expiresAt],
     );
 
     return {

@@ -54,7 +54,6 @@ const CLINICAL_OPTIONS = {
     'Nao avaliado',
   ],
   fetalPresentations: ['cephalic', 'pelvic', 'transverse', 'not_evaluated'],
-  edemaGrades: ['Ausente', '1+', '2+', '3+', '4+'],
   edemaOptions: [
     { value: 'absent', label: 'Ausente' },
     { value: '1plus', label: '+/4+ MMII' },

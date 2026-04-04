@@ -37,11 +37,8 @@ export class PrescriptionsController {
     return this.service.sign(id, body.provider, body.signatureToken);
   }
 
-  @Get('prescriptions/:id/memed-token')
-  memedToken(
-    @Param('id', ParseUUIDPipe) _id: string,
-    @CurrentUser('userId') userId: string,
-  ) {
+  @Get('prescriptions/memed-token')
+  memedToken(@CurrentUser('userId') userId: string) {
     return this.service.generateMemedToken(userId);
   }
 }

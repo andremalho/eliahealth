@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 import { ResearchRecord } from './research-record.entity.js';
 import { AgeGroup, CEP_REGION_MAP } from './research.enums.js';
 import { Pregnancy } from '../pregnancies/pregnancy.entity.js';
@@ -78,6 +78,23 @@ export class ResearchService {
       consentForResearch: true,
       dataVersion: '1.0',
     });
+
+    // Compute integrity hash over anonymized data (tamper detection)
+    const hashPayload = JSON.stringify({
+      researchId: record.researchId,
+      pregnancyId: record.pregnancyId,
+      maternalAge: record.maternalAge,
+      ageGroup: record.ageGroup,
+      zipCodePartial: record.zipCodePartial,
+      bloodType: record.bloodType,
+      gravida: record.gravida,
+      para: record.para,
+      plurality: record.plurality,
+      gestationalDiabetes: record.gestationalDiabetes,
+      hypertension: record.hypertension,
+      preeclampsia: record.preeclampsia,
+    });
+    record.dataHash = createHash('sha256').update(hashPayload).digest('hex');
 
     return this.repo.save(record);
   }

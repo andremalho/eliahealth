@@ -101,7 +101,7 @@ export class Consultation {
   @Column({ type: 'enum', enum: Membranes, nullable: true })
   membranes: Membranes | null;
 
-  @Column({ name: 'fetal_presentation', type: 'enum', enum: FetalPresentation, nullable: true })
+  @Column({ name: 'fetal_presentation', type: 'enum', enum: FetalPresentation, default: FetalPresentation.NOT_PERFORMED, nullable: true })
   fetalPresentation: FetalPresentation | null;
 
   @Column({ name: 'estimated_fetal_weight', type: 'varchar', nullable: true })

@@ -53,7 +53,14 @@ const CLINICAL_OPTIONS = {
     'Ausentes',
     'Nao avaliado',
   ],
-  fetalPresentations: ['cephalic', 'pelvic', 'transverse', 'not_evaluated'],
+  fetalPresentations: [
+    { value: 'nr', label: 'Nao realizado (NR)' },
+    { value: 'cephalic', label: 'Cefalica' },
+    { value: 'pelvic', label: 'Pelvica' },
+    { value: 'transverse', label: 'Transversa' },
+    { value: 'oblique', label: 'Obliqua' },
+    { value: 'not_evaluated', label: 'Nao avaliado' },
+  ],
   edemaOptions: [
     { value: 'absent', label: 'Ausente' },
     { value: '1plus', label: '+/4+ MMII' },

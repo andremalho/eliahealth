@@ -7,9 +7,11 @@ export enum EdemaGrade {
 }
 
 export enum FetalPresentation {
+  NOT_PERFORMED = 'nr',
   CEPHALIC = 'cephalic',
   PELVIC = 'pelvic',
   TRANSVERSE = 'transverse',
+  OBLIQUE = 'oblique',
   NOT_EVALUATED = 'not_evaluated',
 }
 

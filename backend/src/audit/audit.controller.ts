@@ -14,6 +14,9 @@ export class AuditController {
     @Query('patientId') patientId?: string,
     @Query('userId') userId?: string,
     @Query('resource') resource?: string,
+    @Query('action') action?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
     @Query('limit') limit?: string,
     @Query('offset') offset?: string,
   ) {
@@ -21,6 +24,9 @@ export class AuditController {
       patientId,
       userId,
       resource,
+      action,
+      startDate,
+      endDate,
       limit: limit ? parseInt(limit, 10) : undefined,
       offset: offset ? parseInt(offset, 10) : undefined,
     });

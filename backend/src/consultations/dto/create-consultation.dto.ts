@@ -21,36 +21,38 @@ export class CreateConsultationDto {
 
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
-  @Min(0)
+  @Min(20)
+  @Max(300)
   weightKg?: number;
 
   @IsOptional()
   @IsInt()
-  @Min(0)
-  @Max(300)
+  @Min(50)
+  @Max(250)
   bpSystolic?: number;
 
   @IsOptional()
   @IsInt()
-  @Min(0)
-  @Max(300)
+  @Min(30)
+  @Max(150)
   bpDiastolic?: number;
 
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 1 })
-  @Min(0)
+  @Min(5)
+  @Max(50)
   fundalHeightCm?: number;
 
   @IsOptional()
   @IsInt()
-  @Min(0)
-  @Max(300)
+  @Min(60)
+  @Max(220)
   fetalHeartRate?: number;
 
   @IsOptional()
   @IsInt()
-  @Min(0)
-  @Max(300)
+  @Min(60)
+  @Max(220)
   fhrValue?: number;
 
   @IsOptional()

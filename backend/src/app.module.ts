@@ -50,6 +50,10 @@ import { LabIntegrationsModule } from './lab-integrations/lab-integrations.modul
 import { WhatsAppModule } from './shared/whatsapp/whatsapp.module.js';
 import { FhirModule } from './shared/fhir/fhir.module.js';
 import { RndsModule } from './shared/rnds/rnds.module.js';
+import { Hl7Module } from './shared/hl7/hl7.module.js';
+import { CdaModule } from './shared/cda/cda.module.js';
+import { LoincModule } from './shared/loinc/loinc.module.js';
+import { CnesModule } from './shared/cnes/cnes.module.js';
 
 @Module({
   imports: [
@@ -115,6 +119,10 @@ import { RndsModule } from './shared/rnds/rnds.module.js';
     WhatsAppModule,
     FhirModule,
     RndsModule,
+    Hl7Module,
+    CdaModule,
+    LoincModule,
+    CnesModule,
   ],
   controllers: [AppController],
   providers: [

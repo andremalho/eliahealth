@@ -33,6 +33,12 @@ export class FixReviewIssues1711900031000
     `);
 
     // ── Migrate old edema values to new ones ──
+    // PostgreSQL requires a transaction boundary after ADD VALUE on enums
+    // (the new values were added in migration 1711900026000)
+    // Commit current transaction so new enum values are visible, then restart
+    await queryRunner.query(`COMMIT`);
+    await queryRunner.query(`BEGIN`);
+
     await queryRunner.query(`
       UPDATE "consultations" SET "edema_grade" = 'absent' WHERE "edema_grade" = 'none'
     `);

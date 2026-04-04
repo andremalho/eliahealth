@@ -6,7 +6,14 @@
       "Bash(npm install:*)",
       "Bash(npm run:*)",
       "Bash(npx ts-node:*)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(ls -d /Users/andremalho/eliahealth/backend/src/*/)",
+      "Bash(xargs -I {} bash -c 'echo \"=== $\\(basename {}\\) ===\" && ls -1 {} | grep -E \"\\\\.\\(ts|entity|service|controller|module|dto\\)\" | head -20')",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(xargs -I {} basename {})"
     ]
   }
 }

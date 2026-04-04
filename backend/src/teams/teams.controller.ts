@@ -4,8 +4,11 @@ import { InviteMemberDto } from './dto/invite-member.dto.js';
 import { UpdateMemberDto } from './dto/update-member.dto.js';
 import { SharePregnancyDto } from './dto/share-pregnancy.dto.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
 export class TeamsController {
   constructor(private readonly service: TeamsService) {}
 

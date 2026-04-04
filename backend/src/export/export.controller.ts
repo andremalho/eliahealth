@@ -2,8 +2,11 @@ import { Controller, Get, Post, Param, Body, Res, ParseUUIDPipe } from '@nestjs/
 import type { Response } from 'express';
 import { ExportService } from './export.service.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
 export class ExportController {
   constructor(private readonly service: ExportService) {}
 

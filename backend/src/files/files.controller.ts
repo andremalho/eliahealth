@@ -3,8 +3,11 @@ import { FilesService } from './files.service.js';
 import { CreateFileDto } from './dto/create-file.dto.js';
 import { UpdateFileDto } from './dto/update-file.dto.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
 export class FilesController {
   constructor(private readonly service: FilesService) {}
 

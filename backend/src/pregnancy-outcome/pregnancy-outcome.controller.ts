@@ -2,8 +2,11 @@ import { Controller, Get, Post, Patch, Param, Body, ParseUUIDPipe } from '@nestj
 import { PregnancyOutcomeService } from './pregnancy-outcome.service.js';
 import { CreatePregnancyOutcomeDto } from './dto/create-pregnancy-outcome.dto.js';
 import { UpdatePregnancyOutcomeDto } from './dto/update-pregnancy-outcome.dto.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller('pregnancies/:pregnancyId/outcome')
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
 export class PregnancyOutcomeController {
   constructor(private readonly service: PregnancyOutcomeService) {}
 

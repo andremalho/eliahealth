@@ -3,8 +3,11 @@ import { NotesService } from './notes.service.js';
 import { CreateNoteDto } from './dto/create-note.dto.js';
 import { UpdateNoteDto } from './dto/update-note.dto.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
 export class NotesController {
   constructor(private readonly service: NotesService) {}
 

@@ -15,8 +15,11 @@ import { CreateGlucoseReadingDto } from './dto/create-glucose-reading.dto.js';
 import { CreateInsulinDoseDto } from './dto/create-insulin-dose.dto.js';
 import { DeviceSyncDto } from './dto/device-sync.dto.js';
 import { DeviceConfigDto } from './dto/device-config.dto.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller('pregnancies/:pregnancyId')
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
 export class GlucoseMonitoringController {
   constructor(private readonly service: GlucoseMonitoringService) {}
 

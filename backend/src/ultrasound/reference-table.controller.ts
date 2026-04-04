@@ -13,8 +13,11 @@ import { ReferenceTableService } from './reference-table.service.js';
 import { BiometryParameter } from './biometry-parameter.enum.js';
 import { CreateReferenceTableDto } from './dto/create-reference-table.dto.js';
 import { BulkImportReferenceDto } from './dto/bulk-import-reference.dto.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller('reference-tables')
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
 export class ReferenceTableController {
   constructor(private readonly service: ReferenceTableService) {}
 

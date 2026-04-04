@@ -2,8 +2,11 @@ import { Controller, Get, Post, Patch, Delete, Param, Body, ParseUUIDPipe } from
 import { OtherExamsService } from './other-exams.service.js';
 import { CreateOtherExamDto } from './dto/create-other-exam.dto.js';
 import { UpdateOtherExamDto } from './dto/update-other-exam.dto.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
 export class OtherExamsController {
   constructor(private readonly service: OtherExamsService) {}
 

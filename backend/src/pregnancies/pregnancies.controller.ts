@@ -13,8 +13,11 @@ import { CreatePregnancyDto } from './dto/create-pregnancy.dto.js';
 import { UpdatePregnancyDto } from './dto/update-pregnancy.dto.js';
 import { QuickCreatePregnancyDto } from './dto/quick-create-pregnancy.dto.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
 export class PregnanciesController {
   constructor(private readonly pregnanciesService: PregnanciesService) {}
 

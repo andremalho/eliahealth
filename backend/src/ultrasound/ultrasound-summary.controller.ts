@@ -10,8 +10,11 @@ import {
 import { UltrasoundSummaryService } from './ultrasound-summary.service.js';
 import { CreateUltrasoundSummaryDto } from './dto/create-ultrasound-summary.dto.js';
 import { UpdateUltrasoundSummaryDto } from './dto/update-ultrasound-summary.dto.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
 export class UltrasoundSummaryController {
   constructor(private readonly service: UltrasoundSummaryService) {}
 

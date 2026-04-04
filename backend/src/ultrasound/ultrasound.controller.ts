@@ -16,8 +16,11 @@ import { CreateDopplerDto } from './dto/create-doppler.dto.js';
 import { UpdateDopplerDto } from './dto/update-doppler.dto.js';
 import { CreateBiophysicalDto } from './dto/create-biophysical.dto.js';
 import { UpdateBiophysicalDto } from './dto/update-biophysical.dto.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
 export class UltrasoundController {
   constructor(private readonly ultrasoundService: UltrasoundService) {}
 

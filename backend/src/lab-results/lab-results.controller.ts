@@ -13,8 +13,11 @@ import { ExamCategory, LabResultStatus } from './lab-result.enums.js';
 import { CreateLabResultDto } from './dto/create-lab-result.dto.js';
 import { UpdateLabResultDto } from './dto/update-lab-result.dto.js';
 import { CreateLabDocumentDto } from './dto/create-lab-document.dto.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
 export class LabResultsController {
   constructor(private readonly labResultsService: LabResultsService) {}
 

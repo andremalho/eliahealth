@@ -1,7 +1,10 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { BirthCalendarService } from './birth-calendar.service.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller('birth-calendar')
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
 export class BirthCalendarController {
   constructor(private readonly service: BirthCalendarService) {}
 

@@ -3,8 +3,11 @@ import { PrescriptionsService } from './prescriptions.service.js';
 import { CreatePrescriptionDto } from './dto/create-prescription.dto.js';
 import { UpdatePrescriptionDto } from './dto/update-prescription.dto.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
 export class PrescriptionsController {
   constructor(private readonly service: PrescriptionsService) {}
 

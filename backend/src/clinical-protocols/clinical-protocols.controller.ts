@@ -14,8 +14,11 @@ import { CreateClinicalProtocolDto } from './dto/create-clinical-protocol.dto.js
 import { UpdateClinicalProtocolDto } from './dto/update-clinical-protocol.dto.js';
 import { CreateExamScheduleDto } from './dto/create-exam-schedule.dto.js';
 import { UploadGuidelineDto } from './dto/upload-guideline.dto.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
 export class ClinicalProtocolsController {
   constructor(private readonly service: ClinicalProtocolsService) {}
 

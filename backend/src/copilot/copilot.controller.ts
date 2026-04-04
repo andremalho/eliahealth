@@ -9,8 +9,11 @@ import {
 } from '@nestjs/common';
 import { CopilotService } from './copilot.service.js';
 import { AlertSeverity } from './copilot.enums.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
 export class CopilotController {
   constructor(private readonly copilotService: CopilotService) {}
 

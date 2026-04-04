@@ -10,11 +10,11 @@ import {
 import { GeneticCounselingService } from './genetic-counseling.service.js';
 import { CreateGeneticCounselingDto } from './dto/create-genetic-counseling.dto.js';
 import { UpdateGeneticCounselingDto } from './dto/update-genetic-counseling.dto.js';
-
-// SENSÍVEL: dados genéticos protegidos.
-// TODO: adicionar @Roles('physician') quando o sistema de permissões granulares estiver implementado.
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
 export class GeneticCounselingController {
   constructor(private readonly service: GeneticCounselingService) {}
 

@@ -2,8 +2,11 @@ import { Controller, Get, Post, Patch, Param, Body, ParseUUIDPipe } from '@nestj
 import { VaccinesService } from './vaccines.service.js';
 import { CreateVaccineDto } from './dto/create-vaccine.dto.js';
 import { UpdateVaccineDto } from './dto/update-vaccine.dto.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
 export class VaccinesController {
   constructor(private readonly service: VaccinesService) {}
 

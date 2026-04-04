@@ -2,8 +2,11 @@ import { Controller, Get, Post, Patch, Delete, Param, Body, ParseUUIDPipe } from
 import { EmergencyContactsService } from './emergency-contacts.service.js';
 import { CreateEmergencyContactDto } from './dto/create-emergency-contact.dto.js';
 import { UpdateEmergencyContactDto } from './dto/update-emergency-contact.dto.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
 export class EmergencyContactsController {
   constructor(private readonly service: EmergencyContactsService) {}
 

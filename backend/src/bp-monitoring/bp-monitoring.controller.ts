@@ -12,8 +12,11 @@ import { BpMonitoringService } from './bp-monitoring.service.js';
 import { CreateBpConfigDto } from './dto/create-bp-config.dto.js';
 import { UpdateBpConfigDto } from './dto/update-bp-config.dto.js';
 import { CreateBpReadingDto } from './dto/create-bp-reading.dto.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller('pregnancies/:pregnancyId')
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
 export class BpMonitoringController {
   constructor(private readonly service: BpMonitoringService) {}
 

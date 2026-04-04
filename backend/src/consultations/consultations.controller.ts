@@ -10,8 +10,11 @@ import {
 import { ConsultationsService } from './consultations.service.js';
 import { CreateConsultationDto } from './dto/create-consultation.dto.js';
 import { UpdateConsultationDto } from './dto/update-consultation.dto.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
+import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
 export class ConsultationsController {
   constructor(private readonly consultationsService: ConsultationsService) {}
 

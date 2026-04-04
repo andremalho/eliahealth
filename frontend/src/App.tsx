@@ -2,26 +2,18 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import LoginPage from './pages/auth/LoginPage';
 import PrivateRoute from './components/PrivateRoute';
-import Logo from './components/Logo';
+import AppLayout from './components/layout/AppLayout';
+import DashboardPage from './pages/dashboard/DashboardPage';
 import { useAuthStore } from './store/auth.store';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
 });
 
-function DashboardPlaceholder() {
-  const { user, logout } = useAuthStore();
+function Placeholder({ title }: { title: string }) {
   return (
-    <div className="min-h-screen bg-cream-light flex flex-col items-center justify-center gap-6">
-      <Logo size="md" />
-      <p className="text-gray-600">Dashboard em construção</p>
-      <p className="text-sm text-gray-400">Logado como: {user?.email}</p>
-      <button
-        onClick={logout}
-        className="px-6 py-2 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition"
-      >
-        Sair
-      </button>
+    <div className="flex items-center justify-center h-full text-gray-400 text-lg p-12">
+      {title} — em construção
     </div>
   );
 }
@@ -35,19 +27,24 @@ export default function App() {
         <Routes>
           <Route
             path="/"
-            element={
-              isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
-            }
+            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />}
           />
           <Route path="/login" element={<LoginPage />} />
+
+          {/* Authenticated routes with sidebar layout */}
           <Route
-            path="/dashboard"
             element={
               <PrivateRoute>
-                <DashboardPlaceholder />
+                <AppLayout />
               </PrivateRoute>
             }
-          />
+          >
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/pregnancies" element={<Placeholder title="Gestações" />} />
+            <Route path="/birth-calendar" element={<Placeholder title="Calendário de Partos" />} />
+            <Route path="/teams" element={<Placeholder title="Equipes" />} />
+            <Route path="/settings" element={<Placeholder title="Configurações" />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

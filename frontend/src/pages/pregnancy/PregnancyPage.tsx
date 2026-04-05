@@ -54,8 +54,16 @@ export default function PregnancyPage() {
   const isLoading = loadingPreg || loadingPatient;
 
   const patientName = patient ? toTitleCase(patient.fullName) : '';
-  const gaWeeks = pregnancy?.gestationalAge?.weeks ?? Math.floor((pregnancy?.bpReadingsCount ?? 0));
-  const gaDays = pregnancy?.gestationalAge?.days ?? 0;
+
+  // Use backend-calculated GA if available, otherwise calculate from lmpDate
+  let gaWeeks = pregnancy?.gestationalAge?.weeks ?? 0;
+  let gaDays = pregnancy?.gestationalAge?.days ?? 0;
+  if (!pregnancy?.gestationalAge && pregnancy?.lmpDate) {
+    const lmp = new Date(pregnancy.lmpDate);
+    const diffDays = Math.floor((Date.now() - lmp.getTime()) / 86_400_000);
+    gaWeeks = Math.floor(diffDays / 7);
+    gaDays = diffDays % 7;
+  }
   const gaTotalDays = gaWeeks * 7 + gaDays;
   const trimester = getTrimester(gaWeeks);
   const progress = progressPercent(gaTotalDays);

@@ -140,6 +140,7 @@ export class PregnanciesService {
 
   async findOneWithStats(id: string, tenantId?: string | null) {
     const pregnancy = await this.findOne(id, tenantId);
+    const ga = this.getGestationalAge(pregnancy);
 
     const [bpStats] = await this.repo.query(
       `SELECT COUNT(*)::int AS count FROM bp_readings WHERE pregnancy_id = $1`,
@@ -162,6 +163,7 @@ export class PregnanciesService {
 
     return {
       ...pregnancy,
+      gestationalAge: { weeks: ga.weeks, days: ga.days, totalDays: ga.totalDays },
       bpReadingsCount,
       glucoseReadingsCount: glucoseTotal,
       glucoseAlteredPercentage,

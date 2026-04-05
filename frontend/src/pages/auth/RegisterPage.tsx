@@ -28,7 +28,12 @@ const schema = z.object({
   name: z.string().min(1, 'Nome obrigatório'),
   email: z.string().min(1, 'E-mail obrigatório').email('E-mail inválido'),
   phone: z.string().min(14, 'Telefone inválido'),
-  password: z.string().min(8, 'Mínimo 8 caracteres'),
+  password: z.string()
+    .min(8, 'Mínimo 8 caracteres')
+    .regex(/[a-z]/, 'Deve conter letra minúscula')
+    .regex(/[A-Z]/, 'Deve conter letra maiúscula')
+    .regex(/\d/, 'Deve conter número')
+    .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Deve conter caractere especial'),
   confirmPassword: z.string().min(1, 'Confirme a senha'),
   crm: z.string().regex(/^\d{4,}$/, 'CRM: mínimo 4 dígitos numéricos'),
   crmState: z.string().min(1, 'Selecione o estado'),
@@ -80,7 +85,6 @@ export default function RegisterPage() {
         role: 'physician',
         crm: `${data.crm}-${data.crmState}`,
         specialty: data.specialty,
-        tenantId: undefined,
       });
       // Auto-login
       const res = await api.post('/auth/login', { email: data.email, password: data.password });
@@ -90,6 +94,9 @@ export default function RegisterPage() {
       if (err.response?.status === 409) {
         setError('Este e-mail já está cadastrado');
         setStep(1);
+      } else if (err.response?.status === 400) {
+        const msg = err.response.data?.message;
+        setError(Array.isArray(msg) ? msg.join('. ') : (msg ?? 'Dados inválidos. Verifique os campos.'));
       } else {
         setError('Erro ao criar conta. Tente novamente.');
       }

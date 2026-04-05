@@ -7,7 +7,7 @@ import {
 import { fetchPregnancyList, fetchUpcomingBirths } from '../../api/pregnancies.api';
 import { useAuthStore } from '../../store/auth.store';
 import { cn } from '../../utils/cn';
-import { toTitleCase, formatDateLong } from '../../utils/formatters';
+import { toTitleCase } from '../../utils/formatters';
 import NewPatientModal from './NewPatientModal';
 
 const trimesterFilters = [
@@ -58,7 +58,10 @@ export default function DashboardPage() {
   };
 
   const userName = toTitleCase(user?.name ?? user?.email?.split('@')[0] ?? '');
-  const today = formatDateLong();
+  const dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+  const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  const now = new Date();
+  const today = `${dias[now.getDay()]}, ${now.getDate()} de ${meses[now.getMonth()]} de ${now.getFullYear()}`;
 
   const filtered = (pregnancies ?? []).filter((p) => {
     if (filter === 'all') return true;

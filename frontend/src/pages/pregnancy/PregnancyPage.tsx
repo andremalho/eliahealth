@@ -24,6 +24,23 @@ function mapEdema(v: string | null): string {
   const m: Record<string, string> = { absent: 'Ausente', none: 'Ausente', '1plus': '1+', '2plus': '2+', '3plus': '3+', '4plus': '4+', '1+': '1+', '2+': '2+', '3+': '3+', '4+': '4+' };
   return m[v] ?? v;
 }
+function mapFetalMovement(v: string | null): string {
+  if (!v) return '—';
+  const m: Record<string, string> = {
+    'Presentes e ativos': 'Presente', 'Presentes e hipoativos': 'Hipoativo',
+    'Ausentes': 'Ausente', 'Não avaliado': 'Não avaliado',
+    present: 'Presente', absent: 'Ausente', not_evaluated: 'Não avaliado', decreased: 'Hipoativo',
+  };
+  return m[v] ?? v;
+}
+function mapVaginalExam(v: string | null): string {
+  if (!v) return '—';
+  const m: Record<string, string> = {
+    nr: 'NR', not_performed: 'NR', cephalic: 'Cefálica', pelvic: 'Pélvica',
+    transverse: 'Transverso', oblique: 'Oblíquo', not_evaluated: 'Não avaliado',
+  };
+  return m[v] ?? v;
+}
 function Skeleton({ className = '' }: { className?: string }) {
   return <div className={cn('animate-pulse bg-gray-200 rounded', className)} />;
 }
@@ -147,17 +164,22 @@ export default function PregnancyPage() {
         </Card>
       </div>
 
-      {/* PA Alert Banner */}
+      {/* PA Alert Banner — scan ALL consultations for elevated BP */}
       {(() => {
-        const last = consultations[consultations.length - 1];
-        const sys = last?.bpSystolic ?? last?.bp_systolic;
-        const dia = last?.bpDiastolic ?? last?.bp_diastolic;
-        if (sys >= 140 || dia >= 90) {
+        const altered = consultations.find((c: any) => {
+          const s = Number(c.bpSystolic ?? c.bp_systolic ?? 0);
+          const d = Number(c.bpDiastolic ?? c.bp_diastolic ?? 0);
+          return s >= 140 || d >= 90;
+        });
+        if (altered) {
+          const s = altered.bpSystolic ?? altered.bp_systolic;
+          const d = altered.bpDiastolic ?? altered.bp_diastolic;
+          const dt = altered.date ? new Date(altered.date + 'T12:00:00').toLocaleDateString('pt-BR') : '';
           return (
             <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
               <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
               <span className="text-sm text-red-700 font-medium">
-                Pressão arterial elevada na última consulta: {sys}/{dia} mmHg — Avaliar conduta
+                ⚠️ Atenção: pressão arterial elevada registrada — {s}×{d} mmHg{dt ? ` em ${dt}` : ''} — Avaliar conduta
               </span>
             </div>
           );
@@ -202,9 +224,9 @@ export default function PregnancyPage() {
                         <td className="px-3 py-2">{c.weightKg ?? c.weight_kg ?? '—'}</td>
                         <td className="px-3 py-2">{(c.bpSystolic ?? c.bp_systolic) ? `${c.bpSystolic ?? c.bp_systolic}/${c.bpDiastolic ?? c.bp_diastolic}` : '—'}</td>
                         <td className="px-3 py-2">{c.fetalHeartRate ?? c.fetal_heart_rate ?? '—'}</td>
-                        <td className="px-3 py-2">{c.fetalMovements ?? c.fetal_movements ?? '—'}</td>
+                        <td className="px-3 py-2">{mapFetalMovement(c.fetalMovements ?? c.fetal_movements)}</td>
                         <td className="px-3 py-2">{mapEdema(c.edemaGrade ?? c.edema_grade)}</td>
-                        <td className="px-3 py-2">{c.fetalPresentation ?? c.fetal_presentation ?? '—'}</td>
+                        <td className="px-3 py-2">{mapVaginalExam(c.fetalPresentation ?? c.fetal_presentation)}</td>
                         <td className="px-3 py-2">{c.fundalHeightCm ?? c.fundal_height_cm ?? '—'}</td>
                       </tr>
                     ))}

@@ -1,12 +1,17 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Post, Body } from '@nestjs/common';
 import { AdminService } from './admin.service.js';
+import { AuthService } from '../auth/auth.service.js';
+import { RegisterDto } from '../auth/dto/register.dto.js';
 import { Public } from '../auth/decorators/public.decorator.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../auth/auth.enums.js';
 
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly service: AdminService) {}
+  constructor(
+    private readonly service: AdminService,
+    private readonly authService: AuthService,
+  ) {}
 
   @Public()
   @Get('health')
@@ -24,5 +29,11 @@ export class AdminController {
   @Roles(UserRole.SUPERADMIN)
   triggerBackup() {
     return this.service.triggerBackup();
+  }
+
+  @Post('users')
+  @Roles(UserRole.SUPERADMIN)
+  createUser(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
   }
 }

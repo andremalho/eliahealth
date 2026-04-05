@@ -14,15 +14,17 @@ const schema = z.object({
   phone: z.string().optional(),
   dateOfBirth: z.string().optional(),
   gaMethod: z.enum(['dum', 'dpp', 'ultrasound', 'ivf', 'manual']),
-  referenceDate: z.string().min(1, 'Data obrigatória'),
+  referenceDate: z.string().optional(),
+  usWeeks: z.string().optional(),
+  usDays: z.string().optional(),
+  manualWeeks: z.string().optional(),
+  manualDays: z.string().optional(),
 });
 
 const dateLabels: Record<string, string> = {
   dum: 'DUM (Data da Última Menstruação)',
   dpp: 'DPP (Data Provável do Parto)',
-  ultrasound: 'Data da Ultrassonografia',
   ivf: 'Data da Transferência (FIV)',
-  manual: 'Data de Referência',
 };
 
 type FormData = z.infer<typeof schema>;
@@ -36,6 +38,9 @@ export default function NewPatientModal({ onClose }: { onClose: () => void }) {
   });
 
   const gaMethod = watch('gaMethod');
+  const needsDate = gaMethod === 'dum' || gaMethod === 'dpp' || gaMethod === 'ivf';
+  const isUltrasound = gaMethod === 'ultrasound';
+  const isManual = gaMethod === 'manual';
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -46,15 +51,30 @@ export default function NewPatientModal({ onClose }: { onClose: () => void }) {
         phone: data.phone || undefined,
         dateOfBirth: data.dateOfBirth || undefined,
       });
-      // Map frontend method to backend gaMethod + correct date field
-      const methodMap: Record<string, string> = { dum: 'lmp', dpp: 'lmp', ultrasound: 'ultrasound', ivf: 'ivf', manual: 'lmp' };
-      await createPregnancy(patient.id, {
-        lmpDate: data.referenceDate,
-        gaMethod: methodMap[data.gaMethod] ?? 'lmp',
-        gravida: 1,
-        para: 0,
-        abortus: 0,
-      });
+
+      // Build pregnancy payload based on method
+      const pregPayload: Record<string, unknown> = { gravida: 1, para: 0, abortus: 0 };
+
+      if (data.gaMethod === 'dum') {
+        pregPayload.lmpDate = data.referenceDate;
+        pregPayload.gaMethod = 'lmp';
+      } else if (data.gaMethod === 'dpp') {
+        pregPayload.edd = data.referenceDate;
+        pregPayload.gaMethod = 'lmp';
+      } else if (data.gaMethod === 'ultrasound') {
+        pregPayload.usDatingDate = data.referenceDate;
+        pregPayload.usDatingGaDays = (parseInt(data.usWeeks ?? '0', 10)) * 7 + parseInt(data.usDays ?? '0', 10);
+        pregPayload.gaMethod = 'ultrasound';
+      } else if (data.gaMethod === 'ivf') {
+        pregPayload.ivfTransferDate = data.referenceDate;
+        pregPayload.gaMethod = 'ivf';
+      } else if (data.gaMethod === 'manual') {
+        pregPayload.gaWeeks = parseInt(data.manualWeeks ?? '0', 10);
+        pregPayload.gaDays = parseInt(data.manualDays ?? '0', 10);
+        pregPayload.gaMethod = 'lmp';
+      }
+
+      await createPregnancy(patient.id, pregPayload as any);
       return patient;
     },
     onSuccess: () => {
@@ -62,6 +82,14 @@ export default function NewPatientModal({ onClose }: { onClose: () => void }) {
       onClose();
     },
   });
+
+  const onSubmit = (data: FormData) => {
+    // Manual validation for conditional fields
+    if (needsDate && !data.referenceDate) return;
+    if (isUltrasound && (!data.referenceDate || !data.usWeeks)) return;
+    if (isManual && !data.manualWeeks) return;
+    mutation.mutate(data);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
@@ -76,7 +104,7 @@ export default function NewPatientModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           {mutation.error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
               Erro ao cadastrar. Verifique os dados e tente novamente.
@@ -105,23 +133,64 @@ export default function NewPatientModal({ onClose }: { onClose: () => void }) {
           </Field>
 
           <hr className="my-2" />
-
           <p className="text-sm font-medium text-navy">Dados da gestação</p>
 
-          <div className="grid grid-cols-2 gap-4 items-end">
-            <Field label="Método de datação *" error={errors.gaMethod?.message}>
-              <select {...register('gaMethod')} className={inputCn(!!errors.gaMethod)}>
-                <option value="dum">DUM</option>
-                <option value="dpp">DPP</option>
-                <option value="ultrasound">Ultrassonografia</option>
-                <option value="ivf">FIV</option>
-                <option value="manual">Manual</option>
-              </select>
-            </Field>
-            <Field label={`${dateLabels[gaMethod] ?? 'Data'} *`} error={errors.referenceDate?.message}>
+          {/* Method selector — always visible */}
+          <Field label="Método de datação *" error={errors.gaMethod?.message}>
+            <select {...register('gaMethod')} className={inputCn(!!errors.gaMethod)}>
+              <option value="dum">DUM</option>
+              <option value="dpp">DPP</option>
+              <option value="ultrasound">Ultrassonografia</option>
+              <option value="ivf">FIV</option>
+              <option value="manual">Manual</option>
+            </select>
+          </Field>
+
+          {/* DUM / DPP / FIV — single date field */}
+          {needsDate && (
+            <Field label={`${dateLabels[gaMethod]} *`} error={errors.referenceDate?.message}>
               <input {...register('referenceDate')} type="date" className={inputCn(!!errors.referenceDate)} />
             </Field>
-          </div>
+          )}
+
+          {/* Ultrasound — date + weeks/days */}
+          {isUltrasound && (
+            <>
+              <Field label="Data da Ultrassonografia *" error={errors.referenceDate?.message}>
+                <input {...register('referenceDate')} type="date" className={inputCn(!!errors.referenceDate)} />
+              </Field>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Idade Gestacional no exame *</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <input {...register('usWeeks')} type="number" min={4} max={42} placeholder="Semanas" className={inputCn(false)} />
+                    <span className="text-xs text-gray-400 mt-0.5 block">semanas</span>
+                  </div>
+                  <div>
+                    <input {...register('usDays')} type="number" min={0} max={6} placeholder="0-6" className={inputCn(false)} />
+                    <span className="text-xs text-gray-400 mt-0.5 block">dias</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Manual — weeks/days only */}
+          {isManual && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Idade Gestacional atual *</label>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <input {...register('manualWeeks')} type="number" min={4} max={42} placeholder="Semanas" className={inputCn(false)} />
+                  <span className="text-xs text-gray-400 mt-0.5 block">semanas</span>
+                </div>
+                <div>
+                  <input {...register('manualDays')} type="number" min={0} max={6} placeholder="0-6" className={inputCn(false)} />
+                  <span className="text-xs text-gray-400 mt-0.5 block">dias</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-4">
             <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">

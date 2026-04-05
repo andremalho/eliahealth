@@ -57,7 +57,7 @@ export default function DashboardPage() {
     return 'Boa noite';
   };
 
-  const userName = toTitleCase(user?.name ?? user?.email?.split('@')[0] ?? '');
+  const userName = user?.name ? toTitleCase(user.name) : (user?.email?.split('@')[0] ?? '');
   const dias = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
   const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
   const now = new Date();

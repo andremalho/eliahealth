@@ -28,9 +28,9 @@ export default function AppLayout() {
     navigate('/login');
   };
 
-  const displayName = toTitleCase(user?.name ?? user?.email ?? '');
-  const initials = displayName
-    .split(' ')
+  const displayName = user?.name ? toTitleCase(user.name) : (user?.email?.toLowerCase() ?? '');
+  const initials = (user?.name ?? user?.email ?? '?')
+    .split(/[\s@]/)
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase())
     .join('');

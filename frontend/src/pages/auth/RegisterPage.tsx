@@ -77,32 +77,48 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: FormData) => {
     setError(null);
+    const payload = {
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      password: data.password,
+      role: 'physician' as const,
+      crm: data.crm,
+      crmState: data.crmState,
+      specialty: data.specialty,
+      clinicName: data.clinicName || undefined,
+    };
+    console.log('[Register] Payload:', { ...payload, password: '***' });
+
     try {
-      await api.post('/auth/register', {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        password: data.password,
-        role: 'physician',
-        crm: data.crm,
-        crmState: data.crmState,
-        specialty: data.specialty,
-        clinicName: data.clinicName || undefined,
-      });
-      // Auto-login
+      await api.post('/auth/register', payload);
+      console.log('[Register] Sucesso, fazendo auto-login...');
+    } catch (err: any) {
+      console.error('[Register] Erro:', err.response?.status, err.response?.data);
+      const status = err.response?.status;
+      if (status === 409) {
+        setError('Este e-mail já está cadastrado. Tente outro e-mail ou faça login.');
+        setStep(1);
+        return;
+      }
+      if (status === 400) {
+        const msg = err.response?.data?.message;
+        setError(Array.isArray(msg) ? msg.join('. ') : (typeof msg === 'string' ? msg : 'Dados inválidos. Verifique os campos.'));
+        return;
+      }
+      setError(err.response?.data?.message ?? 'Erro ao criar conta. Tente novamente.');
+      return;
+    }
+
+    try {
       const res = await api.post('/auth/login', { email: data.email, password: data.password });
+      console.log('[Register] Login OK, redirecionando...');
       login(res.data.accessToken, { userId: res.data.userId, email: data.email, role: res.data.role, name: data.name });
       navigate('/dashboard');
-    } catch (err: any) {
-      if (err.response?.status === 409) {
-        setError('Este e-mail já está cadastrado');
-        setStep(1);
-      } else if (err.response?.status === 400) {
-        const msg = err.response.data?.message;
-        setError(Array.isArray(msg) ? msg.join('. ') : (msg ?? 'Dados inválidos. Verifique os campos.'));
-      } else {
-        setError('Erro ao criar conta. Tente novamente.');
-      }
+    } catch (loginErr: any) {
+      console.error('[Register] Erro no auto-login:', loginErr.response?.status, loginErr.response?.data);
+      setError('Conta criada com sucesso! Faça login manualmente.');
+      navigate('/login');
     }
   };
 

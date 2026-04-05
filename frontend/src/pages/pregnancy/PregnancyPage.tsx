@@ -19,6 +19,11 @@ import {
 
 function gaString(days: number) { return `${Math.floor(days / 7)}s ${days % 7}d`; }
 function getTrimester(w: number) { return w < 14 ? 1 : w < 28 ? 2 : 3; }
+function mapEdema(v: string | null): string {
+  if (!v) return '—';
+  const m: Record<string, string> = { absent: 'Ausente', none: 'Ausente', '1plus': '1+', '2plus': '2+', '3plus': '3+', '4plus': '4+', '1+': '1+', '2+': '2+', '3+': '3+', '4+': '4+' };
+  return m[v] ?? v;
+}
 function Skeleton({ className = '' }: { className?: string }) {
   return <div className={cn('animate-pulse bg-gray-200 rounded', className)} />;
 }
@@ -122,6 +127,44 @@ export default function PregnancyPage() {
         </Card>
       </div>
 
+      {/* Second row: Antecedentes, Patologias, Histórico */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <Card title="Antecedentes Obstétricos">
+          <div className="flex gap-2 flex-wrap">
+            {[['G', 'gravida'], ['P', 'para'], ['A', 'abortus'], ['C', 'cesareans']].map(([l, k]) => (
+              <span key={l} className="px-2.5 py-1 bg-gray-100 text-navy text-sm font-semibold rounded-lg">{l}{pregnancy?.[k] ?? 0}</span>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 mt-2">Partos normais: {pregnancy?.vaginalDeliveries ?? 0}</p>
+        </Card>
+        <Card title="Patologias, Medicações e Hábitos">
+          <p className="text-sm text-gray-500">{patient?.comorbidities || 'Nenhum registrado'}</p>
+        </Card>
+        <Card title="Histórico Clínico">
+          <p className="text-sm text-gray-500">
+            {[patient?.comorbidities, patient?.allergies, patient?.addictions].filter(Boolean).join(' · ') || 'Nenhum registrado'}
+          </p>
+        </Card>
+      </div>
+
+      {/* PA Alert Banner */}
+      {(() => {
+        const last = consultations[consultations.length - 1];
+        const sys = last?.bpSystolic ?? last?.bp_systolic;
+        const dia = last?.bpDiastolic ?? last?.bp_diastolic;
+        if (sys >= 140 || dia >= 90) {
+          return (
+            <div className="mb-4 flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl">
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+              <span className="text-sm text-red-700 font-medium">
+                Pressão arterial elevada na última consulta: {sys}/{dia} mmHg — Avaliar conduta
+              </span>
+            </div>
+          );
+        }
+        return null;
+      })()}
+
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
         {/* Main column */}
@@ -149,7 +192,7 @@ export default function PregnancyPage() {
                   <thead><tr className="text-left text-xs text-gray-500 border-b bg-gray-50">
                     <th className="px-3 py-2">IG</th><th className="px-3 py-2">Data</th><th className="px-3 py-2">Peso</th>
                     <th className="px-3 py-2">PA</th><th className="px-3 py-2">BCF</th><th className="px-3 py-2">MF</th>
-                    <th className="px-3 py-2">Edema</th><th className="px-3 py-2">TV</th><th className="px-3 py-2">AF</th>
+                    <th className="px-3 py-2">Edema</th><th className="px-3 py-2">TV</th><th className="px-3 py-2">AU</th>
                   </tr></thead>
                   <tbody className="divide-y">
                     {consultations.map((c: any) => (
@@ -160,7 +203,7 @@ export default function PregnancyPage() {
                         <td className="px-3 py-2">{(c.bpSystolic ?? c.bp_systolic) ? `${c.bpSystolic ?? c.bp_systolic}/${c.bpDiastolic ?? c.bp_diastolic}` : '—'}</td>
                         <td className="px-3 py-2">{c.fetalHeartRate ?? c.fetal_heart_rate ?? '—'}</td>
                         <td className="px-3 py-2">{c.fetalMovements ?? c.fetal_movements ?? '—'}</td>
-                        <td className="px-3 py-2">{c.edemaGrade ?? c.edema_grade ?? '—'}</td>
+                        <td className="px-3 py-2">{mapEdema(c.edemaGrade ?? c.edema_grade)}</td>
                         <td className="px-3 py-2">{c.fetalPresentation ?? c.fetal_presentation ?? '—'}</td>
                         <td className="px-3 py-2">{c.fundalHeightCm ?? c.fundal_height_cm ?? '—'}</td>
                       </tr>

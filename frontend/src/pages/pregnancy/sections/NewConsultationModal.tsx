@@ -57,7 +57,7 @@ export default function NewConsultationModal({ pregnancyId, onClose }: Props) {
               <input {...register('date')} type="date" className={iCn} /></div>
             <div><label className="block text-xs font-medium text-gray-600 mb-1">Peso (kg)</label>
               <input {...register('weightKg')} type="number" step="0.1" min="20" max="300" placeholder="Ex: 72.5" className={iCn} /></div>
-            <div><label className="block text-xs font-medium text-gray-600 mb-1">AF (cm)</label>
+            <div><label className="block text-xs font-medium text-gray-600 mb-1">AU (cm)</label>
               <input {...register('fundalHeightCm')} type="number" step="0.5" min="5" max="50" placeholder="Ex: 28" className={iCn} /></div>
           </div>
 

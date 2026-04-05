@@ -5,6 +5,7 @@ import RegisterPage from './pages/auth/RegisterPage';
 import PrivateRoute from './components/PrivateRoute';
 import AppLayout from './components/layout/AppLayout';
 import DashboardPage from './pages/dashboard/DashboardPage';
+import PregnancyPage from './pages/pregnancy/PregnancyPage';
 import { useAuthStore } from './store/auth.store';
 
 const queryClient = new QueryClient({
@@ -43,6 +44,7 @@ export default function App() {
           >
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/pregnancies" element={<Placeholder title="Gestações" />} />
+            <Route path="/pregnancies/:pregnancyId" element={<PregnancyPage />} />
             <Route path="/birth-calendar" element={<Placeholder title="Calendário de Partos" />} />
             <Route path="/teams" element={<Placeholder title="Equipes" />} />
             <Route path="/settings" element={<Placeholder title="Configurações" />} />

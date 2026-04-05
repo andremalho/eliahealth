@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Users, Calendar, Stethoscope, AlertTriangle,
@@ -35,6 +36,7 @@ function Skeleton({ className = '' }: { className?: string }) {
 }
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
@@ -164,7 +166,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             filtered.map((p) => (
-              <PregnancyRow key={p.id} pregnancy={p} />
+              <PregnancyRow key={p.id} pregnancy={p} onClick={() => navigate(`/pregnancies/${p.id}`)} />
             ))
           )}
         </div>
@@ -197,7 +199,7 @@ function SummaryCard({
   );
 }
 
-function PregnancyRow({ pregnancy: p }: { pregnancy: { id: string; patientName: string; gestationalAge: { weeks: number; days: number }; edd: string; riskLevel: string } }) {
+function PregnancyRow({ pregnancy: p, onClick }: { pregnancy: { id: string; patientName: string; gestationalAge: { weeks: number; days: number }; edd: string; riskLevel: string }; onClick: () => void }) {
   const ga = p.gestationalAge;
   const progress = Math.min(100, Math.round(((ga.weeks * 7 + ga.days) / 280) * 100));
   const initials = p.patientName
@@ -207,7 +209,7 @@ function PregnancyRow({ pregnancy: p }: { pregnancy: { id: string; patientName: 
     .join('');
 
   return (
-    <div className="flex items-center gap-4 p-5 hover:bg-gray-50 cursor-pointer transition group">
+    <div onClick={onClick} className="flex items-center gap-4 p-5 hover:bg-gray-50 cursor-pointer transition group">
       <div className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center text-sm font-bold shrink-0">
         {initials}
       </div>

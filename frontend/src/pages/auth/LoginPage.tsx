@@ -35,8 +35,8 @@ export default function LoginPage() {
     setError(null);
     try {
       const res = await api.post('/auth/login', data);
-      const { accessToken, userId, role } = res.data;
-      login(accessToken, { userId, email: data.email, role });
+      const { accessToken, userId, role, name } = res.data;
+      login(accessToken, { userId, email: data.email, role, name });
       navigate('/dashboard');
     } catch (err: any) {
       if (err.response?.status === 401) {

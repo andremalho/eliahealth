@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -176,9 +176,16 @@ export default function LoginPage() {
             Continuar com Google
           </button>
 
+          <p className="text-center text-sm text-gray-500 mt-8">
+            Não tem conta?{' '}
+            <Link to="/register" className="text-primary font-medium hover:text-primary-dark">
+              Criar conta gratuita
+            </Link>
+          </p>
+
           {/* Footer */}
           {!isWhiteLabel && (
-            <p className="text-center text-xs text-gray-400 mt-10">
+            <p className="text-center text-xs text-gray-400 mt-4">
               Powered by EliaHealth
             </p>
           )}

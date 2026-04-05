@@ -34,7 +34,7 @@ export function formatDate(date: string | Date): string {
 export function formatDateLong(date: Date = new Date()): string {
   const raw = date.toLocaleDateString('pt-BR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  });
-  // Capitalize only the first letter, rest lowercase
+  }).toLowerCase();
+  // "domingo, 5 de abril de 2026" → "Domingo, 5 de abril de 2026"
   return raw.charAt(0).toUpperCase() + raw.slice(1);
 }

@@ -27,6 +27,7 @@ const USER_TYPES: { value: UserType; icon: React.ElementType; title: string; des
   { value: 'patient', icon: Heart, title: 'Paciente', desc: 'Gestante ou paciente' },
 ];
 
+// Step 1 schema — validated via trigger() before advancing
 const schema = z.object({
   userType: z.enum(['physician', 'nurse', 'patient']),
   name: z.string().min(1, 'Nome obrigatório'),
@@ -39,6 +40,7 @@ const schema = z.object({
     .regex(/\d/, 'Deve conter número')
     .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'Deve conter caractere especial'),
   confirmPassword: z.string().min(1, 'Confirme a senha'),
+  // Step 2 fields — all optional at schema level, validated manually in onSubmit
   crm: z.string().optional(),
   crmState: z.string().optional(),
   coren: z.string().optional(),
@@ -49,18 +51,6 @@ const schema = z.object({
   cpf: z.string().optional(),
 }).refine((d) => d.password === d.confirmPassword, {
   message: 'As senhas não coincidem', path: ['confirmPassword'],
-}).refine((d) => d.userType !== 'physician' || (d.crm && /^\d{4,}$/.test(d.crm)), {
-  message: 'CRM: mínimo 4 dígitos numéricos', path: ['crm'],
-}).refine((d) => d.userType !== 'physician' || !!d.crmState, {
-  message: 'Selecione o estado', path: ['crmState'],
-}).refine((d) => d.userType !== 'nurse' || !!d.coren, {
-  message: 'Número de registro obrigatório', path: ['coren'],
-}).refine((d) => d.userType !== 'nurse' || !!d.council, {
-  message: 'Selecione o conselho', path: ['council'],
-}).refine((d) => d.userType !== 'patient' || !!d.dateOfBirth, {
-  message: 'Data de nascimento obrigatória', path: ['dateOfBirth'],
-}).refine((d) => d.userType !== 'patient' || (d.cpf && /^\d{11}$/.test(d.cpf)), {
-  message: 'CPF deve ter 11 dígitos', path: ['cpf'],
 });
 
 type FormData = z.infer<typeof schema>;
@@ -94,6 +84,19 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: FormData) => {
     setError(null);
+
+    // Step 2 manual validation
+    if (data.userType === 'physician') {
+      if (!data.crm || !/^\d{4,}$/.test(data.crm)) { setError('CRM: mínimo 4 dígitos numéricos'); return; }
+      if (!data.crmState) { setError('Selecione o estado do CRM'); return; }
+    } else if (data.userType === 'nurse') {
+      if (!data.coren) { setError('Número de registro obrigatório'); return; }
+      if (!data.council) { setError('Selecione o conselho'); return; }
+    } else {
+      if (!data.dateOfBirth) { setError('Data de nascimento obrigatória'); return; }
+      if (!data.cpf || !/^\d{11}$/.test(data.cpf)) { setError('CPF deve ter 11 dígitos'); return; }
+    }
+
     const payload: Record<string, unknown> = {
       name: data.name, email: data.email, phone: data.phone, password: data.password,
       role: data.userType,

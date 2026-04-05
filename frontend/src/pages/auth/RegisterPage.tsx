@@ -81,10 +81,13 @@ export default function RegisterPage() {
       await api.post('/auth/register', {
         name: data.name,
         email: data.email,
+        phone: data.phone,
         password: data.password,
         role: 'physician',
-        crm: `${data.crm}-${data.crmState}`,
+        crm: data.crm,
+        crmState: data.crmState,
         specialty: data.specialty,
+        clinicName: data.clinicName || undefined,
       });
       // Auto-login
       const res = await api.post('/auth/login', { email: data.email, password: data.password });

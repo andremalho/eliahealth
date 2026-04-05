@@ -25,7 +25,15 @@ export class RegisterDto {
 
   @IsOptional()
   @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
   crm?: string;
+
+  @IsOptional()
+  @IsString()
+  crmState?: string;
 
   @IsOptional()
   @IsString()
@@ -34,6 +42,10 @@ export class RegisterDto {
   @IsOptional()
   @IsString()
   specialty?: string;
+
+  @IsOptional()
+  @IsString()
+  clinicName?: string;
 
   @IsOptional()
   @IsString()

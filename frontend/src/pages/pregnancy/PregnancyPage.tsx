@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft, Edit3, FileText, Share2, StickyNote, MessageSquare,
-  Bell, Plus, List, Table as TableIcon,
+  Bell, Plus, List, Table as TableIcon, AlertCircle,
 } from 'lucide-react';
 import { fetchPregnancyDetail, fetchConsultations, fetchPatient } from '../../api/consultations.api';
 import { toTitleCase } from '../../utils/formatters';
@@ -11,6 +11,7 @@ import { cn } from '../../utils/cn';
 import BpSection from './sections/BpSection';
 import GlucoseSection from './sections/GlucoseSection';
 import CopilotPanel from './sections/CopilotPanel';
+import NewConsultationModal from './sections/NewConsultationModal';
 import {
   VaccinesCard, VaginalSwabsCard, BiologicalFatherCard,
   UltrasoundsCard, LabResultsCard, PrescriptionsCard, FilesCard,
@@ -26,6 +27,7 @@ export default function PregnancyPage() {
   const { pregnancyId } = useParams<{ pregnancyId: string }>();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'table' | 'list'>('table');
+  const [consultationModal, setConsultationModal] = useState(false);
 
   const { data: pregnancy, isLoading: lp } = useQuery({
     queryKey: ['pregnancy', pregnancyId], queryFn: () => fetchPregnancyDetail(pregnancyId!), enabled: !!pregnancyId,
@@ -77,6 +79,12 @@ export default function PregnancyPage() {
               {patient?.email}{patient?.email && patient?.phone && ' · '}{patient?.phone}
             </p>
             <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1"><Bell className="w-3.5 h-3.5" /> 0 contatos de emergência</p>
+            {!patient?.email && !patient?.phone && (
+              <div className="mt-2 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span className="text-xs text-amber-700">E-mail ou telefone necessários para compartilhar cartão</span>
+              </div>
+            )}
           </div>
           <div className="flex gap-2 flex-wrap">
             {[{ icon: FileText, label: 'PDF' }, { icon: Share2, label: 'Compartilhar' }, { icon: StickyNote, label: 'Post-it' }, { icon: MessageSquare, label: 'Nota' }].map(({ icon: Icon, label }) => (
@@ -118,8 +126,8 @@ export default function PregnancyPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
         {/* Main column */}
         <div className="space-y-6">
-          {pregnancyId && <BpSection pregnancyId={pregnancyId} />}
-          {pregnancyId && <GlucoseSection pregnancyId={pregnancyId} />}
+          {pregnancyId && pregnancy?.isHighRisk && <BpSection pregnancyId={pregnancyId} />}
+          {pregnancyId && pregnancy?.isHighRisk && <GlucoseSection pregnancyId={pregnancyId} />}
 
           {/* Consultations */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -130,7 +138,7 @@ export default function PregnancyPage() {
                   <button onClick={() => setViewMode('table')} className={cn('p-1.5', viewMode === 'table' ? 'bg-lilac text-white' : 'text-gray-400')}><TableIcon className="w-4 h-4" /></button>
                   <button onClick={() => setViewMode('list')} className={cn('p-1.5', viewMode === 'list' ? 'bg-lilac text-white' : 'text-gray-400')}><List className="w-4 h-4" /></button>
                 </div>
-                <button className="flex items-center gap-1 px-3 py-1.5 bg-lilac text-white text-xs rounded-lg hover:bg-primary-dark"><Plus className="w-3.5 h-3.5" /> Nova</button>
+                <button onClick={() => setConsultationModal(true)} className="flex items-center gap-1 px-3 py-1.5 bg-lilac text-white text-xs rounded-lg hover:bg-primary-dark"><Plus className="w-3.5 h-3.5" /> Nova</button>
               </div>
             </div>
             {consultations.length === 0 ? (
@@ -184,24 +192,27 @@ export default function PregnancyPage() {
         {/* Sidebar */}
         {pregnancyId && (
           <div className="space-y-4">
-            <Card title="Perfil">
+            <Card title="Perfil da Gestante">
               <div className="space-y-1 text-xs text-gray-700">
                 <p>Tipo sanguíneo: {patient?.bloodType ?? '—'}</p>
                 <p>Altura: {patient?.height ? `${patient.height} cm` : '—'}</p>
               </div>
             </Card>
+            <BiologicalFatherCard pregnancyId={pregnancyId} />
             <VaccinesCard pregnancyId={pregnancyId} />
             <LabResultsCard pregnancyId={pregnancyId} />
             <UltrasoundsCard pregnancyId={pregnancyId} />
             <VaginalSwabsCard pregnancyId={pregnancyId} />
             <PrescriptionsCard pregnancyId={pregnancyId} />
-            <BiologicalFatherCard pregnancyId={pregnancyId} />
             <FilesCard pregnancyId={pregnancyId} />
           </div>
         )}
       </div>
 
       {pregnancyId && <CopilotPanel pregnancyId={pregnancyId} />}
+      {consultationModal && pregnancyId && (
+        <NewConsultationModal pregnancyId={pregnancyId} onClose={() => setConsultationModal(false)} />
+      )}
     </div>
   );
 }

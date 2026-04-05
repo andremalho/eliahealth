@@ -4,6 +4,11 @@ import { Bot, X, AlertTriangle, Shield, RefreshCw, Loader2 } from 'lucide-react'
 import { fetchCopilotAlerts, analyzeCopilot } from '../../../api/pregnancy.api';
 import { cn } from '../../../utils/cn';
 
+const ALERT_TYPE_LABELS: Record<string, string> = {
+  suggestion: 'Sugestão', exam_overdue: 'Exame em atraso', pattern_detected: 'Padrão detectado',
+  red_flag: 'Alerta crítico', warning: 'Atenção', info: 'Informação',
+};
+
 export default function CopilotPanel({ pregnancyId }: { pregnancyId: string }) {
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
@@ -144,7 +149,7 @@ export default function CopilotPanel({ pregnancyId }: { pregnancyId: string }) {
                         <div className="flex items-start gap-2">
                           <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                           <div>
-                            <p className="font-medium text-xs">{a.alertType ?? a.alert_type}</p>
+                            <p className="font-medium text-xs">{ALERT_TYPE_LABELS[a.alertType ?? a.alert_type] ?? (a.alertType ?? a.alert_type)}</p>
                             <p className="text-xs mt-0.5 opacity-80">{a.message}</p>
                           </div>
                         </div>

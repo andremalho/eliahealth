@@ -110,8 +110,16 @@ export class CopilotService {
       savedAlerts.push(await this.alertRepo.save(entity));
     }
 
+    // Override riskLevel based on actual alert severities (AI may underestimate)
+    let riskLevel = analysis.riskLevel ?? 'low';
+    const hasCritical = savedAlerts.some((a) => a.severity === 'critical' || a.alertType === 'red_flag');
+    const hasWarning = savedAlerts.some((a) => a.severity === 'warning');
+    if (hasCritical) riskLevel = 'high';
+    else if (hasWarning && riskLevel === 'low') riskLevel = 'moderate';
+
     return {
-      riskLevel: analysis.riskLevel,
+      riskLevel,
+      suggestions: analysis.summary,
       summary: analysis.summary,
       alerts: savedAlerts,
       gestationalAge: ga,

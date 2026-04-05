@@ -15,7 +15,9 @@ async function bootstrap() {
   app.enableCors({
     origin: process.env.CORS_ORIGINS
       ? process.env.CORS_ORIGINS.split(',')
-      : ['http://localhost:3001', 'https://app.eliahealth.com'],
+      : ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001', 'https://app.eliahealth.com'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     credentials: true,
   });
 

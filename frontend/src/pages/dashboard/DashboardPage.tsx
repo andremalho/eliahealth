@@ -81,7 +81,7 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-semibold text-navy">
             {greeting()}, Dr. {userName}
           </h1>
-          <p className="text-sm text-gray-500 capitalize">{today}</p>
+          <p className="text-sm text-gray-500">{today}</p>
         </div>
         <button
           onClick={() => setModalOpen(true)}

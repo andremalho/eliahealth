@@ -13,19 +13,29 @@ const schema = z.object({
   email: z.string().email('E-mail inválido').optional().or(z.literal('')),
   phone: z.string().optional(),
   dateOfBirth: z.string().optional(),
-  lmpDate: z.string().min(1, 'DUM obrigatória'),
-  gaMethod: z.enum(['lmp', 'ultrasound', 'ivf']),
+  gaMethod: z.enum(['dum', 'dpp', 'ultrasound', 'ivf', 'manual']),
+  referenceDate: z.string().min(1, 'Data obrigatória'),
 });
+
+const dateLabels: Record<string, string> = {
+  dum: 'DUM (Data da Última Menstruação)',
+  dpp: 'DPP (Data Provável do Parto)',
+  ultrasound: 'Data da Ultrassonografia',
+  ivf: 'Data da Transferência (FIV)',
+  manual: 'Data de Referência',
+};
 
 type FormData = z.infer<typeof schema>;
 
 export default function NewPatientModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { gaMethod: 'lmp' },
+    defaultValues: { gaMethod: 'dum' },
   });
+
+  const gaMethod = watch('gaMethod');
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -36,9 +46,11 @@ export default function NewPatientModal({ onClose }: { onClose: () => void }) {
         phone: data.phone || undefined,
         dateOfBirth: data.dateOfBirth || undefined,
       });
+      // Map frontend method to backend gaMethod + correct date field
+      const methodMap: Record<string, string> = { dum: 'lmp', dpp: 'lmp', ultrasound: 'ultrasound', ivf: 'ivf', manual: 'lmp' };
       await createPregnancy(patient.id, {
-        lmpDate: data.lmpDate,
-        gaMethod: data.gaMethod,
+        lmpDate: data.referenceDate,
+        gaMethod: methodMap[data.gaMethod] ?? 'lmp',
         gravida: 1,
         para: 0,
         abortus: 0,
@@ -96,16 +108,18 @@ export default function NewPatientModal({ onClose }: { onClose: () => void }) {
 
           <p className="text-sm font-medium text-navy">Dados da gestação</p>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="DUM (Data da Última Menstruação) *" error={errors.lmpDate?.message}>
-              <input {...register('lmpDate')} type="date" className={inputCn(!!errors.lmpDate)} />
-            </Field>
+          <div className="grid grid-cols-2 gap-4 items-end">
             <Field label="Método de datação *" error={errors.gaMethod?.message}>
               <select {...register('gaMethod')} className={inputCn(!!errors.gaMethod)}>
-                <option value="lmp">DUM</option>
+                <option value="dum">DUM</option>
+                <option value="dpp">DPP</option>
                 <option value="ultrasound">Ultrassonografia</option>
                 <option value="ivf">FIV</option>
+                <option value="manual">Manual</option>
               </select>
+            </Field>
+            <Field label={`${dateLabels[gaMethod] ?? 'Data'} *`} error={errors.referenceDate?.message}>
+              <input {...register('referenceDate')} type="date" className={inputCn(!!errors.referenceDate)} />
             </Field>
           </div>
 

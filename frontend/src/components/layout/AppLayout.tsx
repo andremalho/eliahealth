@@ -7,6 +7,7 @@ import {
 import Logo from '../Logo';
 import { useAuthStore } from '../../store/auth.store';
 import { cn } from '../../utils/cn';
+import { toTitleCase } from '../../utils/formatters';
 
 const navItems = [
   { to: '/dashboard', icon: Home, label: 'Início' },
@@ -27,7 +28,8 @@ export default function AppLayout() {
     navigate('/login');
   };
 
-  const initials = (user?.name ?? user?.email ?? '?')
+  const displayName = toTitleCase(user?.name ?? user?.email ?? '');
+  const initials = displayName
     .split(' ')
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase())
@@ -98,7 +100,7 @@ export default function AppLayout() {
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{user?.name ?? user?.email}</p>
+              <p className="text-sm font-medium truncate">{displayName}</p>
               <button onClick={handleLogout} className="text-xs text-white/50 hover:text-white flex items-center gap-1">
                 <LogOut className="w-3 h-3" /> Sair
               </button>

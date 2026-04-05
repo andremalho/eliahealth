@@ -7,6 +7,7 @@ import {
 import { fetchPregnancyList, fetchUpcomingBirths } from '../../api/pregnancies.api';
 import { useAuthStore } from '../../store/auth.store';
 import { cn } from '../../utils/cn';
+import { toTitleCase, formatDateLong } from '../../utils/formatters';
 import NewPatientModal from './NewPatientModal';
 
 const trimesterFilters = [
@@ -56,8 +57,8 @@ export default function DashboardPage() {
     return 'Boa noite';
   };
 
-  const userName = user?.name ?? user?.email?.split('@')[0] ?? '';
-  const today = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const userName = toTitleCase(user?.name ?? user?.email?.split('@')[0] ?? '');
+  const today = formatDateLong();
 
   const filtered = (pregnancies ?? []).filter((p) => {
     if (filter === 'all') return true;

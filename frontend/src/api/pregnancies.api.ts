@@ -49,3 +49,8 @@ export async function createPregnancy(patientId: string, dto: {
   const { data } = await api.post(`/patients/${patientId}/pregnancies`, dto);
   return data;
 }
+
+export async function quickCreatePregnancy(dto: Record<string, unknown>) {
+  const { data } = await api.post('/pregnancies/quick-create', dto);
+  return data;
+}

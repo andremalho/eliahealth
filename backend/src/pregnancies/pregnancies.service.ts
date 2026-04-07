@@ -82,6 +82,8 @@ export class PregnanciesService {
       gaDays: dto.gaDays,
       ivfTransferDate: dto.ivfTransferDate,
       ivfTransferType: dto.ivfTransferType,
+      usDatingDate: dto.usDatingDate,
+      usDatingGaDays: dto.usDatingGaDays,
       gravida: dto.gravida ?? 1,
       para: dto.para ?? 0,
       abortus: dto.abortus ?? 0,
@@ -323,6 +325,19 @@ export class PregnanciesService {
     if (!dto.lmpDate && dto.edd) {
       const eddDate = new Date(dto.edd);
       const lmp = new Date(eddDate.getTime() - 280 * 86_400_000);
+      dto.lmpDate = lmp.toISOString().split('T')[0];
+      return;
+    }
+
+    // Ultrasound dating: compute retroactive LMP from us date + GA at exam
+    if (
+      dto.gaMethod === GaMethod.ULTRASOUND &&
+      dto.usDatingDate &&
+      dto.usDatingGaDays != null &&
+      !dto.lmpDate
+    ) {
+      const usDate = new Date(dto.usDatingDate);
+      const lmp = new Date(usDate.getTime() - dto.usDatingGaDays * 86_400_000);
       dto.lmpDate = lmp.toISOString().split('T')[0];
       return;
     }

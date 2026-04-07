@@ -3,8 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2 } from 'lucide-react';
-import { createPatient } from '../../api/patients.api';
-import { createPregnancy } from '../../api/pregnancies.api';
+import { quickCreatePregnancy } from '../../api/pregnancies.api';
 import { cn } from '../../utils/cn';
 
 const schema = z.object({
@@ -44,38 +43,36 @@ export default function NewPatientModal({ onClose }: { onClose: () => void }) {
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const patient = await createPatient({
-        fullName: data.fullName,
+      const payload: Record<string, unknown> = {
+        patientName: data.fullName,
         cpf: data.cpf,
         email: data.email || undefined,
         phone: data.phone || undefined,
-        dateOfBirth: data.dateOfBirth || undefined,
-      });
-
-      // Build pregnancy payload based on method
-      const pregPayload: Record<string, unknown> = { gravida: 1, para: 0, abortus: 0 };
+        gravida: 1,
+        para: 0,
+        abortus: 0,
+      };
 
       if (data.gaMethod === 'dum') {
-        pregPayload.lmpDate = data.referenceDate;
-        pregPayload.gaMethod = 'lmp';
+        payload.lmpDate = data.referenceDate;
+        payload.gaMethod = 'lmp';
       } else if (data.gaMethod === 'dpp') {
-        pregPayload.edd = data.referenceDate;
-        pregPayload.gaMethod = 'lmp';
+        payload.edd = data.referenceDate;
+        payload.gaMethod = 'lmp';
       } else if (data.gaMethod === 'ultrasound') {
-        pregPayload.usDatingDate = data.referenceDate;
-        pregPayload.usDatingGaDays = (parseInt(data.usWeeks ?? '0', 10)) * 7 + parseInt(data.usDays ?? '0', 10);
-        pregPayload.gaMethod = 'ultrasound';
+        payload.usDatingDate = data.referenceDate;
+        payload.usDatingGaDays = (parseInt(data.usWeeks ?? '0', 10)) * 7 + parseInt(data.usDays ?? '0', 10);
+        payload.gaMethod = 'ultrasound';
       } else if (data.gaMethod === 'ivf') {
-        pregPayload.ivfTransferDate = data.referenceDate;
-        pregPayload.gaMethod = 'ivf';
+        payload.ivfTransferDate = data.referenceDate;
+        payload.gaMethod = 'ivf';
       } else if (data.gaMethod === 'manual') {
-        pregPayload.gaWeeks = parseInt(data.manualWeeks ?? '0', 10);
-        pregPayload.gaDays = parseInt(data.manualDays ?? '0', 10);
-        pregPayload.gaMethod = 'lmp';
+        payload.gaWeeks = parseInt(data.manualWeeks ?? '0', 10);
+        payload.gaDays = parseInt(data.manualDays ?? '0', 10);
+        payload.gaMethod = 'lmp';
       }
 
-      await createPregnancy(patient.id, pregPayload as any);
-      return patient;
+      return quickCreatePregnancy(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pregnancies'] });

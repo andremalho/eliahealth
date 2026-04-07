@@ -53,6 +53,16 @@ export class QuickCreatePregnancyDto {
 
   @IsOptional()
   @IsDateString()
+  usDatingDate?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(300)
+  usDatingGaDays?: number;
+
+  @IsOptional()
+  @IsDateString()
   ivfTransferDate?: string;
 
   @IsOptional()

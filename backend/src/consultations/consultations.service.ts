@@ -1,19 +1,24 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { verifySubResourceTenant } from '../common/tenant.js';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Consultation } from './consultation.entity.js';
 import { FhrStatus, EdemaGrade, ConsultationAlert } from './consultation.enums.js';
 import { PregnanciesService } from '../pregnancies/pregnancies.service.js';
+import { CopilotService } from '../copilot/copilot.service.js';
 import { CreateConsultationDto } from './dto/create-consultation.dto.js';
 import { UpdateConsultationDto } from './dto/update-consultation.dto.js';
 
 @Injectable()
 export class ConsultationsService {
+  private readonly logger = new Logger(ConsultationsService.name);
+
   constructor(
     @InjectRepository(Consultation)
     private readonly repo: Repository<Consultation>,
     private readonly pregnanciesService: PregnanciesService,
+    @Inject(forwardRef(() => CopilotService))
+    private readonly copilotService: CopilotService,
   ) {}
 
   async create(pregnancyId: string, dto: CreateConsultationDto): Promise<Consultation> {
@@ -27,7 +32,16 @@ export class ConsultationsService {
     });
 
     this.evaluateAlerts(consultation);
-    return this.repo.save(consultation);
+    const saved = await this.repo.save(consultation);
+
+    // Dispara deteccao de padroes do copiloto (nao bloqueia em caso de falha)
+    try {
+      await this.copilotService.detectPatterns(saved.id);
+    } catch (err) {
+      this.logger.warn(`Falha ao executar detectPatterns para consulta ${saved.id}: ${(err as Error).message}`);
+    }
+
+    return saved;
   }
 
   async findAllByPregnancy(pregnancyId: string, page = 1, limit = 50) {

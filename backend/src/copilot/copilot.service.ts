@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger, Inject, forwardRef } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -28,6 +28,7 @@ export class CopilotService {
     private readonly alertRepo: Repository<CopilotAlert>,
     private readonly configService: ConfigService,
     private readonly pregnanciesService: PregnanciesService,
+    @Inject(forwardRef(() => ConsultationsService))
     private readonly consultationsService: ConsultationsService,
     private readonly labResultsService: LabResultsService,
     private readonly clinicalProtocolsService: ClinicalProtocolsService,
@@ -255,6 +256,32 @@ export class CopilotService {
           'fundal_height_low',
         ));
       }
+    }
+
+    // Movimentos fetais ausentes — red flag clássica do pré-natal
+    if (consultation.fetalMovements && /ausent/i.test(consultation.fetalMovements) && gaWeeks >= 20) {
+      savedAlerts.push(await this.savePatternAlert(
+        consultation.pregnancyId,
+        consultationId,
+        AlertSeverity.CRITICAL,
+        'Movimentos fetais ausentes',
+        `Paciente refere ausência de movimentos fetais com ${gaWeeks} semanas de IG.`,
+        'Avaliação imediata da vitalidade fetal: ausculta de BCF, cardiotocografia e/ou ultrassom obstétrico com perfil biofísico fetal. Considerar internação se confirmada redução/ausência de movimentação.',
+        'fetal_movement_absent',
+      ));
+    }
+
+    // Movimentos fetais hipoativos — atenção
+    if (consultation.fetalMovements && /hipoativ/i.test(consultation.fetalMovements) && gaWeeks >= 20) {
+      savedAlerts.push(await this.savePatternAlert(
+        consultation.pregnancyId,
+        consultationId,
+        AlertSeverity.WARNING,
+        'Movimentos fetais hipoativos',
+        `Paciente refere movimentos fetais hipoativos com ${gaWeeks} semanas de IG.`,
+        'Orientar mobilograma. Reavaliar em curto prazo. Considerar cardiotocografia se persistir.',
+        'fetal_movement_reduced',
+      ));
     }
 
     // BCF fora do range 110-160 bpm

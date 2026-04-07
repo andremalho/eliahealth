@@ -16,6 +16,26 @@ export function withTenant(
 }
 
 /**
+ * Verifies that a patient belongs to the given tenant.
+ * Used by patient-rooted modules (gynecology, contraception, menopause, etc.).
+ * Skips check if tenantId is null (superadmin).
+ */
+export async function verifyPatientTenant(
+  repo: Repository<ObjectLiteral>,
+  patientId: string,
+  tenantId: string | null,
+): Promise<void> {
+  if (!tenantId) return;
+  const [row] = await (repo as any).query(
+    `SELECT tenant_id FROM patients WHERE id = $1`,
+    [patientId],
+  );
+  if (row && row.tenant_id !== tenantId) {
+    throw new ForbiddenException('Acesso negado');
+  }
+}
+
+/**
  * Verifies that a pregnancy belongs to the given tenant.
  * Uses a single JOIN query: pregnancy → patient → tenantId.
  * Skips check if tenantId is null (superadmin).

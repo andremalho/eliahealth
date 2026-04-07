@@ -54,6 +54,13 @@ import { Hl7Module } from './shared/hl7/hl7.module.js';
 import { CdaModule } from './shared/cda/cda.module.js';
 import { LoincModule } from './shared/loinc/loinc.module.js';
 import { CnesModule } from './shared/cnes/cnes.module.js';
+import { PreventiveExamScheduleModule } from './preventive-exam-schedule/preventive-exam-schedule.module.js';
+import { GynecologyConsultationsModule } from './gynecology-consultations/gynecology-consultations.module.js';
+import { MenstrualCycleAssessmentsModule } from './menstrual-cycle-assessments/menstrual-cycle-assessments.module.js';
+import { ContraceptionRecordsModule } from './contraception-records/contraception-records.module.js';
+import { InfertilityWorkupsModule } from './infertility-workups/infertility-workups.module.js';
+import { AssistedReproductionModule } from './assisted-reproduction/assisted-reproduction.module.js';
+import { MenopauseAssessmentsModule } from './menopause-assessments/menopause-assessments.module.js';
 
 @Module({
   imports: [
@@ -123,6 +130,13 @@ import { CnesModule } from './shared/cnes/cnes.module.js';
     CdaModule,
     LoincModule,
     CnesModule,
+    PreventiveExamScheduleModule,
+    GynecologyConsultationsModule,
+    MenstrualCycleAssessmentsModule,
+    ContraceptionRecordsModule,
+    InfertilityWorkupsModule,
+    AssistedReproductionModule,
+    MenopauseAssessmentsModule,
   ],
   controllers: [AppController],
   providers: [

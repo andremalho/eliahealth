@@ -12,7 +12,7 @@ import {
 } from 'class-validator';
 import {
   EdemaGrade, FetalPresentation, UmbilicalDopplerResult,
-  CervicalPosition, CervicalConsistency, FetalStation, Membranes, FhrStatus,
+  CervicalPosition, CervicalConsistency, CervicalState, FetalStation, Membranes, FhrStatus,
 } from '../consultation.enums.js';
 
 export class CreateConsultationDto {
@@ -92,6 +92,10 @@ export class CreateConsultationDto {
   vaginalExam?: string;
 
   // Structured cervical exam
+  @IsOptional()
+  @IsEnum(CervicalState)
+  cervicalState?: CervicalState;
+
   @IsOptional()
   @IsEnum(CervicalPosition)
   cervicalPosition?: CervicalPosition;

@@ -284,6 +284,24 @@ export class CopilotService {
       ));
     }
 
+    // Apresentacao fetal nao cefalica >= 35 semanas
+    if (
+      gaWeeks >= 35 &&
+      consultation.fetalPresentation &&
+      (consultation.fetalPresentation === 'pelvic' || consultation.fetalPresentation === 'transverse')
+    ) {
+      const presentLabel = consultation.fetalPresentation === 'pelvic' ? 'pélvica' : 'transversa';
+      savedAlerts.push(await this.savePatternAlert(
+        consultation.pregnancyId,
+        consultationId,
+        AlertSeverity.WARNING,
+        `Apresentação ${presentLabel} no terceiro trimestre`,
+        `Feto em apresentação ${presentLabel} com ${gaWeeks} semanas de IG.`,
+        'Considerar versão cefálica externa entre 36-37 semanas se ausência de contraindicações. Avaliar via de parto. Documentar discussão de riscos com a paciente.',
+        'fetal_presentation_non_cephalic',
+      ));
+    }
+
     // BCF fora do range 110-160 bpm
     if (consultation.fetalHeartRate != null) {
       const fhr = consultation.fetalHeartRate;

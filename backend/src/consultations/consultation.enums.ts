@@ -33,6 +33,15 @@ export enum CervicalConsistency {
   SOFT = 'soft',
 }
 
+export enum CervicalState {
+  NOT_PERFORMED = 'nr',
+  IMPERVIOUS = 'impervious',
+  SHORTENED = 'shortened',
+  SOFTENED = 'softened',
+  DILATED = 'dilated',
+  OTHER = 'other',
+}
+
 export enum FetalStation {
   HIGH = 'high',
   INTERMEDIATE = 'intermediate',

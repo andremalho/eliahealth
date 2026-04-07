@@ -11,16 +11,27 @@ const EDEMA_OPTIONS = [
   { value: 'absent', label: 'Ausente' }, { value: '1plus', label: '+/4+' },
   { value: '2plus', label: '++/4+' }, { value: '3plus', label: '+++/4+' }, { value: '4plus', label: '++++/4+' },
 ];
-const TV_OPTIONS = [
-  { value: 'nr', label: 'NR' }, { value: 'cephalic', label: 'Cefálica' },
-  { value: 'pelvic', label: 'Pélvica' }, { value: 'transverse', label: 'Transversa' }, { value: 'oblique', label: 'Oblíqua' },
+const PRESENTATION_OPTIONS = [
+  { value: 'cephalic', label: 'Cefálica' },
+  { value: 'pelvic', label: 'Pélvica' },
+  { value: 'transverse', label: 'Transversa' },
+];
+const CERVICAL_STATE_OPTIONS = [
+  { value: 'nr', label: 'NR' },
+  { value: 'impervious', label: 'Impérvio' },
+  { value: 'shortened', label: 'Encurtado' },
+  { value: 'softened', label: 'Amolecido' },
+  { value: 'dilated', label: 'Dilatado' },
+  { value: 'other', label: 'Outros' },
 ];
 
 export default function NewConsultationModal({ pregnancyId, onClose }: Props) {
   const qc = useQueryClient();
-  const { register, handleSubmit, formState: { isSubmitting } } = useForm<Record<string, string>>({
+  const { register, handleSubmit, watch, formState: { isSubmitting } } = useForm<Record<string, string>>({
     defaultValues: { date: new Date().toISOString().split('T')[0] },
   });
+
+  const cervicalState = watch('cervicalState');
 
   const mutation = useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
@@ -33,6 +44,15 @@ export default function NewConsultationModal({ pregnancyId, onClose }: Props) {
       if (data.edemaGrade) payload.edemaGrade = data.edemaGrade;
       if (data.fetalPresentation) payload.fetalPresentation = data.fetalPresentation;
       if (data.fundalHeightCm) payload.fundalHeightCm = Number(data.fundalHeightCm);
+      if (data.cervicalState) {
+        payload.cervicalState = data.cervicalState;
+        if (data.cervicalState === 'dilated' && data.cervicalDilation) {
+          payload.cervicalDilation = Number(data.cervicalDilation);
+        }
+        if (data.cervicalState === 'other' && data.vaginalExam) {
+          payload.vaginalExam = data.vaginalExam;
+        }
+      }
       if (data.subjective) payload.subjective = data.subjective;
       if (data.plan) payload.plan = data.plan;
       if (data.confidentialNotes) payload.confidentialNotes = data.confidentialNotes;
@@ -79,10 +99,25 @@ export default function NewConsultationModal({ pregnancyId, onClose }: Props) {
               <select {...register('edemaGrade')} className={iCn}><option value="">—</option>
                 {EDEMA_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select></div>
-            <div><label className="block text-xs font-medium text-gray-600 mb-1">Toque Vaginal</label>
+            <div><label className="block text-xs font-medium text-gray-600 mb-1">Apresentação Fetal</label>
               <select {...register('fetalPresentation')} className={iCn}><option value="">—</option>
-                {TV_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                {PRESENTATION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select></div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div><label className="block text-xs font-medium text-gray-600 mb-1">Toque Vaginal</label>
+              <select {...register('cervicalState')} className={iCn}><option value="">—</option>
+                {CERVICAL_STATE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select></div>
+            {cervicalState === 'dilated' && (
+              <div><label className="block text-xs font-medium text-gray-600 mb-1">Dilatação (cm)</label>
+                <input {...register('cervicalDilation')} type="number" step="0.5" min="0" max="10" placeholder="Ex: 3" className={iCn} /></div>
+            )}
+            {cervicalState === 'other' && (
+              <div className="col-span-2"><label className="block text-xs font-medium text-gray-600 mb-1">Descrição</label>
+                <input {...register('vaginalExam')} type="text" placeholder="Descreva o achado..." className={iCn} /></div>
+            )}
           </div>
 
           <div><label className="block text-xs font-medium text-gray-600 mb-1">Queixas</label>

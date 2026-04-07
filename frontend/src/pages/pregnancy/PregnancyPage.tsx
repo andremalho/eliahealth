@@ -33,13 +33,29 @@ function mapFetalMovement(v: string | null): string {
   };
   return m[v] ?? v;
 }
-function mapVaginalExam(v: string | null): string {
+function mapPresentation(v: string | null): string {
   if (!v) return '—';
   const m: Record<string, string> = {
     nr: 'NR', not_performed: 'NR', cephalic: 'Cefálica', pelvic: 'Pélvica',
     transverse: 'Transverso', oblique: 'Oblíquo', not_evaluated: 'Não avaliado',
   };
   return m[v] ?? v;
+}
+function mapCervicalState(c: any): string {
+  const state = c?.cervicalState ?? c?.cervical_state;
+  if (!state) return '—';
+  const m: Record<string, string> = {
+    nr: 'NR', impervious: 'Impérvio', shortened: 'Encurtado',
+    softened: 'Amolecido', dilated: 'Dilatado', other: 'Outros',
+  };
+  if (state === 'dilated') {
+    const cm = c?.cervicalDilation ?? c?.cervical_dilation;
+    return cm != null ? `Dilatado ${cm}cm` : 'Dilatado';
+  }
+  if (state === 'other') {
+    return c?.vaginalExam ?? c?.vaginal_exam ?? 'Outros';
+  }
+  return m[state] ?? state;
 }
 function Skeleton({ className = '' }: { className?: string }) {
   return <div className={cn('animate-pulse bg-gray-200 rounded', className)} />;
@@ -214,7 +230,7 @@ export default function PregnancyPage() {
                   <thead><tr className="text-left text-xs text-gray-500 border-b bg-gray-50">
                     <th className="px-3 py-2">IG</th><th className="px-3 py-2">Data</th><th className="px-3 py-2">Peso</th>
                     <th className="px-3 py-2">PA</th><th className="px-3 py-2">BCF</th><th className="px-3 py-2">MF</th>
-                    <th className="px-3 py-2">Edema</th><th className="px-3 py-2">TV</th><th className="px-3 py-2">AU</th>
+                    <th className="px-3 py-2">Edema</th><th className="px-3 py-2">TV</th><th className="px-3 py-2">Apr.</th><th className="px-3 py-2">AU</th>
                   </tr></thead>
                   <tbody className="divide-y">
                     {consultations.map((c: any) => (
@@ -226,7 +242,8 @@ export default function PregnancyPage() {
                         <td className="px-3 py-2">{c.fetalHeartRate ?? c.fetal_heart_rate ?? '—'}</td>
                         <td className="px-3 py-2">{mapFetalMovement(c.fetalMovements ?? c.fetal_movements)}</td>
                         <td className="px-3 py-2">{mapEdema(c.edemaGrade ?? c.edema_grade)}</td>
-                        <td className="px-3 py-2">{mapVaginalExam(c.fetalPresentation ?? c.fetal_presentation)}</td>
+                        <td className="px-3 py-2">{mapCervicalState(c)}</td>
+                        <td className="px-3 py-2">{mapPresentation(c.fetalPresentation ?? c.fetal_presentation)}</td>
                         <td className="px-3 py-2">{c.fundalHeightCm ?? c.fundal_height_cm ?? '—'}</td>
                       </tr>
                     ))}

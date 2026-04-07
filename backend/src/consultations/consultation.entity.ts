@@ -10,7 +10,7 @@ import {
 import { Pregnancy } from '../pregnancies/pregnancy.entity.js';
 import {
   EdemaGrade, FetalPresentation, UmbilicalDopplerResult,
-  CervicalPosition, CervicalConsistency, FetalStation, Membranes, FhrStatus,
+  CervicalPosition, CervicalConsistency, CervicalState, FetalStation, Membranes, FhrStatus,
   ConsultationAlert,
 } from './consultation.enums.js';
 
@@ -83,6 +83,9 @@ export class Consultation {
   vaginalExam: string | null;
 
   // Structured cervical exam
+  @Column({ name: 'cervical_state', type: 'enum', enum: CervicalState, nullable: true })
+  cervicalState: CervicalState | null;
+
   @Column({ name: 'cervical_position', type: 'enum', enum: CervicalPosition, nullable: true })
   cervicalPosition: CervicalPosition | null;
 

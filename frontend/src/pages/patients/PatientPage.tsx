@@ -23,6 +23,7 @@ import ContraceptionSection from './sections/ContraceptionSection';
 import PreventiveExamSection from './sections/PreventiveExamSection';
 import MenopauseSection from './sections/MenopauseSection';
 import InfertilitySection from './sections/InfertilitySection';
+import AssistedReproductionSection from './sections/AssistedReproductionSection';
 
 type ModuleKey =
   | 'gynecology'
@@ -45,7 +46,7 @@ const MODULES: ModuleDef[] = [
   { key: 'menstrual', label: 'Ciclo / SUA', icon: Activity, available: true },
   { key: 'contraception', label: 'Contracepção', icon: Pill, available: true },
   { key: 'infertility', label: 'Infertilidade', icon: Sparkles, available: true },
-  { key: 'art', label: 'Reprodução Assistida', icon: Baby, available: false },
+  { key: 'art', label: 'Reprodução Assistida', icon: Baby, available: true },
   { key: 'menopause', label: 'Menopausa', icon: Flower2, available: true },
   { key: 'preventive', label: 'Rastreios', icon: ClipboardCheck, available: true },
 ];
@@ -59,6 +60,7 @@ const SECTION_COMPONENTS: Partial<
   preventive: PreventiveExamSection,
   menopause: MenopauseSection,
   infertility: InfertilitySection,
+  art: AssistedReproductionSection,
 };
 
 function calcAge(dob: string | null): number | null {

@@ -114,10 +114,18 @@ export class CopilotService {
       savedAlerts.push(await this.alertRepo.save(entity));
     }
 
+    // Detecta gaps de rastreio/profilaxia baseados em IG
+    try {
+      const gapAlerts = await this.detectPregnancyGaps(pregnancyId);
+      savedAlerts.push(...gapAlerts);
+    } catch (err) {
+      this.logger.warn(`Falha ao detectar gaps: ${(err as Error).message}`);
+    }
+
     // Override riskLevel based on actual alert severities (AI may underestimate)
     let riskLevel = analysis.riskLevel ?? 'low';
     const hasCritical = savedAlerts.some((a) => a.severity === 'critical' || a.alertType === 'red_flag');
-    const hasWarning = savedAlerts.some((a) => a.severity === 'warning');
+    const hasWarning = savedAlerts.some((a) => a.severity === 'warning' || a.severity === 'urgent');
     if (hasCritical) riskLevel = 'high';
     else if (hasWarning && riskLevel === 'low') riskLevel = 'moderate';
 
@@ -128,6 +136,216 @@ export class CopilotService {
       alerts: savedAlerts,
       gestationalAge: ga,
     };
+  }
+
+  // ── Deteccao de gaps de rastreio e profilaxia ──
+  // Regras deterministicas baseadas em IG, exames, vacinas e fatores de risco
+  async detectPregnancyGaps(pregnancyId: string): Promise<CopilotAlert[]> {
+    const pregnancy = await this.pregnanciesService.findOne(pregnancyId);
+    const ga = this.pregnanciesService.getGestationalAge(pregnancy);
+    const gaWeeks = ga.weeks;
+    const patient = await this.patientRepo.findOneBy({ id: pregnancy.patientId });
+
+    const savedAlerts: CopilotAlert[] = [];
+
+    const hasActiveAlert = async (key: string): Promise<boolean> => {
+      const existing = await this.alertRepo.findOne({
+        where: { pregnancyId, triggeredBy: key, isRead: false },
+      });
+      return !!existing;
+    };
+
+    const createGap = async (
+      severity: AlertSeverity,
+      title: string,
+      message: string,
+      recommendation: string,
+      key: string,
+    ): Promise<CopilotAlert | null> => {
+      if (await hasActiveAlert(key)) return null;
+      const alert = this.alertRepo.create({
+        pregnancyId,
+        consultationId: null as any,
+        alertType: AlertType.SUGGESTION,
+        severity,
+        title,
+        message,
+        recommendation,
+        triggeredBy: key,
+        aiGenerated: false,
+      });
+      return this.alertRepo.save(alert);
+    };
+
+    // 1. Rastreio DMG (24-28s)
+    if (gaWeeks >= 24 && gaWeeks <= 28) {
+      const [{ count }] = await this.alertRepo.query(
+        `SELECT COUNT(*)::int AS count FROM lab_results
+         WHERE pregnancy_id = $1
+           AND (LOWER(exam_name) LIKE '%ttog%'
+                OR LOWER(exam_name) LIKE '%glicemia%'
+                OR LOWER(exam_name) LIKE '%glicose%'
+                OR LOWER(exam_name) LIKE '%toleranc%')`,
+        [pregnancyId],
+      );
+      if (count === 0) {
+        const alert = await createGap(
+          AlertSeverity.WARNING,
+          'Rastreio de DMG pendente',
+          `Paciente com ${gaWeeks} semanas. Rastreio de Diabetes Mellitus Gestacional não registrado nesta gestação.`,
+          'Solicitar TTOG 75g (jejum, 1h e 2h). FEBRASGO/SBD recomendam rastreio universal entre 24-28 semanas.',
+          'gap_dmg_screening',
+        );
+        if (alert) savedAlerts.push(alert);
+      }
+    }
+
+    // 2. Profilaxia anti-RhD (>=28s, Rh negativo)
+    const isRhNegative =
+      patient?.bloodTypeRH === ('negative' as any) ||
+      (patient?.bloodType ?? '').includes('-');
+    if (gaWeeks >= 28 && isRhNegative) {
+      const [{ count: labCount }] = await this.alertRepo.query(
+        `SELECT COUNT(*)::int AS count FROM lab_results
+         WHERE pregnancy_id = $1
+           AND (LOWER(exam_name) LIKE '%coombs%'
+                OR LOWER(exam_name) LIKE '%anti-rhd%'
+                OR LOWER(exam_name) LIKE '%anti rh%')`,
+        [pregnancyId],
+      );
+      const [{ count: vaccineCount }] = await this.alertRepo.query(
+        `SELECT COUNT(*)::int AS count FROM vaccines
+         WHERE pregnancy_id = $1
+           AND (LOWER(vaccine_name) LIKE '%anti-rhd%'
+                OR LOWER(vaccine_name) LIKE '%anti-d%'
+                OR LOWER(vaccine_name) LIKE '%rhogam%'
+                OR LOWER(vaccine_name) LIKE '%matergam%')`,
+        [pregnancyId],
+      );
+      if (labCount === 0 && vaccineCount === 0) {
+        const alert = await createGap(
+          AlertSeverity.URGENT,
+          'Profilaxia anti-RhD pendente',
+          `Paciente Rh negativo com ${gaWeeks} semanas. Sem registro de Coombs indireto ou imunoglobulina anti-D.`,
+          'Solicitar Coombs indireto. Se negativo, administrar imunoglobulina anti-D 300mcg IM em 28 semanas (profilaxia rotineira) e nas primeiras 72h pós-parto se RN Rh+.',
+          'gap_anti_rhd',
+        );
+        if (alert) savedAlerts.push(alert);
+      }
+    }
+
+    // 3. Prevencao pre-eclampsia com AAS (12-36s, com fatores de risco)
+    if (gaWeeks >= 12 && gaWeeks <= 36) {
+      const fatoresRisco: string[] = [];
+      if (patient?.dateOfBirth) {
+        const age = Math.floor((Date.now() - new Date(patient.dateOfBirth).getTime()) / 31557600000);
+        if (age >= 35) fatoresRisco.push('idade ≥35 anos');
+      }
+      const heightCm = patient?.height ? Number(patient.height) : 0;
+      if (heightCm > 0) {
+        const [lastWeight] = await this.alertRepo.query(
+          `SELECT weight_kg FROM consultations WHERE pregnancy_id = $1 AND weight_kg IS NOT NULL ORDER BY date DESC LIMIT 1`,
+          [pregnancyId],
+        );
+        if (lastWeight?.weight_kg) {
+          const bmi = Number(lastWeight.weight_kg) / Math.pow(heightCm / 100, 2);
+          if (bmi >= 30) fatoresRisco.push(`IMC ${bmi.toFixed(1)} (obesidade)`);
+        }
+      }
+      const path = (pregnancy.currentPathologies ?? '').toLowerCase();
+      if (/hipertens/.test(path)) fatoresRisco.push('HAS prévia');
+      if (/diabetes|dm[12]|lada|mody/.test(path)) fatoresRisco.push('Diabetes prévio');
+      if (/renal/.test(path)) fatoresRisco.push('Doença renal');
+      if (/autoimune|les|saf/.test(path)) fatoresRisco.push('Doença autoimune');
+      if ((pregnancy.plurality ?? 1) > 1) fatoresRisco.push('gestação múltipla');
+      if (/pré-eclâmpsia|pre-eclampsia|pré.eclâmpsia/i.test(pregnancy.previousPregnanciesNotes ?? '')) {
+        fatoresRisco.push('PE em gestação anterior');
+      }
+
+      if (fatoresRisco.length >= 1) {
+        const meds = (pregnancy.currentMedications ?? '').toLowerCase();
+        const usandoAas = /\baas\b|acido acetil|aspirina/i.test(meds);
+        if (!usandoAas) {
+          const alert = await createGap(
+            AlertSeverity.WARNING,
+            'Profilaxia de pré-eclâmpsia com AAS',
+            `Paciente com fator(es) de risco: ${fatoresRisco.join(', ')}. AAS não consta nas medicações em uso.`,
+            'Considerar AAS 100-150mg/dia ao deitar entre 12-36 semanas (idealmente iniciar antes de 16s). Recomendação USPSTF/FIGO/FEBRASGO para pacientes de alto risco.',
+            'gap_aas_pe',
+          );
+          if (alert) savedAlerts.push(alert);
+        }
+      }
+    }
+
+    // 4. Streptococcus B (35-37s)
+    if (gaWeeks >= 35 && gaWeeks <= 37) {
+      const [{ count }] = await this.alertRepo.query(
+        `SELECT COUNT(*)::int AS count FROM vaginal_swabs
+         WHERE pregnancy_id = $1
+           AND (LOWER(exam_type) LIKE '%gbs%'
+                OR LOWER(exam_type) LIKE '%streptococ%'
+                OR LOWER(exam_type) LIKE '%grupo b%')`,
+        [pregnancyId],
+      );
+      if (count === 0) {
+        const alert = await createGap(
+          AlertSeverity.WARNING,
+          'Pesquisa de Streptococcus do grupo B pendente',
+          `Paciente com ${gaWeeks} semanas. Sem registro de pesquisa de GBS.`,
+          'Coletar swab vaginal e retal para cultura de Streptococcus do grupo B entre 35-37 semanas. Resultado positivo indica antibioticoprofilaxia intraparto.',
+          'gap_gbs',
+        );
+        if (alert) savedAlerts.push(alert);
+      }
+    }
+
+    // 5. Vacina dTpa (20-36s)
+    if (gaWeeks >= 20 && gaWeeks <= 36) {
+      const [{ count }] = await this.alertRepo.query(
+        `SELECT COUNT(*)::int AS count FROM vaccines
+         WHERE pregnancy_id = $1
+           AND (LOWER(vaccine_name) LIKE '%dtpa%' OR vaccine_type = 'dtpa')
+           AND status = 'administered'`,
+        [pregnancyId],
+      );
+      if (count === 0) {
+        const alert = await createGap(
+          AlertSeverity.INFO,
+          'Vacina dTpa pendente',
+          `Paciente com ${gaWeeks} semanas. dTpa não foi administrada nesta gestação.`,
+          'Administrar dTpa entre 20-36 semanas (idealmente 27-36s) em todas as gestações para proteção do recém-nascido contra coqueluche.',
+          'gap_dtpa',
+        );
+        if (alert) savedAlerts.push(alert);
+      }
+    }
+
+    // 6. Vacina VRS / Abrysvo (32-36s)
+    if (gaWeeks >= 32 && gaWeeks <= 36) {
+      const [{ count }] = await this.alertRepo.query(
+        `SELECT COUNT(*)::int AS count FROM vaccines
+         WHERE pregnancy_id = $1
+           AND (LOWER(vaccine_name) LIKE '%vrs%'
+                OR LOWER(vaccine_name) LIKE '%rsv%'
+                OR LOWER(vaccine_name) LIKE '%abrysvo%'
+                OR vaccine_type = 'rsv')
+           AND status = 'administered'`,
+        [pregnancyId],
+      );
+      if (count === 0) {
+        const alert = await createGap(
+          AlertSeverity.INFO,
+          'Vacina VRS (Abrysvo) pendente',
+          `Paciente com ${gaWeeks} semanas. VRS (vacina contra vírus sincicial respiratório) não foi administrada.`,
+          'Administrar Abrysvo entre 32-36 semanas para proteção do RN contra bronquiolite por VRS. Janela recomendada estreita.',
+          'gap_vrs',
+        );
+        if (alert) savedAlerts.push(alert);
+      }
+    }
+
+    return savedAlerts;
   }
 
   // ── Verificação de exames ──

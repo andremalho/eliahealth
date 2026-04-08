@@ -18,6 +18,7 @@ import { fetchPatient } from '../../api/patients.api';
 import { cn } from '../../utils/cn';
 import { toTitleCase, formatCPF, formatPhone } from '../../utils/formatters';
 import GynecologySection from './sections/GynecologySection';
+import MenstrualCycleSection from './sections/MenstrualCycleSection';
 
 type ModuleKey =
   | 'gynecology'
@@ -37,7 +38,7 @@ interface ModuleDef {
 
 const MODULES: ModuleDef[] = [
   { key: 'gynecology', label: 'Ginecologia', icon: Stethoscope, available: true },
-  { key: 'menstrual', label: 'Ciclo / SUA', icon: Activity, available: false },
+  { key: 'menstrual', label: 'Ciclo / SUA', icon: Activity, available: true },
   { key: 'contraception', label: 'Contracepção', icon: Pill, available: false },
   { key: 'infertility', label: 'Infertilidade', icon: Sparkles, available: false },
   { key: 'art', label: 'Reprodução Assistida', icon: Baby, available: false },
@@ -183,7 +184,10 @@ export default function PatientPage() {
           {activeModule === 'gynecology' && (
             <GynecologySection patientId={patient.id} />
           )}
-          {activeModule !== 'gynecology' && (
+          {activeModule === 'menstrual' && (
+            <MenstrualCycleSection patientId={patient.id} />
+          )}
+          {activeModule !== 'gynecology' && activeModule !== 'menstrual' && (
             <div className="flex flex-col items-center py-16 text-gray-400">
               <p className="font-medium">Módulo em desenvolvimento</p>
               <p className="text-sm mt-1">

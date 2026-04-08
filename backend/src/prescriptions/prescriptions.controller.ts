@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Query, Body, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, HttpCode, Param, Query, Body, ParseUUIDPipe } from '@nestjs/common';
 import { PrescriptionsService } from './prescriptions.service.js';
 import { CreatePrescriptionDto } from './dto/create-prescription.dto.js';
 import { UpdatePrescriptionDto } from './dto/update-prescription.dto.js';
@@ -36,6 +36,12 @@ export class PrescriptionsController {
   @Patch('prescriptions/:id')
   update(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('tenantId') tenantId: string, @Body() dto: UpdatePrescriptionDto) {
     return this.service.update(id, dto, tenantId);
+  }
+
+  @Delete('prescriptions/:id')
+  @HttpCode(204)
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('tenantId') tenantId: string) {
+    return this.service.remove(id, tenantId);
   }
 
   @Post('prescriptions/:id/sign')

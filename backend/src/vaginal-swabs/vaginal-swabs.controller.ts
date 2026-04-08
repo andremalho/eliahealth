@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Query, Body, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, HttpCode, Param, Query, Body, ParseUUIDPipe } from '@nestjs/common';
 import { VaginalSwabsService } from './vaginal-swabs.service.js';
 import { CreateVaginalSwabDto } from './dto/create-vaginal-swab.dto.js';
 import { UpdateVaginalSwabDto } from './dto/update-vaginal-swab.dto.js';
@@ -25,5 +25,11 @@ export class VaginalSwabsController {
   @Patch('vaginal-swabs/:id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateVaginalSwabDto) {
     return this.service.update(id, dto);
+  }
+
+  @Delete('vaginal-swabs/:id')
+  @HttpCode(204)
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.service.remove(id);
   }
 }

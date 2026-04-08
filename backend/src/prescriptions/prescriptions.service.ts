@@ -38,6 +38,11 @@ export class PrescriptionsService {
     return this.repo.save(rx);
   }
 
+  async remove(id: string, tenantId?: string | null): Promise<void> {
+    const rx = await this.findOne(id, tenantId);
+    await this.repo.remove(rx);
+  }
+
   async findActive(pregnancyId: string): Promise<Prescription[]> {
     return this.repo.find({
       where: { pregnancyId, status: PrescriptionStatus.ACTIVE },

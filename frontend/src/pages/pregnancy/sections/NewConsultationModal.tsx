@@ -2,9 +2,10 @@ import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2, Lock } from 'lucide-react';
 import api from '../../../api/client';
+import { updateConsultation } from '../../../api/pregnancy.api';
 import { cn } from '../../../utils/cn';
 
-interface Props { pregnancyId: string; onClose: () => void }
+interface Props { pregnancyId: string; initial?: any; onClose: () => void }
 
 const MF_OPTIONS = ['Presentes e ativos', 'Presentes e hipoativos', 'Ausentes', 'Não avaliado'];
 const EDEMA_OPTIONS = [
@@ -25,10 +26,27 @@ const CERVICAL_STATE_OPTIONS = [
   { value: 'other', label: 'Outros' },
 ];
 
-export default function NewConsultationModal({ pregnancyId, onClose }: Props) {
+export default function NewConsultationModal({ pregnancyId, initial, onClose }: Props) {
   const qc = useQueryClient();
+  const isEdit = !!initial?.id;
   const { register, handleSubmit, watch, formState: { isSubmitting } } = useForm<Record<string, string>>({
-    defaultValues: { date: new Date().toISOString().split('T')[0] },
+    defaultValues: {
+      date: initial?.date ?? new Date().toISOString().split('T')[0],
+      weightKg: initial?.weightKg?.toString() ?? initial?.weight_kg?.toString() ?? '',
+      bpSystolic: initial?.bpSystolic?.toString() ?? initial?.bp_systolic?.toString() ?? '',
+      bpDiastolic: initial?.bpDiastolic?.toString() ?? initial?.bp_diastolic?.toString() ?? '',
+      fetalHeartRate: initial?.fetalHeartRate?.toString() ?? initial?.fetal_heart_rate?.toString() ?? '',
+      fetalMovements: initial?.fetalMovements ?? initial?.fetal_movements ?? '',
+      edemaGrade: initial?.edemaGrade ?? initial?.edema_grade ?? '',
+      fetalPresentation: initial?.fetalPresentation ?? initial?.fetal_presentation ?? '',
+      fundalHeightCm: initial?.fundalHeightCm?.toString() ?? initial?.fundal_height_cm?.toString() ?? '',
+      cervicalState: initial?.cervicalState ?? initial?.cervical_state ?? '',
+      cervicalDilation: initial?.cervicalDilation?.toString() ?? initial?.cervical_dilation?.toString() ?? '',
+      vaginalExam: initial?.vaginalExam ?? initial?.vaginal_exam ?? '',
+      subjective: initial?.subjective ?? '',
+      plan: initial?.plan ?? '',
+      confidentialNotes: initial?.confidentialNotes ?? initial?.confidential_notes ?? '',
+    } as Record<string, string>,
   });
 
   const cervicalState = watch('cervicalState');
@@ -56,6 +74,7 @@ export default function NewConsultationModal({ pregnancyId, onClose }: Props) {
       if (data.subjective) payload.subjective = data.subjective;
       if (data.plan) payload.plan = data.plan;
       if (data.confidentialNotes) payload.confidentialNotes = data.confidentialNotes;
+      if (isEdit) return updateConsultation(initial.id, payload);
       return (await api.post(`/pregnancies/${pregnancyId}/consultations`, payload)).data;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['consultations', pregnancyId] }); onClose(); },
@@ -65,7 +84,7 @@ export default function NewConsultationModal({ pregnancyId, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold text-navy">Nova Consulta</h2>
+          <h2 className="text-lg font-semibold text-navy">{isEdit ? 'Editar Consulta' : 'Nova Consulta'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
         </div>
 

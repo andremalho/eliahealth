@@ -36,6 +36,12 @@ export class VaginalSwabsService {
     return this.repo.save(swab);
   }
 
+  async remove(id: string): Promise<void> {
+    const swab = await this.repo.findOneBy({ id });
+    if (!swab) throw new NotFoundException(`Coleta vaginal ${id} nao encontrada`);
+    await this.repo.remove(swab);
+  }
+
   private evaluateAlert(swab: VaginalSwab): void {
     // For dropdown-based exams, use resultDropdown
     if (DROPDOWN_EXAM_TYPES.includes(swab.examType) && swab.resultDropdown) {

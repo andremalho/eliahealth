@@ -63,6 +63,11 @@ export class ConsultationsService {
     return consultation;
   }
 
+  async remove(id: string, tenantId?: string | null): Promise<void> {
+    const consultation = await this.findOne(id, tenantId);
+    await this.repo.remove(consultation);
+  }
+
   async update(id: string, dto: UpdateConsultationDto, tenantId?: string | null): Promise<Consultation> {
     const consultation = await this.findOne(id, tenantId);
 

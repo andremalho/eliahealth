@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createLabResult } from '../../../api/pregnancy.api';
+import { createLabResult, updateLabResult } from '../../../api/pregnancy.api';
 import { Wrap, Field, SubmitBar, ErrorBanner, iCn } from './AddVaccineModal';
 import ExtractFileField from './FileUploadField';
 
-interface Props { pregnancyId: string; onClose: () => void }
+interface Props { pregnancyId: string; initial?: any; onClose: () => void }
 
 interface FormData {
   examName: string;
@@ -32,12 +32,25 @@ const CATEGORIES = [
   { v: 'other', l: 'Outro' },
 ];
 
-export default function AddLabResultModal({ pregnancyId, onClose }: Props) {
+export default function AddLabResultModal({ pregnancyId, initial, onClose }: Props) {
   const qc = useQueryClient();
+  const isEdit = !!initial?.id;
   const [extractedCount, setExtractedCount] = useState(0);
   const [extractedExtras, setExtractedExtras] = useState<any[]>([]);
   const { register, handleSubmit, setValue, formState: { isSubmitting } } = useForm<FormData>({
-    defaultValues: { requestedAt: new Date().toISOString().split('T')[0] },
+    defaultValues: {
+      examName: initial?.examName ?? initial?.exam_name ?? '',
+      examCategory: initial?.examCategory ?? initial?.exam_category ?? '',
+      requestedAt: initial?.requestedAt ?? initial?.requested_at ?? new Date().toISOString().split('T')[0],
+      resultDate: initial?.resultDate ?? initial?.result_date ?? '',
+      value: initial?.value?.toString() ?? '',
+      unit: initial?.unit ?? '',
+      referenceMin: initial?.referenceMin?.toString() ?? initial?.reference_min?.toString() ?? '',
+      referenceMax: initial?.referenceMax?.toString() ?? initial?.reference_max?.toString() ?? '',
+      resultText: initial?.resultText ?? initial?.result_text ?? '',
+      labName: initial?.labName ?? initial?.lab_name ?? '',
+      notes: initial?.notes ?? '',
+    } as Partial<FormData>,
   });
 
   const handleExtracted = (data: any) => {
@@ -72,6 +85,9 @@ export default function AddLabResultModal({ pregnancyId, onClose }: Props) {
       if (data.resultText) payload.resultText = data.resultText;
       if (data.labName) payload.labName = data.labName;
       if (data.notes) payload.notes = data.notes;
+      if (isEdit) {
+        return updateLabResult(initial.id, payload);
+      }
       const created = await createLabResult(pregnancyId, payload);
 
       // Cria os demais exames extraidos do mesmo arquivo (se houver)
@@ -99,10 +115,10 @@ export default function AddLabResultModal({ pregnancyId, onClose }: Props) {
   });
 
   return (
-    <Wrap onClose={onClose} title="Novo exame laboratorial" max="max-w-lg">
+    <Wrap onClose={onClose} title={isEdit ? 'Editar exame laboratorial' : 'Novo exame laboratorial'} max="max-w-lg">
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="p-6 space-y-4">
         {mutation.error && <ErrorBanner />}
-        <ExtractFileField extractType="lab_result" onExtracted={handleExtracted} />
+        {!isEdit && <ExtractFileField extractType="lab_result" onExtracted={handleExtracted} />}
         {extractedCount > 1 && (
           <div className="p-2 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-700">
             {extractedCount} exames extraídos. O primeiro foi carregado no formulário; os demais ({extractedCount - 1}) serão criados automaticamente ao salvar.

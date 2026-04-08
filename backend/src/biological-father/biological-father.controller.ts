@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Body, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, HttpCode, Param, Body, ParseUUIDPipe } from '@nestjs/common';
 import { BiologicalFatherService } from './biological-father.service.js';
 import { CreateBiologicalFatherDto } from './dto/create-biological-father.dto.js';
 import { UpdateBiologicalFatherDto } from './dto/update-biological-father.dto.js';
@@ -16,5 +16,8 @@ export class BiologicalFatherController {
   @Get() findOne(@Param('pregnancyId', ParseUUIDPipe) id: string) { return this.service.findOne(id); }
   @Patch() update(@Param('pregnancyId', ParseUUIDPipe) id: string, @Body() dto: UpdateBiologicalFatherDto) {
     return this.service.update(id, dto);
+  }
+  @Delete() @HttpCode(204) remove(@Param('pregnancyId', ParseUUIDPipe) id: string) {
+    return this.service.remove(id);
   }
 }

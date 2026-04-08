@@ -1,9 +1,9 @@
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createFile } from '../../../api/pregnancy.api';
+import { createFile, updateFile } from '../../../api/pregnancy.api';
 import { Wrap, Field, SubmitBar, ErrorBanner, iCn } from './AddVaccineModal';
 
-interface Props { pregnancyId: string; onClose: () => void }
+interface Props { pregnancyId: string; initial?: any; onClose: () => void }
 
 interface FormData {
   fileName: string;
@@ -23,10 +23,19 @@ const FILE_TYPES = [
   { v: 'other', l: 'Outro', mime: 'application/octet-stream' },
 ];
 
-export default function AddFileModal({ pregnancyId, onClose }: Props) {
+export default function AddFileModal({ pregnancyId, initial, onClose }: Props) {
   const qc = useQueryClient();
+  const isEdit = !!initial?.id;
   const { register, handleSubmit, watch, formState: { isSubmitting } } = useForm<FormData>({
-    defaultValues: { fileType: 'document' },
+    defaultValues: {
+      fileName: initial?.fileName ?? initial?.file_name ?? '',
+      fileUrl: initial?.fileUrl ?? initial?.file_url ?? '',
+      fileType: initial?.fileType ?? initial?.file_type ?? 'document',
+      mimeType: initial?.mimeType ?? initial?.mime_type ?? '',
+      fileSize: initial?.fileSize?.toString() ?? initial?.file_size?.toString() ?? '',
+      description: initial?.description ?? '',
+      isVisibleToPatient: !!initial?.isVisibleToPatient ?? !!initial?.is_visible_to_patient,
+    } as Partial<FormData>,
   });
 
   const fileType = watch('fileType');
@@ -42,8 +51,8 @@ export default function AddFileModal({ pregnancyId, onClose }: Props) {
         fileUrl: data.fileUrl,
       };
       if (data.description) payload.description = data.description;
-      if (data.isVisibleToPatient) payload.isVisibleToPatient = true;
-      return createFile(pregnancyId, payload);
+      payload.isVisibleToPatient = !!data.isVisibleToPatient;
+      return isEdit ? updateFile(initial.id, payload) : createFile(pregnancyId, payload);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['files', pregnancyId] });
@@ -52,7 +61,7 @@ export default function AddFileModal({ pregnancyId, onClose }: Props) {
   });
 
   return (
-    <Wrap onClose={onClose} title="Novo arquivo">
+    <Wrap onClose={onClose} title={isEdit ? 'Editar arquivo' : 'Novo arquivo'}>
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="p-6 space-y-4">
         {mutation.error && <ErrorBanner />}
         <p className="text-xs text-gray-500 -mt-2">Cadastro por URL externa. Upload direto será adicionado em breve.</p>

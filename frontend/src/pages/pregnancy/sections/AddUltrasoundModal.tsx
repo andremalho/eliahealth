@@ -1,11 +1,11 @@
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createUltrasound } from '../../../api/pregnancy.api';
+import { createUltrasound, updateUltrasound } from '../../../api/pregnancy.api';
 import { Wrap, Field, SubmitBar, ErrorBanner, iCn } from './AddVaccineModal';
 import ExtractFileField from './FileUploadField';
 import { cn } from '../../../utils/cn';
 
-interface Props { pregnancyId: string; onClose: () => void }
+interface Props { pregnancyId: string; initial?: any; onClose: () => void }
 
 interface FormData {
   examType: string;
@@ -26,10 +26,17 @@ const EXAM_TYPES = [
   { v: 'other', l: 'Outro' },
 ];
 
-export default function AddUltrasoundModal({ pregnancyId, onClose }: Props) {
+export default function AddUltrasoundModal({ pregnancyId, initial, onClose }: Props) {
   const qc = useQueryClient();
+  const isEdit = !!initial?.id;
   const { register, handleSubmit, setValue, formState: { isSubmitting } } = useForm<FormData>({
-    defaultValues: { examDate: new Date().toISOString().split('T')[0] },
+    defaultValues: {
+      examType: initial?.examType ?? initial?.exam_type ?? '',
+      examDate: initial?.examDate ?? initial?.exam_date ?? new Date().toISOString().split('T')[0],
+      operatorName: initial?.operatorName ?? initial?.operator_name ?? '',
+      equipmentModel: initial?.equipmentModel ?? initial?.equipment_model ?? '',
+      finalReport: initial?.finalReport ?? initial?.final_report ?? '',
+    } as Partial<FormData>,
   });
 
   const handleExtracted = (data: any) => {
@@ -49,7 +56,7 @@ export default function AddUltrasoundModal({ pregnancyId, onClose }: Props) {
       if (data.operatorName) payload.operatorName = data.operatorName;
       if (data.equipmentModel) payload.equipmentModel = data.equipmentModel;
       if (data.finalReport) payload.finalReport = data.finalReport;
-      return createUltrasound(pregnancyId, payload);
+      return isEdit ? updateUltrasound(initial.id, payload) : createUltrasound(pregnancyId, payload);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['ultrasounds', pregnancyId] });
@@ -58,10 +65,10 @@ export default function AddUltrasoundModal({ pregnancyId, onClose }: Props) {
   });
 
   return (
-    <Wrap onClose={onClose} title="Nova ultrassonografia" max="max-w-lg">
+    <Wrap onClose={onClose} title={isEdit ? 'Editar ultrassonografia' : 'Nova ultrassonografia'} max="max-w-lg">
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="p-6 space-y-4">
         {mutation.error && <ErrorBanner />}
-        <ExtractFileField extractType="ultrasound" onExtracted={handleExtracted} />
+        {!isEdit && <ExtractFileField extractType="ultrasound" onExtracted={handleExtracted} />}
         <div className="grid grid-cols-2 gap-3">
           <Field label="Tipo de exame *">
             <select {...register('examType', { required: true })} className={iCn}>

@@ -1,9 +1,9 @@
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createVaginalSwab } from '../../../api/pregnancy.api';
+import { createVaginalSwab, updateVaginalSwab } from '../../../api/pregnancy.api';
 import { Wrap, Field, SubmitBar, ErrorBanner, iCn } from './AddVaccineModal';
 
-interface Props { pregnancyId: string; onClose: () => void }
+interface Props { pregnancyId: string; initial?: any; onClose: () => void }
 
 interface FormData {
   collectionDate: string;
@@ -23,10 +23,18 @@ const EXAM_TYPES = [
   'Outro',
 ];
 
-export default function AddVaginalSwabModal({ pregnancyId, onClose }: Props) {
+export default function AddVaginalSwabModal({ pregnancyId, initial, onClose }: Props) {
   const qc = useQueryClient();
+  const isEdit = !!initial?.id;
   const { register, handleSubmit, formState: { isSubmitting } } = useForm<FormData>({
-    defaultValues: { collectionDate: new Date().toISOString().split('T')[0] },
+    defaultValues: {
+      collectionDate: initial?.collectionDate ?? initial?.collection_date ?? new Date().toISOString().split('T')[0],
+      examType: initial?.examType ?? initial?.exam_type ?? '',
+      result: initial?.result ?? '',
+      resultDropdown: initial?.resultDropdown ?? initial?.result_dropdown ?? '',
+      labName: initial?.labName ?? initial?.lab_name ?? '',
+      notes: initial?.notes ?? '',
+    } as Partial<FormData>,
   });
 
   const mutation = useMutation({
@@ -39,7 +47,7 @@ export default function AddVaginalSwabModal({ pregnancyId, onClose }: Props) {
       if (data.resultDropdown) payload.resultDropdown = data.resultDropdown;
       if (data.labName) payload.labName = data.labName;
       if (data.notes) payload.notes = data.notes;
-      return createVaginalSwab(pregnancyId, payload);
+      return isEdit ? updateVaginalSwab(initial.id, payload) : createVaginalSwab(pregnancyId, payload);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['vaginal-swabs', pregnancyId] });
@@ -48,7 +56,7 @@ export default function AddVaginalSwabModal({ pregnancyId, onClose }: Props) {
   });
 
   return (
-    <Wrap onClose={onClose} title="Nova coleta vaginal">
+    <Wrap onClose={onClose} title={isEdit ? 'Editar coleta vaginal' : 'Nova coleta vaginal'}>
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="p-6 space-y-4">
         {mutation.error && <ErrorBanner />}
         <div className="grid grid-cols-2 gap-3">

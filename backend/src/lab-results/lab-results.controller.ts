@@ -3,6 +3,8 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
+  HttpCode,
   Param,
   Query,
   Body,
@@ -67,6 +69,12 @@ export class LabResultsController {
     @Body() dto: UpdateLabResultDto,
   ) {
     return this.labResultsService.update(id, dto);
+  }
+
+  @Delete('lab-results/:id')
+  @HttpCode(204)
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.labResultsService.remove(id);
   }
 
   @Patch('lab-results/:id/review')

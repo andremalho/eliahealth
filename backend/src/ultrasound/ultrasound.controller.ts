@@ -3,6 +3,8 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
+  HttpCode,
   Param,
   Query,
   Body,
@@ -53,6 +55,15 @@ export class UltrasoundController {
     @Body() dto: UpdateUltrasoundDto,
   ) {
     return this.ultrasoundService.update(id, dto, tenantId);
+  }
+
+  @Delete('ultrasounds/:id')
+  @HttpCode(204)
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('tenantId') tenantId: string,
+  ) {
+    return this.ultrasoundService.remove(id, tenantId);
   }
 
   @Post('ultrasounds/:id/biometry')

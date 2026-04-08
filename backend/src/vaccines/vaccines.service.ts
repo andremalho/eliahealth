@@ -42,6 +42,11 @@ export class VaccinesService {
     return this.repo.save(v);
   }
 
+  async remove(id: string, tenantId?: string | null): Promise<void> {
+    const v = await this.findOne(id, tenantId);
+    await this.repo.remove(v);
+  }
+
   async findPending(pregnancyId: string): Promise<Vaccine[]> {
     return this.repo.find({
       where: [

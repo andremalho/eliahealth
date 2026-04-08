@@ -102,6 +102,11 @@ export class UltrasoundService {
     return this.usRepo.save(us);
   }
 
+  async remove(id: string, tenantId?: string | null): Promise<void> {
+    const us = await this.findOne(id, tenantId);
+    await this.usRepo.remove(us);
+  }
+
   // ── Sub-entidades ──
 
   async addBiometry(ultrasoundId: string, dto: CreateBiometryDto): Promise<{ biometry: FetalBiometry; percentiles: PercentileResult[] }> {

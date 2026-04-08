@@ -1,9 +1,9 @@
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2 } from 'lucide-react';
-import { createVaccine } from '../../../api/pregnancy.api';
+import { createVaccine, updateVaccine } from '../../../api/pregnancy.api';
 
-interface Props { pregnancyId: string; onClose: () => void }
+interface Props { pregnancyId: string; initial?: any; onClose: () => void }
 
 interface FormData {
   vaccineName: string;
@@ -31,17 +31,25 @@ const VACCINE_PRESETS = [
   { name: 'Outro', type: 'other' },
 ];
 
-export default function AddVaccineModal({ pregnancyId, onClose }: Props) {
+export default function AddVaccineModal({ pregnancyId, initial, onClose }: Props) {
   const qc = useQueryClient();
+  const isEdit = !!initial?.id;
   const { register, handleSubmit, watch, formState: { isSubmitting } } = useForm<FormData>({
-    defaultValues: { status: 'administered' },
+    defaultValues: {
+      vaccineName: initial?.vaccineName ?? initial?.vaccine_name ?? '',
+      doseNumber: (initial?.doseNumber ?? initial?.dose_number)?.toString() ?? '',
+      status: initial?.status ?? 'administered',
+      administeredDate: initial?.administeredDate ?? initial?.administered_date ?? '',
+      scheduledDate: initial?.scheduledDate ?? initial?.scheduled_date ?? '',
+      batchNumber: initial?.batchNumber ?? initial?.batch_number ?? '',
+      notes: initial?.notes ?? '',
+    } as Partial<FormData>,
   });
 
   const status = watch('status');
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
-      // Deriva vaccineType do nome escolhido (match com presets ou 'other')
       const matched = VACCINE_PRESETS.find((p) => p.name === data.vaccineName);
       const vaccineType = matched?.type ?? 'other';
       const payload: Record<string, unknown> = {
@@ -54,7 +62,7 @@ export default function AddVaccineModal({ pregnancyId, onClose }: Props) {
       if (data.scheduledDate) payload.scheduledDate = data.scheduledDate;
       if (data.batchNumber) payload.batchNumber = data.batchNumber;
       if (data.notes) payload.notes = data.notes;
-      return createVaccine(pregnancyId, payload);
+      return isEdit ? updateVaccine(initial.id, payload) : createVaccine(pregnancyId, payload);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['vaccines', pregnancyId] });
@@ -63,7 +71,7 @@ export default function AddVaccineModal({ pregnancyId, onClose }: Props) {
   });
 
   return (
-    <Wrap onClose={onClose} title="Nova vacina">
+    <Wrap onClose={onClose} title={isEdit ? 'Editar vacina' : 'Nova vacina'}>
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="p-6 space-y-4">
         {mutation.error && <ErrorBanner />}
         <div className="grid grid-cols-3 gap-3">

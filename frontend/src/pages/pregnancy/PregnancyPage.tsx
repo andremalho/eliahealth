@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Edit3, FileText, Share2, StickyNote, MessageSquare,
-  Bell, Plus, List, Table as TableIcon, AlertCircle,
+  Bell, Plus, List, Table as TableIcon, AlertCircle, Pencil, Trash2,
 } from 'lucide-react';
 import { fetchPregnancyDetail, fetchConsultations, fetchPatient } from '../../api/consultations.api';
+import { deleteConsultation } from '../../api/pregnancy.api';
 import { toTitleCase } from '../../utils/formatters';
 import { cn } from '../../utils/cn';
 import BpSection from './sections/BpSection';
@@ -74,7 +75,13 @@ export default function PregnancyPage() {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'table' | 'list'>('table');
   const [consultationModal, setConsultationModal] = useState(false);
+  const [editingConsultation, setEditingConsultation] = useState<any>(null);
   const [initialAssessmentModal, setInitialAssessmentModal] = useState(false);
+  const qc = useQueryClient();
+  const deleteCons = useMutation({
+    mutationFn: (id: string) => deleteConsultation(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['consultations', pregnancyId] }),
+  });
 
   const { data: pregnancy, isLoading: lp } = useQuery({
     queryKey: ['pregnancy', pregnancyId], queryFn: () => fetchPregnancyDetail(pregnancyId!), enabled: !!pregnancyId,
@@ -368,7 +375,7 @@ export default function PregnancyPage() {
                   <button onClick={() => setViewMode('table')} className={cn('p-1.5', viewMode === 'table' ? 'bg-lilac text-white' : 'text-gray-400')}><TableIcon className="w-4 h-4" /></button>
                   <button onClick={() => setViewMode('list')} className={cn('p-1.5', viewMode === 'list' ? 'bg-lilac text-white' : 'text-gray-400')}><List className="w-4 h-4" /></button>
                 </div>
-                <button onClick={() => setConsultationModal(true)} className="flex items-center gap-1 px-3 py-1.5 bg-lilac text-white text-xs rounded-lg hover:bg-primary-dark"><Plus className="w-3.5 h-3.5" /> Nova</button>
+                <button onClick={() => { setEditingConsultation(null); setConsultationModal(true); }} className="flex items-center gap-1 px-3 py-1.5 bg-lilac text-white text-xs rounded-lg hover:bg-primary-dark"><Plus className="w-3.5 h-3.5" /> Nova</button>
               </div>
             </div>
             {consultations.length === 0 ? (
@@ -380,10 +387,11 @@ export default function PregnancyPage() {
                     <th className="px-3 py-2">IG</th><th className="px-3 py-2">Data</th><th className="px-3 py-2">Peso</th>
                     <th className="px-3 py-2">PA</th><th className="px-3 py-2">BCF</th><th className="px-3 py-2">MF</th>
                     <th className="px-3 py-2">Edema</th><th className="px-3 py-2">TV</th><th className="px-3 py-2">Apr.</th><th className="px-3 py-2">AU</th>
+                    <th className="px-3 py-2"></th>
                   </tr></thead>
                   <tbody className="divide-y">
                     {consultations.map((c: any) => (
-                      <tr key={c.id} className="hover:bg-gray-50">
+                      <tr key={c.id} className="group hover:bg-gray-50">
                         <td className="px-3 py-2"><span className="px-2 py-0.5 bg-lilac/10 text-lilac text-xs font-semibold rounded-full">{gaString(c.gestationalAgeDays ?? c.gestational_age_days ?? 0)}</span></td>
                         <td className="px-3 py-2">{new Date((c.date ?? '') + 'T12:00:00').toLocaleDateString('pt-BR')}</td>
                         <td className="px-3 py-2">{c.weightKg ?? c.weight_kg ?? '—'}</td>
@@ -394,6 +402,20 @@ export default function PregnancyPage() {
                         <td className="px-3 py-2">{mapCervicalState(c)}</td>
                         <td className="px-3 py-2">{mapPresentation(c.fetalPresentation ?? c.fetal_presentation)}</td>
                         <td className="px-3 py-2">{c.fundalHeightCm ?? c.fundal_height_cm ?? '—'}</td>
+                        <td className="px-3 py-2">
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
+                            <button onClick={() => { setEditingConsultation(c); setConsultationModal(true); }} className="p-0.5 text-gray-400 hover:text-lilac" title="Editar">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => { if (window.confirm('Excluir esta consulta?')) deleteCons.mutate(c.id); }}
+                              className="p-0.5 text-gray-400 hover:text-red-500"
+                              title="Excluir"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -442,7 +464,11 @@ export default function PregnancyPage() {
 
       {pregnancyId && <CopilotPanel pregnancyId={pregnancyId} />}
       {consultationModal && pregnancyId && (
-        <NewConsultationModal pregnancyId={pregnancyId} onClose={() => setConsultationModal(false)} />
+        <NewConsultationModal
+          pregnancyId={pregnancyId}
+          initial={editingConsultation}
+          onClose={() => { setConsultationModal(false); setEditingConsultation(null); }}
+        />
       )}
       {initialAssessmentModal && pregnancyId && pregnancy?.patientId && (
         <InitialAssessmentModal

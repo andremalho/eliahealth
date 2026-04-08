@@ -41,12 +41,24 @@ export const fetchUltrasounds = async (pregnancyId: string) =>
 export const createUltrasound = async (pregnancyId: string, dto: Record<string, unknown>) =>
   (await api.post(`/pregnancies/${pregnancyId}/ultrasounds`, dto)).data;
 
+export const updateUltrasound = async (id: string, dto: Record<string, unknown>) =>
+  (await api.patch(`/ultrasounds/${id}`, dto)).data;
+
+export const deleteUltrasound = async (id: string) =>
+  (await api.delete(`/ultrasounds/${id}`)).data;
+
 // ── Lab Results ──
 export const fetchLabResults = async (pregnancyId: string) =>
   (await api.get(`/pregnancies/${pregnancyId}/lab-results`)).data;
 
 export const createLabResult = async (pregnancyId: string, dto: Record<string, unknown>) =>
   (await api.post(`/pregnancies/${pregnancyId}/lab-results`, dto)).data;
+
+export const updateLabResult = async (id: string, dto: Record<string, unknown>) =>
+  (await api.patch(`/lab-results/${id}`, dto)).data;
+
+export const deleteLabResult = async (id: string) =>
+  (await api.delete(`/lab-results/${id}`)).data;
 
 // ── Vaccines ──
 export const fetchVaccines = async (pregnancyId: string) =>
@@ -55,12 +67,24 @@ export const fetchVaccines = async (pregnancyId: string) =>
 export const createVaccine = async (pregnancyId: string, dto: Record<string, unknown>) =>
   (await api.post(`/pregnancies/${pregnancyId}/vaccines`, dto)).data;
 
+export const updateVaccine = async (id: string, dto: Record<string, unknown>) =>
+  (await api.patch(`/vaccines/${id}`, dto)).data;
+
+export const deleteVaccine = async (id: string) =>
+  (await api.delete(`/vaccines/${id}`)).data;
+
 // ── Vaginal Swabs ──
 export const fetchVaginalSwabs = async (pregnancyId: string) =>
   (await api.get(`/pregnancies/${pregnancyId}/vaginal-swabs`)).data;
 
 export const createVaginalSwab = async (pregnancyId: string, dto: Record<string, unknown>) =>
   (await api.post(`/pregnancies/${pregnancyId}/vaginal-swabs`, dto)).data;
+
+export const updateVaginalSwab = async (id: string, dto: Record<string, unknown>) =>
+  (await api.patch(`/vaginal-swabs/${id}`, dto)).data;
+
+export const deleteVaginalSwab = async (id: string) =>
+  (await api.delete(`/vaginal-swabs/${id}`)).data;
 
 // ── Biological Father ──
 export const fetchBiologicalFather = async (pregnancyId: string) =>
@@ -69,6 +93,9 @@ export const fetchBiologicalFather = async (pregnancyId: string) =>
 export const upsertBiologicalFather = async (pregnancyId: string, dto: Record<string, unknown>) =>
   (await api.post(`/pregnancies/${pregnancyId}/biological-father`, dto)).data;
 
+export const deleteBiologicalFather = async (pregnancyId: string) =>
+  (await api.delete(`/pregnancies/${pregnancyId}/biological-father`)).data;
+
 // ── Files ──
 export const fetchFiles = async (pregnancyId: string) =>
   (await api.get(`/pregnancies/${pregnancyId}/files`)).data;
@@ -76,12 +103,31 @@ export const fetchFiles = async (pregnancyId: string) =>
 export const createFile = async (pregnancyId: string, dto: Record<string, unknown>) =>
   (await api.post(`/pregnancies/${pregnancyId}/files`, dto)).data;
 
+export const updateFile = async (id: string, dto: Record<string, unknown>) =>
+  (await api.patch(`/files/${id}`, dto)).data;
+
+export const deleteFile = async (id: string) =>
+  (await api.delete(`/files/${id}`)).data;
+
+// ── Consultations ──
+export const updateConsultation = async (id: string, dto: Record<string, unknown>) =>
+  (await api.patch(`/consultations/${id}`, dto)).data;
+
+export const deleteConsultation = async (id: string) =>
+  (await api.delete(`/consultations/${id}`)).data;
+
 // ── Prescriptions ──
 export const fetchPrescriptions = async (pregnancyId: string) =>
   (await api.get(`/pregnancies/${pregnancyId}/prescriptions`)).data;
 
 export const createPrescription = async (pregnancyId: string, dto: Record<string, unknown>) =>
   (await api.post(`/pregnancies/${pregnancyId}/prescriptions`, dto)).data;
+
+export const updatePrescription = async (id: string, dto: Record<string, unknown>) =>
+  (await api.patch(`/prescriptions/${id}`, dto)).data;
+
+export const deletePrescription = async (id: string) =>
+  (await api.delete(`/prescriptions/${id}`)).data;
 
 // ── Other Exams ──
 export const fetchOtherExams = async (pregnancyId: string) =>

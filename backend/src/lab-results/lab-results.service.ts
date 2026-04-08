@@ -88,6 +88,11 @@ export class LabResultsService {
     return this.resultRepo.save(labResult);
   }
 
+  async remove(id: string): Promise<void> {
+    const labResult = await this.findOne(id);
+    await this.resultRepo.remove(labResult);
+  }
+
   async reviewPatientExam(id: string, reviewStatus: string, notes?: string) {
     const exam = await this.findOne(id);
     await this.resultRepo.query(

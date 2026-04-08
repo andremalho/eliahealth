@@ -1,11 +1,11 @@
 import { useFieldArray, useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2 } from 'lucide-react';
-import { createPrescription } from '../../../api/pregnancy.api';
+import { createPrescription, updatePrescription } from '../../../api/pregnancy.api';
 import { Wrap, Field, SubmitBar, ErrorBanner, iCn } from './AddVaccineModal';
 import { cn } from '../../../utils/cn';
 
-interface Props { pregnancyId: string; onClose: () => void }
+interface Props { pregnancyId: string; initial?: any; onClose: () => void }
 
 interface MedicationItem {
   name: string;
@@ -22,13 +22,25 @@ interface FormData {
   medications: MedicationItem[];
 }
 
-export default function AddPrescriptionModal({ pregnancyId, onClose }: Props) {
+export default function AddPrescriptionModal({ pregnancyId, initial, onClose }: Props) {
   const qc = useQueryClient();
+  const isEdit = !!initial?.id;
+  const initialMeds: MedicationItem[] = initial?.medications && Array.isArray(initial.medications) && initial.medications.length > 0
+    ? initial.medications.map((m: any) => ({
+        name: m.name ?? '',
+        dose: m.dose ?? '',
+        route: m.route ?? '',
+        frequency: m.frequency ?? '',
+        duration: m.duration ?? '',
+      }))
+    : [{ name: '', dose: '', route: '', frequency: '', duration: '' }];
+
   const { register, handleSubmit, control, formState: { isSubmitting } } = useForm<FormData>({
     defaultValues: {
-      prescriptionDate: new Date().toISOString().split('T')[0],
-      status: 'active',
-      medications: [{ name: '', dose: '', route: '', frequency: '', duration: '' }],
+      prescriptionDate: initial?.prescriptionDate ?? initial?.prescription_date ?? new Date().toISOString().split('T')[0],
+      status: initial?.status ?? 'active',
+      notes: initial?.notes ?? '',
+      medications: initialMeds,
     },
   });
 
@@ -44,7 +56,7 @@ export default function AddPrescriptionModal({ pregnancyId, onClose }: Props) {
         status: data.status,
       };
       if (data.notes) payload.notes = data.notes;
-      return createPrescription(pregnancyId, payload);
+      return isEdit ? updatePrescription(initial.id, payload) : createPrescription(pregnancyId, payload);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['prescriptions', pregnancyId] });
@@ -53,7 +65,7 @@ export default function AddPrescriptionModal({ pregnancyId, onClose }: Props) {
   });
 
   return (
-    <Wrap onClose={onClose} title="Nova prescrição" max="max-w-2xl">
+    <Wrap onClose={onClose} title={isEdit ? 'Editar prescrição' : 'Nova prescrição'} max="max-w-2xl">
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="p-6 space-y-4">
         {mutation.error && <ErrorBanner />}
         <div className="grid grid-cols-2 gap-3">

@@ -3,6 +3,8 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
+  HttpCode,
   Param,
   Query,
   Body,
@@ -51,5 +53,14 @@ export class ConsultationsController {
     @Body() dto: UpdateConsultationDto,
   ) {
     return this.consultationsService.update(id, dto, tenantId);
+  }
+
+  @Delete('consultations/:id')
+  @HttpCode(204)
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('tenantId') tenantId: string,
+  ) {
+    return this.consultationsService.remove(id, tenantId);
   }
 }

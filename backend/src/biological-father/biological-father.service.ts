@@ -25,4 +25,9 @@ export class BiologicalFatherService {
     Object.assign(f, dto);
     return this.repo.save(f);
   }
+
+  async remove(pregnancyId: string): Promise<void> {
+    const f = await this.findOne(pregnancyId);
+    await this.repo.remove(f);
+  }
 }

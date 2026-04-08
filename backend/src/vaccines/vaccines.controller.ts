@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Param, Query, Body, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, HttpCode, Param, Query, Body, ParseUUIDPipe } from '@nestjs/common';
 import { VaccinesService } from './vaccines.service.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { CreateVaccineDto } from './dto/create-vaccine.dto.js';
@@ -36,5 +36,11 @@ export class VaccinesController {
   @Patch('vaccines/:id')
   update(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('tenantId') tenantId: string, @Body() dto: UpdateVaccineDto) {
     return this.service.update(id, dto, tenantId);
+  }
+
+  @Delete('vaccines/:id')
+  @HttpCode(204)
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('tenantId') tenantId: string) {
+    return this.service.remove(id, tenantId);
   }
 }

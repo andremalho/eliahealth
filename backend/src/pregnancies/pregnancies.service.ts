@@ -172,6 +172,136 @@ export class PregnanciesService {
     };
   }
 
+  async getTimeline(id: string, tenantId?: string | null) {
+    await this.findOne(id, tenantId);
+
+    const [consultations, ultrasounds, labs, vaccines, prescriptions, alerts] = await Promise.all([
+      this.repo.query(
+        `SELECT id, date, gestational_age_days, weight_kg, bp_systolic, bp_diastolic, fetal_heart_rate, fundal_height_cm, subjective
+         FROM consultations WHERE pregnancy_id = $1 ORDER BY date DESC`,
+        [id],
+      ),
+      this.repo.query(
+        `SELECT id, exam_type, exam_date, final_report
+         FROM ultrasounds WHERE pregnancy_id = $1 ORDER BY exam_date DESC`,
+        [id],
+      ).catch(() => []),
+      this.repo.query(
+        `SELECT id, exam_name, exam_category, value, unit, reference_min, reference_max, status, result_date, requested_at
+         FROM lab_results WHERE pregnancy_id = $1 ORDER BY COALESCE(result_date, requested_at) DESC`,
+        [id],
+      ).catch(() => []),
+      this.repo.query(
+        `SELECT id, vaccine_name, status, administered_date, scheduled_date, dose_number
+         FROM vaccines WHERE pregnancy_id = $1 ORDER BY COALESCE(administered_date, scheduled_date) DESC NULLS LAST`,
+        [id],
+      ).catch(() => []),
+      this.repo.query(
+        `SELECT id, prescription_date, status, medications, notes
+         FROM prescriptions WHERE pregnancy_id = $1 ORDER BY prescription_date DESC`,
+        [id],
+      ).catch(() => []),
+      this.repo.query(
+        `SELECT id, title, message, severity, alert_type, created_at
+         FROM copilot_alerts WHERE pregnancy_id = $1 ORDER BY created_at DESC LIMIT 30`,
+        [id],
+      ).catch(() => []),
+    ]);
+
+    const events: any[] = [];
+
+    for (const c of consultations) {
+      events.push({
+        id: c.id,
+        type: 'consultation',
+        date: c.date,
+        title: 'Consulta',
+        gestationalAgeDays: c.gestational_age_days,
+        details: {
+          weightKg: c.weight_kg,
+          bpSystolic: c.bp_systolic,
+          bpDiastolic: c.bp_diastolic,
+          fetalHeartRate: c.fetal_heart_rate,
+          fundalHeightCm: c.fundal_height_cm,
+          subjective: c.subjective,
+        },
+      });
+    }
+
+    for (const u of ultrasounds) {
+      events.push({
+        id: u.id,
+        type: 'ultrasound',
+        date: u.exam_date,
+        title: 'Ultrassonografia',
+        details: { examType: u.exam_type, finalReport: u.final_report },
+      });
+    }
+
+    for (const l of labs) {
+      events.push({
+        id: l.id,
+        type: 'lab_result',
+        date: l.result_date ?? l.requested_at,
+        title: l.exam_name ?? 'Exame laboratorial',
+        details: {
+          examCategory: l.exam_category,
+          value: l.value,
+          unit: l.unit,
+          referenceMin: l.reference_min,
+          referenceMax: l.reference_max,
+          status: l.status,
+        },
+      });
+    }
+
+    for (const v of vaccines) {
+      const date = v.administered_date ?? v.scheduled_date;
+      if (!date) continue;
+      events.push({
+        id: v.id,
+        type: 'vaccine',
+        date,
+        title: v.vaccine_name ?? 'Vacina',
+        details: { status: v.status, doseNumber: v.dose_number },
+      });
+    }
+
+    for (const p of prescriptions) {
+      events.push({
+        id: p.id,
+        type: 'prescription',
+        date: p.prescription_date,
+        title: 'Prescrição',
+        details: {
+          status: p.status,
+          medications: p.medications,
+          notes: p.notes,
+        },
+      });
+    }
+
+    for (const a of alerts) {
+      events.push({
+        id: a.id,
+        type: 'alert',
+        date: a.created_at,
+        title: a.title ?? 'Alerta do copiloto',
+        details: {
+          message: a.message,
+          severity: a.severity,
+          alertType: a.alert_type,
+        },
+      });
+    }
+
+    return events.sort((a, b) => {
+      const da = new Date(a.date).getTime();
+      const db = new Date(b.date).getTime();
+      return db - da;
+    });
+  }
+
   async update(id: string, dto: UpdatePregnancyDto, tenantId?: string | null): Promise<Pregnancy> {
     const pregnancy = await this.findOne(id, tenantId);
     Object.assign(pregnancy, dto);

@@ -93,4 +93,9 @@ export class PregnanciesController {
     const pregnancy = await this.pregnanciesService.findOne(id, tenantId);
     return this.pregnanciesService.getGestationalAge(pregnancy);
   }
+
+  @Get('pregnancies/:id/timeline')
+  getTimeline(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('tenantId') tenantId: string) {
+    return this.pregnanciesService.getTimeline(id, tenantId);
+  }
 }

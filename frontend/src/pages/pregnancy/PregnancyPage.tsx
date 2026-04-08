@@ -15,6 +15,7 @@ import CopilotPanel from './sections/CopilotPanel';
 import NewConsultationModal from './sections/NewConsultationModal';
 import InitialAssessmentModal from './sections/InitialAssessmentModal';
 import ShareModal from './sections/ShareModal';
+import TimelineSection from './sections/TimelineSection';
 import {
   VaccinesCard, VaginalSwabsCard, BiologicalFatherCard,
   UltrasoundsCard, LabResultsCard, PrescriptionsCard, FilesCard,
@@ -468,6 +469,8 @@ export default function PregnancyPage() {
               </div>
             )}
           </div>
+
+          {pregnancyId && <TimelineSection pregnancyId={pregnancyId} />}
         </div>
 
         {/* Sidebar */}

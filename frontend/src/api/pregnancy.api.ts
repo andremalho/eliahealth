@@ -137,6 +137,21 @@ export const generateShareQrCode = async (pregnancyId: string) => {
   return data as { qrcodeUrl: string; accessToken: string; expiresAt: string };
 };
 
+// ── Timeline ──
+export interface TimelineEvent {
+  id: string;
+  type: 'consultation' | 'ultrasound' | 'lab_result' | 'vaccine' | 'prescription' | 'alert';
+  date: string;
+  title: string;
+  gestationalAgeDays?: number;
+  details: any;
+}
+
+export const fetchTimeline = async (pregnancyId: string): Promise<TimelineEvent[]> => {
+  const { data } = await api.get(`/pregnancies/${pregnancyId}/timeline`);
+  return data;
+};
+
 // ── Prescriptions ──
 export const fetchPrescriptions = async (pregnancyId: string) =>
   (await api.get(`/pregnancies/${pregnancyId}/prescriptions`)).data;

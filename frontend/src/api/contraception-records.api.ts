@@ -223,6 +223,151 @@ export const WHOMEC_LABELS: Record<WHOMECCategory, string> = {
   cat4: 'Categoria 4 — Contraindicação absoluta',
 };
 
+export const WHOMEC_DESCRIPTIONS: Record<WHOMECCategory, string> = {
+  cat1: 'Método pode ser usado sem qualquer restrição.',
+  cat2: 'Vantagens superam riscos teóricos ou comprovados. Uso geralmente seguro, com acompanhamento de rotina.',
+  cat3: 'Riscos teóricos ou comprovados superam vantagens. Uso não recomendado — preferir alternativa. Apenas se outros métodos não disponíveis e com supervisão clínica próxima.',
+  cat4: 'Risco inaceitável à saúde. Método NÃO deve ser usado — contraindicação absoluta.',
+};
+
+export const WHOMEC_BADGE_COLORS: Record<WHOMECCategory, string> = {
+  cat1: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  cat2: 'bg-blue-100 text-blue-800 border-blue-200',
+  cat3: 'bg-amber-100 text-amber-800 border-amber-200',
+  cat4: 'bg-red-100 text-red-800 border-red-200',
+};
+
+// ── Calculadora OMS MEC 2015 (subset) ──
+// Recebe método contraceptivo + fatores de risco da paciente.
+// Retorna a pior categoria aplicável + lista de razões.
+
+export interface RiskFactors {
+  smokingAge35Plus: boolean;
+  historyOfVTE: boolean;
+  thrombophilia: boolean;
+  migraineWithAura: boolean;
+  uncontrolledHypertension: boolean;
+  diabetesWith15yearsPlus: boolean;
+  breastCancerHistory: boolean;
+  liverDisease: boolean;
+  cardiovascularDisease: boolean;
+  stroke: boolean;
+  breastfeeding: boolean;
+}
+
+export interface WHOMECResult {
+  category: WHOMECCategory;
+  reasons: { reason: string; cat: WHOMECCategory }[];
+  hasInputs: boolean;
+}
+
+const COMBINED_HORMONAL: ContraceptiveMethod[] = [
+  'combined_oral',
+  'combined_injectable',
+  'combined_patch',
+  'vaginal_ring',
+];
+
+const PROGESTIN_ONLY: ContraceptiveMethod[] = [
+  'progestin_only_pill',
+  'progestin_injectable',
+  'lng_iud_52mg',
+  'lng_iud_19mg',
+  'etonogestrel_implant',
+];
+
+const CAT_ORDER: Record<WHOMECCategory, number> = {
+  cat1: 1,
+  cat2: 2,
+  cat3: 3,
+  cat4: 4,
+};
+
+export function computeWHOMEC(
+  method: ContraceptiveMethod | '' | null | undefined,
+  risks: RiskFactors,
+): WHOMECResult | null {
+  if (!method || method === 'none') return null;
+
+  const reasons: { reason: string; cat: WHOMECCategory }[] = [];
+  const isCombined = COMBINED_HORMONAL.includes(method);
+  const isProgestinOnly = PROGESTIN_ONLY.includes(method);
+
+  // CHC — Contracepção Hormonal Combinada
+  if (isCombined) {
+    if (risks.smokingAge35Plus) {
+      reasons.push({ reason: 'Tabagista ≥35 anos (≥15 cigarros/dia)', cat: 'cat4' });
+    }
+    if (risks.historyOfVTE) {
+      reasons.push({ reason: 'História de tromboembolismo venoso (TEV)', cat: 'cat4' });
+    }
+    if (risks.thrombophilia) {
+      reasons.push({ reason: 'Trombofilia conhecida', cat: 'cat4' });
+    }
+    if (risks.migraineWithAura) {
+      reasons.push({ reason: 'Enxaqueca com aura (em qualquer idade)', cat: 'cat4' });
+    }
+    if (risks.stroke) {
+      reasons.push({ reason: 'AVC prévio', cat: 'cat4' });
+    }
+    if (risks.cardiovascularDisease) {
+      reasons.push({ reason: 'Doença cardiovascular ativa/prévia', cat: 'cat4' });
+    }
+    if (risks.uncontrolledHypertension) {
+      reasons.push({ reason: 'HAS não controlada (≥160/100)', cat: 'cat4' });
+    }
+    if (risks.diabetesWith15yearsPlus) {
+      reasons.push({ reason: 'DM ≥20 anos ou com lesão de órgão-alvo', cat: 'cat3' });
+    }
+    if (risks.breastCancerHistory) {
+      reasons.push({
+        reason: 'Câncer de mama prévio (com ou sem evidência atual)',
+        cat: 'cat4',
+      });
+    }
+    if (risks.liverDisease) {
+      reasons.push({ reason: 'Hepatopatia grave/cirrose descompensada', cat: 'cat4' });
+    }
+    if (risks.breastfeeding) {
+      reasons.push({ reason: 'Amamentando (<6 meses pós-parto)', cat: 'cat4' });
+    }
+  }
+
+  // Progestágeno isolado — geralmente mais seguro que CHC
+  if (isProgestinOnly) {
+    if (risks.breastCancerHistory) {
+      reasons.push({
+        reason: 'Câncer de mama prévio (>5 anos sem evidência)',
+        cat: 'cat3',
+      });
+    }
+    if (risks.liverDisease) {
+      reasons.push({ reason: 'Hepatopatia grave', cat: 'cat3' });
+    }
+    if (method === 'progestin_injectable' && risks.cardiovascularDisease) {
+      reasons.push({
+        reason: 'DMPA + doença cardiovascular (afeta perfil lipídico)',
+        cat: 'cat3',
+      });
+    }
+  }
+
+  // DIU de cobre — geralmente cat 1-2 para tudo do nosso form.
+  // Cat 3-4 só em condições não capturadas (cervical cancer initiation,
+  // infecção pélvica atual, sepse puerperal, doença trofoblástica, etc.).
+
+  if (reasons.length === 0) {
+    return { category: 'cat1', reasons: [], hasInputs: true };
+  }
+
+  const worst = reasons.reduce<WHOMECCategory>(
+    (acc, r) => (CAT_ORDER[r.cat] > CAT_ORDER[acc] ? r.cat : acc),
+    'cat1',
+  );
+
+  return { category: worst, reasons, hasInputs: true };
+}
+
 export const SMOKING_LABELS: Record<SmokingStatus, string> = {
   never: 'Nunca fumou',
   former: 'Ex-tabagista',

@@ -4,9 +4,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2 } from 'lucide-react';
 import {
   createContraceptionRecord,
+  computeWHOMEC,
   METHOD_OPTIONS,
+  METHOD_LABELS,
   DESIRE_LABELS,
   WHOMEC_LABELS,
+  WHOMEC_DESCRIPTIONS,
+  WHOMEC_BADGE_COLORS,
   SMOKING_LABELS,
   isIud,
   isImplant,
@@ -16,6 +20,7 @@ import {
   type WHOMECCategory,
   type SmokingStatus,
 } from '../../../api/contraception-records.api';
+import { InfoTooltip } from '../../../components/forms/InfoTooltip';
 import { cn } from '../../../utils/cn';
 
 interface FormData {
@@ -115,6 +120,25 @@ export default function NewContraceptionRecordModal({
   const thrombophiliaChecked = watch('thrombophilia');
   const emergencyChecked = watch('emergencyContraceptionUsed');
 
+  // ── Watches para cálculo OMS MEC ao vivo ──
+  const watchedRisks = {
+    smokingAge35Plus: !!watch('smokingAge35Plus'),
+    historyOfVTE: !!watch('historyOfVTE'),
+    thrombophilia: !!watch('thrombophilia'),
+    migraineWithAura: !!watch('migraineWithAura'),
+    uncontrolledHypertension: !!watch('uncontrolledHypertension'),
+    diabetesWith15yearsPlus: !!watch('diabetesWith15yearsPlus'),
+    breastCancerHistory: !!watch('breastCancerHistory'),
+    liverDisease: !!watch('liverDisease'),
+    cardiovascularDisease: !!watch('cardiovascularDisease'),
+    stroke: !!watch('stroke'),
+    breastfeeding: !!watch('breastfeeding'),
+  };
+
+  // Calcula contra o método prescrito (preferido) ou o atual
+  const targetMethod = methodPrescribedKey || currentMethodKey;
+  const mecResult = computeWHOMEC(targetMethod, watchedRisks);
+
   // DIU/implante: mostrar campos se o método atual OU prescrito for DIU/implante
   const showIudFields = isIud(currentMethodKey || 'none') || isIud(methodPrescribedKey || 'none');
   const showImplantFields =
@@ -138,7 +162,12 @@ export default function NewContraceptionRecordModal({
       if (data.currentMethodDetails) dto.currentMethodDetails = data.currentMethodDetails;
 
       dto.breastfeeding = data.breastfeeding;
-      if (data.whomecCategory) dto.whomecCategory = data.whomecCategory;
+      // Override manual tem prioridade; senão usa o cálculo automático
+      if (data.whomecCategory) {
+        dto.whomecCategory = data.whomecCategory;
+      } else if (mecResult) {
+        dto.whomecCategory = mecResult.category;
+      }
       if (data.smokingStatus) dto.smokingStatus = data.smokingStatus;
       dto.smokingAge35Plus = data.smokingAge35Plus;
       dto.historyOfVTE = data.historyOfVTE;
@@ -260,18 +289,8 @@ export default function NewContraceptionRecordModal({
             </div>
           </Section>
 
-          {/* Fatores de risco / OMS MEC */}
-          <Section title="Fatores de risco (OMS MEC 2015)">
-            <Field label="Categoria OMS MEC do método proposto">
-              <select {...register('whomecCategory')} className={inputCn(false)}>
-                <option value="">— a calcular —</option>
-                {Object.entries(WHOMEC_LABELS).map(([v, l]) => (
-                  <option key={v} value={v}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            </Field>
+          {/* Fatores de risco */}
+          <Section title="Fatores de risco">
             <Field label="Tabagismo">
               <select {...register('smokingStatus')} className={inputCn(false)}>
                 <option value="">—</option>
@@ -299,6 +318,83 @@ export default function NewContraceptionRecordModal({
                 <input {...register('thrombophiliaDetails')} className={inputCn(false)} />
               </Field>
             )}
+          </Section>
+
+          {/* Cálculo OMS MEC ao vivo */}
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                Elegibilidade OMS MEC
+                <InfoTooltip title="OMS MEC — Medical Eligibility Criteria 2015">
+                  Critério da OMS para indicar contracepção com base em condições
+                  clínicas da paciente. Cada combinação método × condição recebe uma
+                  categoria:
+                  <br />
+                  <br />
+                  <strong>Cat 1</strong> — Sem restrição. Uso livre.<br />
+                  <strong>Cat 2</strong> — Vantagens superam riscos. Uso geralmente seguro.<br />
+                  <strong>Cat 3</strong> — Riscos superam vantagens. Não recomendado.<br />
+                  <strong>Cat 4</strong> — Risco inaceitável. Contraindicação absoluta.
+                  <br />
+                  <br />
+                  O cálculo abaixo é feito automaticamente a partir do método selecionado
+                  (prescrito ou atual) e dos fatores de risco marcados. Você pode
+                  sobrescrever manualmente se necessário.
+                </InfoTooltip>
+              </span>
+            }
+          >
+            {!targetMethod || targetMethod === 'none' ? (
+              <p className="text-sm text-gray-400 italic">
+                Selecione um método (atual ou prescrito) para calcular a elegibilidade.
+              </p>
+            ) : mecResult ? (
+              <div
+                className={cn(
+                  'border rounded-lg p-3 space-y-2',
+                  WHOMEC_BADGE_COLORS[mecResult.category],
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase font-semibold opacity-75">
+                      {METHOD_LABELS[targetMethod]}
+                    </p>
+                    <p className="text-base font-bold mt-0.5">
+                      {WHOMEC_LABELS[mecResult.category]}
+                    </p>
+                  </div>
+                  <span className="text-xs px-2 py-1 bg-white/60 rounded font-semibold whitespace-nowrap">
+                    Calculado
+                  </span>
+                </div>
+                <p className="text-xs">{WHOMEC_DESCRIPTIONS[mecResult.category]}</p>
+                {mecResult.reasons.length > 0 && (
+                  <div className="pt-2 border-t border-current/20">
+                    <p className="text-xs font-semibold mb-1">Razões:</p>
+                    <ul className="text-xs space-y-0.5">
+                      {mecResult.reasons.map((r, i) => (
+                        <li key={i}>
+                          • {r.reason}{' '}
+                          <span className="opacity-60">({r.cat.toUpperCase()})</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : null}
+
+            <Field label="Sobrescrever categoria (opcional)">
+              <select {...register('whomecCategory')} className={inputCn(false)}>
+                <option value="">— usar cálculo automático —</option>
+                {Object.entries(WHOMEC_LABELS).map(([v, l]) => (
+                  <option key={v} value={v}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </Field>
           </Section>
 
           {/* DIU — campos condicionais */}
@@ -434,7 +530,7 @@ export default function NewContraceptionRecordModal({
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-semibold text-navy uppercase tracking-wide">{title}</h3>
@@ -448,7 +544,7 @@ function Field({
   error,
   children,
 }: {
-  label: string;
+  label: React.ReactNode;
   error?: string;
   children: React.ReactNode;
 }) {

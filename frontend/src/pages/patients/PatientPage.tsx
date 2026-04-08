@@ -20,6 +20,7 @@ import { toTitleCase, formatCPF, formatPhone } from '../../utils/formatters';
 import GynecologySection from './sections/GynecologySection';
 import MenstrualCycleSection from './sections/MenstrualCycleSection';
 import ContraceptionSection from './sections/ContraceptionSection';
+import PreventiveExamSection from './sections/PreventiveExamSection';
 
 type ModuleKey =
   | 'gynecology'
@@ -44,7 +45,7 @@ const MODULES: ModuleDef[] = [
   { key: 'infertility', label: 'Infertilidade', icon: Sparkles, available: false },
   { key: 'art', label: 'Reprodução Assistida', icon: Baby, available: false },
   { key: 'menopause', label: 'Menopausa', icon: Flower2, available: false },
-  { key: 'preventive', label: 'Rastreios', icon: ClipboardCheck, available: false },
+  { key: 'preventive', label: 'Rastreios', icon: ClipboardCheck, available: true },
 ];
 
 function calcAge(dob: string | null): number | null {
@@ -191,9 +192,13 @@ export default function PatientPage() {
           {activeModule === 'contraception' && (
             <ContraceptionSection patientId={patient.id} />
           )}
+          {activeModule === 'preventive' && (
+            <PreventiveExamSection patientId={patient.id} />
+          )}
           {activeModule !== 'gynecology' &&
             activeModule !== 'menstrual' &&
-            activeModule !== 'contraception' && (
+            activeModule !== 'contraception' &&
+            activeModule !== 'preventive' && (
             <div className="flex flex-col items-center py-16 text-gray-400">
               <p className="font-medium">Módulo em desenvolvimento</p>
               <p className="text-sm mt-1">

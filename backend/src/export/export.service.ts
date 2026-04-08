@@ -126,96 +126,315 @@ export class ExportService {
       where: { id: pregnancyId },
       relations: ['patient'],
     });
-    if (!pregnancy) throw new NotFoundException('Gestacao nao encontrada');
+    if (!pregnancy) throw new NotFoundException('Gestação não encontrada');
 
     const patient = pregnancy.patient;
     const ga = this.pregnanciesService.getGestationalAge(pregnancy);
 
-    const [vaccines, alerts, lastConsultation] = await Promise.all([
+    const [vaccines, alerts, lastConsultation, recentConsultations, ultrasounds, labs] = await Promise.all([
       this.pregnancyRepo.query(
-        `SELECT vaccine_name, status FROM vaccines WHERE pregnancy_id = $1`,
+        `SELECT vaccine_name, status, administered_date, dose_number FROM vaccines WHERE pregnancy_id = $1 ORDER BY administered_date DESC NULLS LAST`,
         [pregnancyId],
       ),
       this.pregnancyRepo.query(
-        `SELECT alert_message FROM lab_results WHERE pregnancy_id = $1 AND alert_triggered = true
-         UNION ALL
-         SELECT alert_message FROM copilot_alerts WHERE pregnancy_id = $1 AND is_read = false LIMIT 5`,
+        `SELECT title, message, severity FROM copilot_alerts WHERE pregnancy_id = $1 AND is_read = false ORDER BY created_at DESC LIMIT 6`,
         [pregnancyId],
       ).catch(() => []),
       this.pregnancyRepo.query(
-        `SELECT date, bp_systolic, bp_diastolic, weight_kg FROM consultations WHERE pregnancy_id = $1 ORDER BY date DESC LIMIT 1`,
+        `SELECT date, bp_systolic, bp_diastolic, weight_kg, fetal_heart_rate, fundal_height_cm FROM consultations WHERE pregnancy_id = $1 ORDER BY date DESC LIMIT 1`,
         [pregnancyId],
       ),
+      this.pregnancyRepo.query(
+        `SELECT date, bp_systolic, bp_diastolic, weight_kg, fetal_heart_rate, fundal_height_cm, gestational_age_days FROM consultations WHERE pregnancy_id = $1 ORDER BY date DESC LIMIT 6`,
+        [pregnancyId],
+      ),
+      this.pregnancyRepo.query(
+        `SELECT exam_type, exam_date, final_report FROM ultrasounds WHERE pregnancy_id = $1 ORDER BY exam_date DESC LIMIT 4`,
+        [pregnancyId],
+      ).catch(() => []),
+      this.pregnancyRepo.query(
+        `SELECT exam_name, value, unit, reference_min, reference_max, status, result_date FROM lab_results WHERE pregnancy_id = $1 ORDER BY result_date DESC NULLS LAST LIMIT 8`,
+        [pregnancyId],
+      ).catch(() => []),
     ]);
 
     return new Promise((resolve, reject) => {
-      const doc = new PDFDocument({ size: 'A4', margin: 50 });
+      const doc = new PDFDocument({
+        size: 'A4',
+        margins: { top: 40, bottom: 40, left: 40, right: 40 },
+        info: {
+          Title: `Cartão da Gestante - ${patient.fullName}`,
+          Author: 'EliaHealth',
+        },
+      });
       const chunks: Buffer[] = [];
 
       doc.on('data', (chunk: Buffer) => chunks.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
-      // Header
-      doc.fontSize(20).fillColor('#7c3aed').text('EliaHealth', { align: 'center' });
-      doc.moveDown(0.5);
-      doc.fontSize(14).fillColor('#1f2937').text('Cartao da Gestante', { align: 'center' });
-      doc.moveDown();
+      // ── Helpers ──
+      const PAGE_WIDTH = doc.page.width - 80;
+      const LILAC = '#7C5CBF';
+      const NAVY = '#0F1F3D';
+      const GRAY = '#6b7280';
+      const LIGHT = '#f3f4f6';
+      const RED = '#dc2626';
+      const AMBER = '#d97706';
 
-      // Patient info
-      doc.fontSize(11).fillColor('#374151');
-      doc.text(`Paciente: ${patient.fullName}`);
-      doc.text(`Email: ${patient.email ?? 'N/I'} | Telefone: ${patient.phone ?? 'N/I'}`);
-      if (patient.dateOfBirth) {
-        const age = Math.floor((Date.now() - new Date(patient.dateOfBirth).getTime()) / 31557600000);
-        doc.text(`Idade: ${age} anos`);
+      const fmtDate = (d: any): string => {
+        if (!d) return '—';
+        try {
+          const date = typeof d === 'string' ? new Date(d + (d.length === 10 ? 'T12:00:00' : '')) : new Date(d);
+          return date.toLocaleDateString('pt-BR');
+        } catch { return '—'; }
+      };
+
+      const fmtAge = (dob: any): string => {
+        if (!dob) return '—';
+        const years = Math.floor((Date.now() - new Date(dob).getTime()) / 31557600000);
+        return `${years} anos`;
+      };
+
+      const sectionTitle = (title: string, color: string = LILAC) => {
+        if (doc.y > doc.page.height - 120) doc.addPage();
+        doc.moveDown(0.9);
+        doc.fontSize(11).fillColor(color).font('Helvetica-Bold').text(title.toUpperCase(), { characterSpacing: 0.5 });
+        doc
+          .moveTo(40, doc.y + 2)
+          .lineTo(40 + PAGE_WIDTH, doc.y + 2)
+          .strokeColor(color)
+          .lineWidth(0.8)
+          .stroke();
+        doc.moveDown(0.7);
+        doc.fontSize(9).fillColor(NAVY).font('Helvetica');
+      };
+
+      const kvRow = (pairs: [string, string][]) => {
+        const startY = doc.y;
+        const colWidth = PAGE_WIDTH / pairs.length;
+        pairs.forEach(([label, value], i) => {
+          const x = 40 + i * colWidth;
+          doc.fontSize(7).fillColor(GRAY).font('Helvetica').text(label.toUpperCase(), x, startY, { width: colWidth - 8 });
+          doc.fontSize(10).fillColor(NAVY).font('Helvetica-Bold').text(value || '—', x, startY + 11, { width: colWidth - 8 });
+        });
+        doc.y = startY + 30;
+        doc.x = 40;
+      };
+
+      const drawTable = (
+        headers: string[],
+        rows: string[][],
+        widths: number[],
+      ) => {
+        const startX = 40;
+        let y = doc.y;
+        const rowHeight = 18;
+        const headerHeight = 20;
+
+        // Verificar se cabe na página
+        const totalHeight = headerHeight + rowHeight * rows.length;
+        if (y + totalHeight > doc.page.height - 60) {
+          doc.addPage();
+          y = doc.y;
+        }
+
+        const tableTopY = y;
+        // Header
+        doc.rect(startX, y, PAGE_WIDTH, headerHeight).fill(LILAC);
+        let xCursor = startX;
+        headers.forEach((h, i) => {
+          doc.fillColor('white').fontSize(8).font('Helvetica-Bold').text(h, xCursor + 5, y + 6, { width: widths[i] - 10 });
+          xCursor += widths[i];
+        });
+        y += headerHeight;
+
+        // Rows
+        rows.forEach((row, ri) => {
+          if (ri % 2 === 0) doc.rect(startX, y, PAGE_WIDTH, rowHeight).fill(LIGHT);
+          xCursor = startX;
+          row.forEach((cell, i) => {
+            doc.fillColor(NAVY).fontSize(8).font('Helvetica').text(cell || '—', xCursor + 5, y + 5, {
+              width: widths[i] - 10,
+              ellipsis: true,
+              lineBreak: false,
+            });
+            xCursor += widths[i];
+          });
+          y += rowHeight;
+        });
+
+        // Border (use coordenada superior salva, nao doc.y atual)
+        doc.rect(startX, tableTopY, PAGE_WIDTH, headerHeight + rowHeight * rows.length).strokeColor('#e5e7eb').lineWidth(0.5).stroke();
+        doc.y = y + 8;
+        doc.x = 40;
+      };
+
+      // ── HEADER ──
+      doc.rect(0, 0, doc.page.width, 70).fill(NAVY);
+      doc.fillColor('white').fontSize(22).font('Helvetica-Bold').text('eliahealth', 40, 22);
+      doc.fillColor('#a78bfa').fontSize(11).font('Helvetica').text('Cartão da Gestante', 40, 48);
+      doc.fillColor('#9ca3af').fontSize(8).text(
+        `Gerado em ${new Date().toLocaleString('pt-BR')}`,
+        doc.page.width - 200,
+        50,
+        { width: 160, align: 'right' },
+      );
+
+      doc.y = 90;
+      doc.x = 40;
+
+      // ── PACIENTE ──
+      sectionTitle('Identificação da paciente');
+      doc.fontSize(13).fillColor(NAVY).font('Helvetica-Bold').text(patient.fullName);
+      doc.moveDown(0.3);
+      kvRow([
+        ['CPF', patient.cpf || '—'],
+        ['Idade', fmtAge(patient.dateOfBirth)],
+        ['Tipo sanguíneo', patient.bloodType || '—'],
+      ]);
+      kvRow([
+        ['E-mail', patient.email || '—'],
+        ['Telefone', patient.phone || '—'],
+      ]);
+
+      // ── GESTAÇÃO ──
+      sectionTitle('Dados da gestação');
+      kvRow([
+        ['IG atual', `${ga.weeks}s ${ga.days}d`],
+        ['DPP', fmtDate(pregnancy.edd)],
+        ['DUM', fmtDate(pregnancy.lmpDate)],
+        ['Método', pregnancy.gaMethod === 'ultrasound' ? 'USG' : pregnancy.gaMethod === 'ivf' ? 'FIV' : 'DUM'],
+      ]);
+      kvRow([
+        ['Gestações (G)', String(pregnancy.gravida ?? 0)],
+        ['Partos (P)', String(pregnancy.para ?? 0)],
+        ['Abortos (A)', String(pregnancy.abortus ?? 0)],
+        ['PV / PC / PF', `${pregnancy.vaginalDeliveries ?? 0} / ${pregnancy.cesareans ?? 0} / ${(pregnancy as any).forcepsDeliveries ?? 0}`],
+      ]);
+
+      // Risco
+      if (pregnancy.isHighRisk) {
+        doc.moveDown(0.5);
+        const flags = (pregnancy.highRiskFlags ?? []).join(', ');
+        const bannerY = doc.y;
+        const bannerH = flags ? 36 : 22;
+        doc.rect(40, bannerY, PAGE_WIDTH, bannerH).fill('#fef2f2').strokeColor(RED).lineWidth(0.6).stroke();
+        doc.fillColor(RED).fontSize(9).font('Helvetica-Bold').text('GESTAÇÃO DE ALTO RISCO', 48, bannerY + 6, { width: PAGE_WIDTH - 16 });
+        if (flags) {
+          doc.fillColor(NAVY).fontSize(8).font('Helvetica').text(flags, 48, bannerY + 20, { width: PAGE_WIDTH - 16 });
+        }
+        doc.y = bannerY + bannerH + 6;
+        doc.x = 40;
       }
-      doc.moveDown();
 
-      // Pregnancy info
-      doc.fontSize(12).fillColor('#7c3aed').text('Dados da Gestacao');
-      doc.fontSize(10).fillColor('#374151');
-      doc.text(`IG: ${ga.weeks} semanas e ${ga.days} dias`);
-      doc.text(`DPP: ${pregnancy.edd} | DUM: ${pregnancy.lmpDate}`);
-      doc.text(`G${pregnancy.gravida} P${pregnancy.para} A${pregnancy.abortus} | Cesareas: ${pregnancy.cesareans ?? 0} | Partos normais: ${pregnancy.vaginalDeliveries ?? 0}`);
-      doc.text(`Alto risco: ${pregnancy.isHighRisk ? 'Sim — ' + pregnancy.highRiskFlags.join(', ') : 'Nao'}`);
-      doc.text(`Tipo sanguineo: ${patient.bloodType ?? 'N/I'}`);
-      doc.moveDown();
-
-      // Last consultation
-      if (lastConsultation.length > 0) {
-        const lc = lastConsultation[0];
-        doc.fontSize(12).fillColor('#7c3aed').text('Ultima Consulta');
-        doc.fontSize(10).fillColor('#374151');
-        doc.text(`Data: ${lc.date} | PA: ${lc.bp_systolic ?? '-'}/${lc.bp_diastolic ?? '-'} mmHg | Peso: ${lc.weight_kg ?? '-'} kg`);
-        doc.moveDown();
+      // ── ANTECEDENTES / COMORBIDADES ──
+      const comorbs: string[] = (patient as any).comorbiditiesSelected ?? [];
+      const addicts: string[] = (patient as any).addictionsSelected ?? [];
+      const renderBlock = (label: string, content: string, labelColor: string = GRAY, bold: boolean = false) => {
+        doc.fontSize(7).fillColor(labelColor).font(bold ? 'Helvetica-Bold' : 'Helvetica').text(label.toUpperCase(), 40, doc.y, { width: PAGE_WIDTH });
+        doc.moveDown(0.15);
+        doc.fontSize(9).fillColor(NAVY).font('Helvetica').text(content, 40, doc.y, { width: PAGE_WIDTH });
+        doc.moveDown(0.6);
+      };
+      if (comorbs.length || patient.allergies || addicts.length || (pregnancy as any).currentPathologies || (pregnancy as any).currentMedications) {
+        sectionTitle('Antecedentes pessoais');
+        if (comorbs.length) renderBlock('Comorbidades', comorbs.join(' • '));
+        if ((pregnancy as any).currentPathologies) renderBlock('Patologias da gestação atual', (pregnancy as any).currentPathologies);
+        if (addicts.length) renderBlock('Hábitos', addicts.join(' • '));
+        if (patient.allergies) renderBlock('Alergias', patient.allergies, AMBER, true);
+        if ((pregnancy as any).currentMedications) renderBlock('Medicações em uso', (pregnancy as any).currentMedications);
       }
 
-      // Vaccines
+      // ── CONSULTAS RECENTES ──
+      if (recentConsultations.length > 0) {
+        sectionTitle('Consultas recentes');
+        const rows = recentConsultations.map((c: any) => {
+          const days = c.gestational_age_days ?? 0;
+          const ig = `${Math.floor(days / 7)}s ${days % 7}d`;
+          const pa = c.bp_systolic && c.bp_diastolic ? `${c.bp_systolic}/${c.bp_diastolic}` : '—';
+          return [
+            ig,
+            fmtDate(c.date),
+            c.weight_kg != null ? `${c.weight_kg}` : '—',
+            pa,
+            c.fetal_heart_rate ? String(c.fetal_heart_rate) : '—',
+            c.fundal_height_cm != null ? `${c.fundal_height_cm}` : '—',
+          ];
+        });
+        drawTable(
+          ['IG', 'Data', 'Peso (kg)', 'PA (mmHg)', 'BCF', 'AU (cm)'],
+          rows,
+          [60, 75, 75, 90, 60, 70],
+        );
+      }
+
+      // ── ULTRASSONS ──
+      if (ultrasounds.length > 0) {
+        sectionTitle('Ultrassonografias');
+        const rows = ultrasounds.map((u: any) => [
+          u.exam_type ?? '—',
+          fmtDate(u.exam_date),
+          (u.final_report ?? '—').replace(/\n/g, ' ').slice(0, 80),
+        ]);
+        drawTable(['Tipo', 'Data', 'Achados'], rows, [120, 75, 235]);
+      }
+
+      // ── EXAMES LABORATORIAIS ──
+      if (labs.length > 0) {
+        sectionTitle('Exames laboratoriais recentes');
+        const rows = labs.map((l: any) => {
+          const ref = l.reference_min != null && l.reference_max != null ? `${l.reference_min}–${l.reference_max}` : '—';
+          return [
+            l.exam_name ?? '—',
+            l.value != null ? `${l.value}${l.unit ? ' ' + l.unit : ''}` : '—',
+            ref,
+            l.status ?? '—',
+            fmtDate(l.result_date),
+          ];
+        });
+        drawTable(['Exame', 'Resultado', 'Referência', 'Status', 'Data'], rows, [140, 80, 80, 70, 60]);
+      }
+
+      // ── VACINAS ──
       if (vaccines.length > 0) {
-        doc.fontSize(12).fillColor('#7c3aed').text('Vacinas');
-        doc.fontSize(10).fillColor('#374151');
-        for (const v of vaccines) {
-          doc.text(`${v.vaccine_name}: ${v.status}`);
-        }
-        doc.moveDown();
+        sectionTitle('Vacinas');
+        const rows = vaccines.map((v: any) => [
+          v.vaccine_name ?? '—',
+          v.dose_number ? `${v.dose_number}ª` : '—',
+          v.status ?? '—',
+          fmtDate(v.administered_date),
+        ]);
+        drawTable(['Vacina', 'Dose', 'Status', 'Data'], rows, [200, 50, 100, 80]);
       }
 
-      // Alerts
+      // ── ALERTAS ──
       if (alerts.length > 0) {
-        doc.fontSize(12).fillColor('#dc2626').text('Alertas Ativos');
-        doc.fontSize(10).fillColor('#374151');
+        sectionTitle('Alertas ativos do copiloto', RED);
         for (const a of alerts) {
-          if (a.alert_message) doc.text(`• ${a.alert_message}`);
+          const dotColor = a.severity === 'critical' ? RED : a.severity === 'urgent' ? RED : a.severity === 'warning' ? AMBER : GRAY;
+          doc.circle(45, doc.y + 5, 2).fill(dotColor);
+          doc.fillColor(NAVY).fontSize(9).font('Helvetica-Bold').text(a.title ?? 'Alerta', 52, doc.y, { width: PAGE_WIDTH - 12 });
+          if (a.message) {
+            doc.fontSize(8).fillColor(GRAY).font('Helvetica').text(a.message, 52, doc.y, { width: PAGE_WIDTH - 12 });
+          }
+          doc.moveDown(0.4);
         }
-        doc.moveDown();
       }
 
-      // Footer
-      doc.moveDown(2);
-      doc.fontSize(8).fillColor('#9ca3af').text(
-        `Gerado em ${new Date().toLocaleString('pt-BR')} | Powered by EliaHealth`,
-        { align: 'center' },
+      // ── FOOTER ──
+      const footerY = doc.page.height - 30;
+      doc
+        .moveTo(40, footerY - 5)
+        .lineTo(doc.page.width - 40, footerY - 5)
+        .strokeColor('#e5e7eb')
+        .lineWidth(0.5)
+        .stroke();
+      doc.fontSize(7).fillColor(GRAY).font('Helvetica').text(
+        'Documento gerado eletronicamente por EliaHealth — Prontuário pré-natal inteligente',
+        40,
+        footerY,
+        { width: PAGE_WIDTH, align: 'center' },
       );
 
       doc.end();

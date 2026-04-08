@@ -116,6 +116,27 @@ export const updateConsultation = async (id: string, dto: Record<string, unknown
 export const deleteConsultation = async (id: string) =>
   (await api.delete(`/consultations/${id}`)).data;
 
+// ── Export & Share ──
+export const downloadPregnancyCard = async (pregnancyId: string, fileName: string) => {
+  const response = await api.get(`/pregnancies/${pregnancyId}/card/pdf`, {
+    responseType: 'blob',
+  });
+  const blob = new Blob([response.data], { type: 'application/pdf' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+};
+
+export const generateShareQrCode = async (pregnancyId: string) => {
+  const { data } = await api.post(`/pregnancies/${pregnancyId}/share/qrcode`);
+  return data as { qrcodeUrl: string; accessToken: string; expiresAt: string };
+};
+
 // ── Prescriptions ──
 export const fetchPrescriptions = async (pregnancyId: string) =>
   (await api.get(`/pregnancies/${pregnancyId}/prescriptions`)).data;

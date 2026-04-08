@@ -6,7 +6,7 @@ import {
   Bell, Plus, List, Table as TableIcon, AlertCircle, Pencil, Trash2,
 } from 'lucide-react';
 import { fetchPregnancyDetail, fetchConsultations, fetchPatient } from '../../api/consultations.api';
-import { deleteConsultation } from '../../api/pregnancy.api';
+import { deleteConsultation, downloadPregnancyCard } from '../../api/pregnancy.api';
 import { toTitleCase } from '../../utils/formatters';
 import { cn } from '../../utils/cn';
 import BpSection from './sections/BpSection';
@@ -14,6 +14,7 @@ import GlucoseSection from './sections/GlucoseSection';
 import CopilotPanel from './sections/CopilotPanel';
 import NewConsultationModal from './sections/NewConsultationModal';
 import InitialAssessmentModal from './sections/InitialAssessmentModal';
+import ShareModal from './sections/ShareModal';
 import {
   VaccinesCard, VaginalSwabsCard, BiologicalFatherCard,
   UltrasoundsCard, LabResultsCard, PrescriptionsCard, FilesCard,
@@ -77,6 +78,8 @@ export default function PregnancyPage() {
   const [consultationModal, setConsultationModal] = useState(false);
   const [editingConsultation, setEditingConsultation] = useState<any>(null);
   const [initialAssessmentModal, setInitialAssessmentModal] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [pdfDownloading, setPdfDownloading] = useState(false);
   const qc = useQueryClient();
   const deleteCons = useMutation({
     mutationFn: (id: string) => deleteConsultation(id),
@@ -162,7 +165,32 @@ export default function PregnancyPage() {
             )}
           </div>
           <div className="flex gap-2 flex-wrap">
-            {[{ icon: FileText, label: 'PDF' }, { icon: Share2, label: 'Compartilhar' }, { icon: StickyNote, label: 'Post-it' }, { icon: MessageSquare, label: 'Nota' }].map(({ icon: Icon, label }) => (
+            <button
+              onClick={async () => {
+                if (!pregnancyId) return;
+                setPdfDownloading(true);
+                try {
+                  await downloadPregnancyCard(pregnancyId, `cartao_${(patient?.fullName ?? 'gestante').replace(/\s+/g, '_').toLowerCase()}.pdf`);
+                } finally {
+                  setPdfDownloading(false);
+                }
+              }}
+              disabled={pdfDownloading}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs text-gray-600 border rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              {pdfDownloading ? 'Gerando...' : 'PDF'}
+            </button>
+            <button
+              onClick={() => setShareModalOpen(true)}
+              disabled={!patient?.email && !patient?.phone}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs text-gray-600 border rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+              title={!patient?.email && !patient?.phone ? 'Necessário e-mail ou telefone' : ''}
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              Compartilhar
+            </button>
+            {[{ icon: StickyNote, label: 'Post-it' }, { icon: MessageSquare, label: 'Nota' }].map(({ icon: Icon, label }) => (
               <button key={label} className="flex items-center gap-1.5 px-3 py-2 text-xs text-gray-600 border rounded-lg hover:bg-gray-50 transition"><Icon className="w-3.5 h-3.5" />{label}</button>
             ))}
           </div>
@@ -468,6 +496,13 @@ export default function PregnancyPage() {
           pregnancyId={pregnancyId}
           initial={editingConsultation}
           onClose={() => { setConsultationModal(false); setEditingConsultation(null); }}
+        />
+      )}
+      {shareModalOpen && pregnancyId && (
+        <ShareModal
+          pregnancyId={pregnancyId}
+          patientName={patientName}
+          onClose={() => setShareModalOpen(false)}
         />
       )}
       {initialAssessmentModal && pregnancyId && pregnancy?.patientId && (

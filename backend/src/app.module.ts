@@ -61,6 +61,7 @@ import { ContraceptionRecordsModule } from './contraception-records/contraceptio
 import { InfertilityWorkupsModule } from './infertility-workups/infertility-workups.module.js';
 import { AssistedReproductionModule } from './assisted-reproduction/assisted-reproduction.module.js';
 import { MenopauseAssessmentsModule } from './menopause-assessments/menopause-assessments.module.js';
+import { UploadsModule } from './uploads/uploads.module.js';
 
 @Module({
   imports: [
@@ -122,6 +123,7 @@ import { MenopauseAssessmentsModule } from './menopause-assessments/menopause-as
     ExportModule,
     LgpdModule,
     AdminModule,
+    UploadsModule,
     LabIntegrationsModule,
     WhatsAppModule,
     FhirModule,

@@ -22,3 +22,16 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* Esconde spinners nativos de <input type="number"> em todos os browsers.
+ * O componente NumberField (components/forms/NumberField) substitui com
+ * botoes +/- explicitos, que funcionam de forma consistente. */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

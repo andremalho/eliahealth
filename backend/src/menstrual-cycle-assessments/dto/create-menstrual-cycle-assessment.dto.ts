@@ -75,6 +75,7 @@ export class CreateMenstrualCycleAssessmentDto {
   @IsOptional() @IsBoolean() hysteroscopyPerformed?: boolean;
   @IsOptional() @IsDateString() hysteroscopyDate?: string;
   @IsOptional() @IsString() hysteroscopyFindings?: string;
+  @IsOptional() @IsArray() hysteroscopies?: Record<string, unknown>[];
   @IsOptional() @IsDateString() returnDate?: string;
   @IsOptional() @IsString() notes?: string;
 

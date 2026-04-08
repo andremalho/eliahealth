@@ -31,6 +31,12 @@ export interface MenstrualCycleAlert {
   severity: 'info' | 'warning' | 'urgent';
 }
 
+export interface HysteroscopyEntry {
+  date: string;
+  findings: string;
+  conduct: string;
+}
+
 export interface MenstrualCycleAssessment {
   id: string;
   tenantId: string | null;
@@ -76,6 +82,9 @@ export interface MenstrualCycleAssessment {
   surgicalReferral: boolean;
   surgicalDetails: string | null;
   hysteroscopyPerformed: boolean;
+  hysteroscopyDate: string | null;
+  hysteroscopyFindings: string | null;
+  hysteroscopies: HysteroscopyEntry[] | null;
   returnDate: string | null;
   notes: string | null;
 
@@ -129,9 +138,12 @@ export interface CreateMenstrualCycleAssessmentDto {
   surgicalReferral?: boolean;
   surgicalDetails?: string;
   hysteroscopyPerformed?: boolean;
+  hysteroscopies?: HysteroscopyEntry[];
   returnDate?: string;
   notes?: string;
 }
+
+export type UpdateMenstrualCycleAssessmentDto = Partial<CreateMenstrualCycleAssessmentDto>;
 
 export async function fetchMenstrualCycleAssessments(
   patientId: string,
@@ -144,12 +156,36 @@ export async function fetchMenstrualCycleAssessments(
   return data;
 }
 
+export async function fetchMenstrualCycleAssessment(
+  patientId: string,
+  id: string,
+): Promise<MenstrualCycleAssessment> {
+  const { data } = await api.get(`/patients/${patientId}/menstrual-cycle-assessments/${id}`);
+  return data;
+}
+
 export async function createMenstrualCycleAssessment(
   patientId: string,
   dto: CreateMenstrualCycleAssessmentDto,
 ): Promise<MenstrualCycleAssessment> {
   const { data } = await api.post(`/patients/${patientId}/menstrual-cycle-assessments`, dto);
   return data;
+}
+
+export async function updateMenstrualCycleAssessment(
+  patientId: string,
+  id: string,
+  dto: UpdateMenstrualCycleAssessmentDto,
+): Promise<MenstrualCycleAssessment> {
+  const { data } = await api.patch(`/patients/${patientId}/menstrual-cycle-assessments/${id}`, dto);
+  return data;
+}
+
+export async function deleteMenstrualCycleAssessment(
+  patientId: string,
+  id: string,
+): Promise<void> {
+  await api.delete(`/patients/${patientId}/menstrual-cycle-assessments/${id}`);
 }
 
 // ── Labels PT-BR ──

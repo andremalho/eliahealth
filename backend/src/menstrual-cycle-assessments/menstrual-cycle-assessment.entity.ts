@@ -186,6 +186,11 @@ export class MenstrualCycleAssessment {
   @Column({ name: 'hysteroscopy_findings', type: 'text', nullable: true })
   hysteroscopyFindings: string | null;
 
+  // Lista estruturada — substitui os 3 campos legacy acima.
+  // Cada entrada: { date, findings, conduct }
+  @Column({ type: 'jsonb', nullable: true })
+  hysteroscopies: Record<string, unknown>[] | null;
+
   @Column({ name: 'return_date', type: 'date', nullable: true })
   returnDate: string | null;
 

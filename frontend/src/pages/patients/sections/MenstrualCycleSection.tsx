@@ -9,6 +9,7 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
+  Pencil,
 } from 'lucide-react';
 import {
   fetchMenstrualCycleAssessments,
@@ -28,6 +29,7 @@ function Skeleton({ className = '' }: { className?: string }) {
 
 export default function MenstrualCycleSection({ patientId }: { patientId: string }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<MenstrualCycleAssessment | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -37,6 +39,16 @@ export default function MenstrualCycleSection({ patientId }: { patientId: string
   });
 
   const items = data?.data ?? [];
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditingItem(null);
+  };
+
+  const openEdit = (item: MenstrualCycleAssessment) => {
+    setEditingItem(item);
+    setModalOpen(true);
+  };
 
   return (
     <div>
@@ -76,6 +88,7 @@ export default function MenstrualCycleSection({ patientId }: { patientId: string
               item={it}
               expanded={expandedId === it.id}
               onToggle={() => setExpandedId(expandedId === it.id ? null : it.id)}
+              onEdit={() => openEdit(it)}
             />
           ))}
         </div>
@@ -84,7 +97,8 @@ export default function MenstrualCycleSection({ patientId }: { patientId: string
       {modalOpen && (
         <NewMenstrualCycleAssessmentModal
           patientId={patientId}
-          onClose={() => setModalOpen(false)}
+          assessment={editingItem ?? undefined}
+          onClose={closeModal}
         />
       )}
     </div>
@@ -95,10 +109,12 @@ function Card({
   item: c,
   expanded,
   onToggle,
+  onEdit,
 }: {
   item: MenstrualCycleAssessment;
   expanded: boolean;
   onToggle: () => void;
+  onEdit: () => void;
 }) {
   const alerts = c.alerts ?? [];
   const urgentCount = alerts.filter((a) => a.severity === 'urgent').length;
@@ -121,35 +137,43 @@ function Card({
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden hover:border-lilac/50 transition">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition text-left"
-      >
-        <div className="w-10 h-10 rounded-lg bg-lilac/10 text-lilac flex items-center justify-center shrink-0">
-          <Calendar className="w-5 h-5" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-gray-800">{formatDate(c.assessmentDate)}</span>
-            <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded truncate max-w-xs">
-              {COMPLAINT_LABELS[c.chiefComplaint]}
-            </span>
+      <div className="flex items-center gap-2 p-4 hover:bg-gray-50 transition">
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-4 flex-1 text-left min-w-0"
+        >
+          <div className="w-10 h-10 rounded-lg bg-lilac/10 text-lilac flex items-center justify-center shrink-0">
+            <Calendar className="w-5 h-5" />
           </div>
-          {(palmTags.length > 0 || coeinTags.length > 0) && (
-            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-              {palmTags.map((t) => (
-                <span key={t} className="px-1.5 py-0.5 text-[10px] font-semibold bg-purple-50 text-purple-700 rounded">
-                  PALM: {t}
-                </span>
-              ))}
-              {coeinTags.map((t) => (
-                <span key={t} className="px-1.5 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-700 rounded">
-                  COEIN: {t}
-                </span>
-              ))}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium text-gray-800">{formatDate(c.assessmentDate)}</span>
+              <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded truncate max-w-xs">
+                {COMPLAINT_LABELS[c.chiefComplaint]}
+              </span>
             </div>
-          )}
-        </div>
+            {(palmTags.length > 0 || coeinTags.length > 0) && (
+              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                {palmTags.map((t) => (
+                  <span
+                    key={t}
+                    className="px-1.5 py-0.5 text-[10px] font-semibold bg-purple-50 text-purple-700 rounded"
+                  >
+                    PALM: {t}
+                  </span>
+                ))}
+                {coeinTags.map((t) => (
+                  <span
+                    key={t}
+                    className="px-1.5 py-0.5 text-[10px] font-semibold bg-amber-50 text-amber-700 rounded"
+                  >
+                    COEIN: {t}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </button>
         <div className="flex items-center gap-2 shrink-0">
           {urgentCount > 0 && (
             <span className="flex items-center gap-1 px-2 py-1 bg-red-50 text-red-600 text-xs font-semibold rounded">
@@ -163,13 +187,21 @@ function Card({
               {warningCount}
             </span>
           )}
-          {expanded ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
-          )}
+          <button
+            onClick={onEdit}
+            className="p-2 text-gray-400 hover:text-lilac hover:bg-lilac/5 rounded transition"
+            title="Editar"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onToggle}
+            className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
+          >
+            {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </button>
         </div>
-      </button>
+      </div>
 
       {expanded && (
         <div className="px-4 pb-4 pt-2 border-t bg-gray-50/50 space-y-4">
@@ -208,6 +240,34 @@ function Card({
           )}
           {c.pcosDiagnosis && (
             <Block label="Diagnóstico adicional">SOP (Síndrome dos Ovários Policísticos)</Block>
+          )}
+          {c.hysteroscopies && c.hysteroscopies.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                Histeroscopias ({c.hysteroscopies.length})
+              </p>
+              <div className="space-y-2">
+                {c.hysteroscopies.map((h, i) => (
+                  <div key={i} className="bg-white rounded p-2.5 border border-gray-100 text-xs">
+                    <p className="font-semibold text-lilac">
+                      #{i + 1} · {h.date && formatDate(h.date)}
+                    </p>
+                    {h.findings && (
+                      <p className="text-gray-700 mt-1">
+                        <span className="text-gray-400">Achados: </span>
+                        {h.findings}
+                      </p>
+                    )}
+                    {h.conduct && (
+                      <p className="text-gray-700 mt-1">
+                        <span className="text-gray-400">Conduta: </span>
+                        {h.conduct}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
           {c.diagnosis && <Block label="Diagnóstico">{c.diagnosis}</Block>}
           {c.treatmentPlan && <Block label="Plano terapêutico">{c.treatmentPlan}</Block>}

@@ -1,16 +1,19 @@
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Plus, Trash2 } from 'lucide-react';
 import {
   createMenstrualCycleAssessment,
+  updateMenstrualCycleAssessment,
   COMPLAINT_LABELS,
   LEIOMYOMA_FIGO_LABELS,
   ENDOMETRIOSIS_STAGE_LABELS,
   type CreateMenstrualCycleAssessmentDto,
+  type MenstrualCycleAssessment,
   type MenstrualComplaint,
   type LeiomyomaFIGO,
   type EndometriosisStage,
+  type HysteroscopyEntry,
 } from '../../../api/menstrual-cycle-assessments.api';
 import { cn } from '../../../utils/cn';
 
@@ -53,7 +56,6 @@ interface FormData {
   treatmentPlan: string;
   surgicalReferral: boolean;
   surgicalDetails: string;
-  hysteroscopyPerformed: boolean;
   returnDate: string;
   notes: string;
 }
@@ -99,32 +101,99 @@ function classifyCycle(intervalStr: string, durationStr: string, volumeMl: strin
 
 export default function NewMenstrualCycleAssessmentModal({
   patientId,
+  assessment,
   onClose,
 }: {
   patientId: string;
+  assessment?: MenstrualCycleAssessment;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
+  const isEdit = !!assessment;
+
+  // Histeroscopias — managed como state separado pois é array dinâmico
+  const [hysteroscopies, setHysteroscopies] = useState<HysteroscopyEntry[]>(() => {
+    if (assessment?.hysteroscopies) return assessment.hysteroscopies;
+    // Migra do formato legacy se existir
+    if (assessment?.hysteroscopyPerformed && assessment.hysteroscopyDate) {
+      return [
+        {
+          date: assessment.hysteroscopyDate ?? '',
+          findings: assessment.hysteroscopyFindings ?? '',
+          conduct: '',
+        },
+      ];
+    }
+    return [];
+  });
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
-    defaultValues: {
-      assessmentDate: new Date().toISOString().split('T')[0],
-      chiefComplaint: 'heavy_menstrual_bleeding',
-      palmPolyp: false,
-      palmAdenomyosis: false,
-      palmLeiomyoma: false,
-      palmMalignancyOrHyperplasia: false,
-      coeinCoagulopathy: false,
-      coeinOvulatoryDysfunction: false,
-      coeinEndometrial: false,
-      coeinIatrogenic: false,
-      coeinNotYetClassified: false,
-      pcosDiagnosis: false,
-      endometriosisDiagnosis: false,
-      surgicalReferral: false,
-      hysteroscopyPerformed: false,
-    },
+    defaultValues: assessment
+      ? {
+          assessmentDate: assessment.assessmentDate,
+          chiefComplaint: assessment.chiefComplaint,
+          cycleIntervalDays: assessment.cycleIntervalDays?.toString() ?? '',
+          cycleDurationDays: assessment.cycleDurationDays?.toString() ?? '',
+          lastMenstrualPeriod: assessment.lastMenstrualPeriod ?? '',
+          estimatedBloodVolumeMl: assessment.estimatedBloodVolumeMl?.toString() ?? '',
+          pictorialBloodChart: assessment.pictorialBloodChart?.toString() ?? '',
+          numberOfPadsPerDay: assessment.numberOfPadsPerDay?.toString() ?? '',
+          palmPolyp: assessment.palmPolyp,
+          palmAdenomyosis: assessment.palmAdenomyosis,
+          palmLeiomyoma: assessment.palmLeiomyoma,
+          palmLeiomyomaLocation: assessment.palmLeiomyomaLocation ?? '',
+          palmMalignancyOrHyperplasia: assessment.palmMalignancyOrHyperplasia,
+          palmMalignancyDetails: assessment.palmMalignancyDetails ?? '',
+          coeinCoagulopathy: assessment.coeinCoagulopathy,
+          coeinCoagulopathyType: assessment.coeinCoagulopathyType ?? '',
+          coeinOvulatoryDysfunction: assessment.coeinOvulatoryDysfunction,
+          coeinOvulatoryType: assessment.coeinOvulatoryType ?? '',
+          coeinEndometrial: assessment.coeinEndometrial,
+          coeinIatrogenic: assessment.coeinIatrogenic,
+          coeinIatrogenicDetails: assessment.coeinIatrogenicDetails ?? '',
+          coeinNotYetClassified: assessment.coeinNotYetClassified,
+          pcosDiagnosis: assessment.pcosDiagnosis,
+          endometriosisDiagnosis: assessment.endometriosisDiagnosis,
+          endometriosisStage: assessment.endometriosisStage ?? '',
+          diagnosis: assessment.diagnosis ?? '',
+          treatmentPlan: assessment.treatmentPlan ?? '',
+          surgicalReferral: assessment.surgicalReferral,
+          surgicalDetails: assessment.surgicalDetails ?? '',
+          returnDate: assessment.returnDate ?? '',
+          notes: assessment.notes ?? '',
+        }
+      : {
+          assessmentDate: new Date().toISOString().split('T')[0],
+          chiefComplaint: 'heavy_menstrual_bleeding',
+          palmPolyp: false,
+          palmAdenomyosis: false,
+          palmLeiomyoma: false,
+          palmMalignancyOrHyperplasia: false,
+          coeinCoagulopathy: false,
+          coeinOvulatoryDysfunction: false,
+          coeinEndometrial: false,
+          coeinIatrogenic: false,
+          coeinNotYetClassified: false,
+          pcosDiagnosis: false,
+          endometriosisDiagnosis: false,
+          surgicalReferral: false,
+        },
   });
+
+  const addHysteroscopy = () => {
+    setHysteroscopies((prev) => [
+      ...prev,
+      { date: new Date().toISOString().split('T')[0]!, findings: '', conduct: '' },
+    ]);
+  };
+
+  const removeHysteroscopy = (idx: number) => {
+    setHysteroscopies((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const updateHysteroscopy = (idx: number, patch: Partial<HysteroscopyEntry>) => {
+    setHysteroscopies((prev) => prev.map((h, i) => (i === idx ? { ...h, ...patch } : h)));
+  };
 
   const cycleClass = classifyCycle(
     watch('cycleIntervalDays'),
@@ -187,10 +256,22 @@ export default function NewMenstrualCycleAssessmentModal({
       if (data.treatmentPlan) dto.treatmentPlan = data.treatmentPlan;
       dto.surgicalReferral = data.surgicalReferral;
       if (data.surgicalDetails) dto.surgicalDetails = data.surgicalDetails;
-      dto.hysteroscopyPerformed = data.hysteroscopyPerformed;
+
+      // Histeroscopias — array dinâmico
+      const validHysteroscopies = hysteroscopies.filter((h) => h.date || h.findings || h.conduct);
+      if (validHysteroscopies.length > 0) {
+        dto.hysteroscopies = validHysteroscopies;
+        dto.hysteroscopyPerformed = true;
+      } else {
+        dto.hysteroscopyPerformed = false;
+      }
+
       if (data.returnDate) dto.returnDate = data.returnDate;
       if (data.notes) dto.notes = data.notes;
 
+      if (isEdit && assessment) {
+        return updateMenstrualCycleAssessment(patientId, assessment.id, dto);
+      }
       return createMenstrualCycleAssessment(patientId, dto);
     },
     onSuccess: () => {
@@ -209,7 +290,9 @@ export default function NewMenstrualCycleAssessmentModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-semibold text-navy">Nova avaliação de ciclo / SUA</h2>
+          <h2 className="text-lg font-semibold text-navy">
+            {isEdit ? 'Editar avaliação de ciclo / SUA' : 'Nova avaliação de ciclo / SUA'}
+          </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
@@ -436,6 +519,70 @@ export default function NewMenstrualCycleAssessmentModal({
             </div>
           </Section>
 
+          {/* Histeroscopias — múltiplas */}
+          <Section title="Histeroscopias">
+            {hysteroscopies.length === 0 ? (
+              <p className="text-sm text-gray-400">Nenhuma histeroscopia registrada.</p>
+            ) : (
+              <div className="space-y-3">
+                {hysteroscopies.map((h, idx) => (
+                  <div
+                    key={idx}
+                    className="border border-lilac/30 bg-lilac/5 rounded-lg p-3 space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-lilac uppercase">
+                        Histeroscopia #{idx + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeHysteroscopy(idx)}
+                        className="text-gray-400 hover:text-red-600"
+                        title="Remover"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <Field label="Data">
+                      <input
+                        type="date"
+                        value={h.date}
+                        onChange={(e) => updateHysteroscopy(idx, { date: e.target.value })}
+                        className={inputCn(false)}
+                      />
+                    </Field>
+                    <Field label="Achados / diagnóstico">
+                      <textarea
+                        rows={2}
+                        value={h.findings}
+                        onChange={(e) => updateHysteroscopy(idx, { findings: e.target.value })}
+                        placeholder="Ex: pólipo endometrial em parede posterior"
+                        className={inputCn(false)}
+                      />
+                    </Field>
+                    <Field label="Conduta">
+                      <textarea
+                        rows={2}
+                        value={h.conduct}
+                        onChange={(e) => updateHysteroscopy(idx, { conduct: e.target.value })}
+                        placeholder="Ex: polipectomia histeroscópica"
+                        className={inputCn(false)}
+                      />
+                    </Field>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={addHysteroscopy}
+              className="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 text-sm text-gray-600 rounded-lg hover:border-lilac hover:text-lilac transition w-full justify-center"
+            >
+              <Plus className="w-4 h-4" />
+              Adicionar histeroscopia
+            </button>
+          </Section>
+
           {/* Conduta */}
           <Section title="Diagnóstico e conduta">
             <Field label="Diagnóstico / impressão">
@@ -453,7 +600,6 @@ export default function NewMenstrualCycleAssessmentModal({
                   </Field>
                 </div>
               )}
-              <Checkbox label="Histeroscopia realizada" {...register('hysteroscopyPerformed')} />
             </div>
             <Field label="Data de retorno">
               <input {...register('returnDate')} type="date" className={inputCn(false)} />
@@ -479,7 +625,7 @@ export default function NewMenstrualCycleAssessmentModal({
               {(isSubmitting || mutation.isPending) && (
                 <Loader2 className="w-4 h-4 animate-spin" />
               )}
-              Salvar avaliação
+              {isEdit ? 'Atualizar avaliação' : 'Salvar avaliação'}
             </button>
           </div>
         </form>

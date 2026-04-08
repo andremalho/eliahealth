@@ -61,6 +61,13 @@ function mapCervicalState(c: any): string {
 function Skeleton({ className = '' }: { className?: string }) {
   return <div className={cn('animate-pulse bg-gray-200 rounded', className)} />;
 }
+function bmiCategory(bmi: number): { label: string; cls: string } {
+  if (bmi < 18.5) return { label: 'Baixo peso', cls: 'bg-amber-100 text-amber-700' };
+  if (bmi < 25) return { label: 'Normal', cls: 'bg-emerald-100 text-emerald-700' };
+  if (bmi < 30) return { label: 'Sobrepeso', cls: 'bg-amber-100 text-amber-700' };
+  if (bmi < 40) return { label: 'Obesidade', cls: 'bg-red-100 text-red-700' };
+  return { label: 'Obesidade grave', cls: 'bg-red-200 text-red-800' };
+}
 
 export default function PregnancyPage() {
   const { pregnancyId } = useParams<{ pregnancyId: string }>();
@@ -183,25 +190,144 @@ export default function PregnancyPage() {
         </Card>
       </div>
 
-      {/* Second row: Antecedentes, Patologias, Histórico */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <Card title="Antecedentes Obstétricos">
-          <div className="flex gap-2 flex-wrap">
-            {[['G', 'gravida'], ['P', 'para'], ['A', 'abortus'], ['C', 'cesareans']].map(([l, k]) => (
-              <span key={l} className="px-2.5 py-1 bg-gray-100 text-navy text-sm font-semibold rounded-lg">{l}{pregnancy?.[k] ?? 0}</span>
-            ))}
-          </div>
-          <p className="text-xs text-gray-500 mt-2">Partos normais: {pregnancy?.vaginalDeliveries ?? 0}</p>
-        </Card>
-        <Card title="Patologias, Medicações e Hábitos">
-          <p className="text-sm text-gray-500">{patient?.comorbidities || 'Nenhum registrado'}</p>
-        </Card>
-        <Card title="Histórico Clínico">
-          <p className="text-sm text-gray-500">
-            {[patient?.comorbidities, patient?.allergies, patient?.addictions].filter(Boolean).join(' · ') || 'Nenhum registrado'}
-          </p>
-        </Card>
-      </div>
+      {/* Second row: IMC + Obstétricos + Comorbidades */}
+      {(() => {
+        const lastWeightKg = consultations
+          .map((c: any) => Number(c.weightKg ?? c.weight_kg))
+          .filter((w: number) => !Number.isNaN(w) && w > 0)
+          .pop();
+        const heightCm = (patient as any)?.height ? Number((patient as any).height) : null;
+        const bmi = lastWeightKg && heightCm ? lastWeightKg / Math.pow(heightCm / 100, 2) : null;
+        const bmiCat = bmi ? bmiCategory(bmi) : null;
+        const comorbidities: string[] = (patient as any)?.comorbiditiesSelected ?? [];
+        const addictionsList: string[] = (patient as any)?.addictionsSelected ?? [];
+        const allergiesText = (patient as any)?.allergies as string | null;
+        const familyHistText = (patient as any)?.familyHistory as string | null;
+        const menarche = (patient as any)?.menarcheAge as number | null;
+        const cycle = (patient as any)?.menstrualCycle as string | null;
+        const dysmen = (patient as any)?.dysmenorrhea as boolean | null;
+        const gynecoNotes = (pregnancy as any)?.gynecologicalHistory as string | null;
+        const surgeries = (patient as any)?.surgeries as string | null;
+        const medications = (pregnancy as any)?.currentMedications as string | null;
+        const currentPath = (pregnancy as any)?.currentPathologies as string | null;
+
+        return (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <Card title="Antropometria / IMC" onEdit={() => setInitialAssessmentModal(true)}>
+                {bmi ? (
+                  <>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-2xl font-bold text-navy">{bmi.toFixed(1)}</p>
+                      <span className="text-xs text-gray-500">kg/m²</span>
+                      {bmiCat && (
+                        <span className={cn('ml-auto px-2 py-0.5 text-xs font-semibold rounded-full', bmiCat.cls)}>
+                          {bmiCat.label}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {lastWeightKg}kg · {heightCm}cm
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-400">
+                    {!heightCm ? 'Altura não informada' : 'Sem peso registrado'}
+                  </p>
+                )}
+              </Card>
+
+              <Card title="Antecedentes Obstétricos" onEdit={() => setInitialAssessmentModal(true)}>
+                <div className="flex gap-2 flex-wrap">
+                  {[['G', 'gravida'], ['A', 'abortus'], ['P', 'para']].map(([l, k]) => (
+                    <span key={l} className="px-2.5 py-1 bg-gray-100 text-navy text-sm font-semibold rounded-lg">
+                      {l}{(pregnancy as any)?.[k] ?? 0}
+                    </span>
+                  ))}
+                </div>
+                {((pregnancy as any)?.para ?? 0) >= 1 && (
+                  <div className="flex gap-2 flex-wrap mt-2">
+                    {[['PV', 'vaginalDeliveries'], ['PC', 'cesareans'], ['PF', 'forcepsDeliveries']].map(([l, k]) => (
+                      <span key={l} className="px-2 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded">
+                        {l} {(pregnancy as any)?.[k] ?? 0}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+              <Card title="Comorbidades" onEdit={() => setInitialAssessmentModal(true)}>
+                {comorbidities.length === 0 ? (
+                  <p className="text-sm text-gray-400">Nenhuma registrada</p>
+                ) : (
+                  <div className="flex gap-1.5 flex-wrap">
+                    {comorbidities.map((c, i) => (
+                      <span key={i} className="px-2 py-0.5 bg-red-50 text-red-700 text-xs font-medium rounded-full">{c}</span>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* Third row: Hábitos/Alergias + Familiares + Ginecológicos */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <Card title="Hábitos e Alergias" onEdit={() => setInitialAssessmentModal(true)}>
+                {addictionsList.length === 0 && !allergiesText ? (
+                  <p className="text-sm text-gray-400">Sem registros</p>
+                ) : (
+                  <div className="space-y-2">
+                    {addictionsList.length > 0 && (
+                      <div className="flex gap-1.5 flex-wrap">
+                        {addictionsList.map((a, i) => (
+                          <span key={i} className="px-2 py-0.5 bg-amber-50 text-amber-700 text-xs font-medium rounded-full">{a}</span>
+                        ))}
+                      </div>
+                    )}
+                    {allergiesText && (
+                      <p className="text-xs text-gray-600"><span className="font-medium text-gray-700">Alergias:</span> {allergiesText}</p>
+                    )}
+                  </div>
+                )}
+              </Card>
+
+              <Card title="Antecedentes Familiares" onEdit={() => setInitialAssessmentModal(true)}>
+                <p className="text-xs text-gray-600 whitespace-pre-line">
+                  {familyHistText || <span className="text-gray-400">Sem registros</span>}
+                </p>
+              </Card>
+
+              <Card title="Ginecológicos / Cirúrgicos" onEdit={() => setInitialAssessmentModal(true)}>
+                <div className="text-xs text-gray-600 space-y-1">
+                  {menarche && <p>Menarca: <span className="font-medium">{menarche} anos</span></p>}
+                  {cycle && <p>Ciclo: <span className="font-medium capitalize">{cycle}</span></p>}
+                  {dysmen != null && <p>Dismenorreia: <span className="font-medium">{dysmen ? 'Sim' : 'Não'}</span></p>}
+                  {gynecoNotes && <p className="text-gray-500 mt-1">{gynecoNotes}</p>}
+                  {surgeries && <p className="text-gray-500"><span className="font-medium text-gray-700">Cirurgias:</span> {surgeries}</p>}
+                  {!menarche && !cycle && dysmen == null && !gynecoNotes && !surgeries && (
+                    <p className="text-gray-400">Sem registros</p>
+                  )}
+                </div>
+              </Card>
+            </div>
+
+            {/* Quarta linha condicional: medicações e patologias da gestação atual */}
+            {(medications || currentPath) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {currentPath && (
+                  <Card title="Patologias da gestação atual" onEdit={() => setInitialAssessmentModal(true)}>
+                    <p className="text-xs text-gray-600 whitespace-pre-line">{currentPath}</p>
+                  </Card>
+                )}
+                {medications && (
+                  <Card title="Medicações em uso" onEdit={() => setInitialAssessmentModal(true)}>
+                    <p className="text-xs text-gray-600 whitespace-pre-line">{medications}</p>
+                  </Card>
+                )}
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* PA Alert Banner — scan ALL consultations for elevated BP */}
       {(() => {
@@ -323,6 +449,8 @@ export default function PregnancyPage() {
           pregnancyId={pregnancyId}
           patientId={pregnancy.patientId}
           initialHeight={(patient as any)?.height}
+          patient={patient}
+          pregnancy={pregnancy}
           onClose={() => setInitialAssessmentModal(false)}
         />
       )}
@@ -330,12 +458,16 @@ export default function PregnancyPage() {
   );
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({ title, children, onEdit }: { title: string; children: React.ReactNode; onEdit?: () => void }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium text-gray-500">{title}</h3>
-        <button className="text-gray-400 hover:text-lilac"><Edit3 className="w-3.5 h-3.5" /></button>
+        {onEdit && (
+          <button onClick={onEdit} className="text-gray-400 hover:text-lilac" title="Editar">
+            <Edit3 className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
       {children}
     </div>

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, ResponsiveContainer, Legend } from 'recharts';
-import { Activity, TrendingUp, Table, AlertTriangle } from 'lucide-react';
+import { Activity, TrendingUp, Table, AlertTriangle, Plus } from 'lucide-react';
 import { fetchBpTimeline } from '../../../api/pregnancy.api';
 import { cn } from '../../../utils/cn';
+import AddBpReadingModal from './AddBpReadingModal';
 
 export default function BpSection({ pregnancyId }: { pregnancyId: string }) {
   const [mode, setMode] = useState<'chart' | 'table'>('chart');
+  const [addOpen, setAddOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['bp-timeline', pregnancyId],
@@ -40,6 +42,9 @@ export default function BpSection({ pregnancyId }: { pregnancyId: string }) {
               <Table className="w-4 h-4" />
             </button>
           </div>
+          <button onClick={() => setAddOpen(true)} className="flex items-center gap-1 px-3 py-1.5 bg-lilac text-white text-xs rounded-lg hover:bg-primary-dark">
+            <Plus className="w-3.5 h-3.5" /> Nova
+          </button>
         </div>
       </div>
 
@@ -85,6 +90,7 @@ export default function BpSection({ pregnancyId }: { pregnancyId: string }) {
           </div>
         )}
       </div>
+      {addOpen && <AddBpReadingModal pregnancyId={pregnancyId} onClose={() => setAddOpen(false)} />}
     </div>
   );
 }

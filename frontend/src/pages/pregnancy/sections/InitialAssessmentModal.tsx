@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { completeInitialAssessment, updatePatient } from '../../../api/pregnancies.api';
+import api from '../../../api/client';
 import { cn } from '../../../utils/cn';
 
 interface Props {
@@ -10,7 +11,107 @@ interface Props {
   patientId: string;
   initialWeightKg?: number | null;
   initialHeight?: number | null;
+  patient?: any;
+  pregnancy?: any;
   onClose: () => void;
+}
+
+function parseDefaults(patient: any, pregnancy: any, initialWeightKg?: number | null, initialHeight?: number | null) {
+  const d: Partial<FormData> = {
+    weightKg: initialWeightKg?.toString() ?? '',
+    height: (initialHeight ?? patient?.height)?.toString() ?? '',
+    gravida: (pregnancy?.gravida ?? 1).toString(),
+    abortus: (pregnancy?.abortus ?? 0).toString(),
+    para: (pregnancy?.para ?? 0).toString(),
+    pv: (pregnancy?.vaginalDeliveries ?? 0).toString(),
+    pc: (pregnancy?.cesareans ?? 0).toString(),
+    pf: (pregnancy?.forcepsDeliveries ?? 0).toString(),
+    familyHistory: patient?.familyHistory ?? '',
+    surgeries: patient?.surgeries ?? '',
+    medications: pregnancy?.currentMedications ?? '',
+    gynecologicalNotes: pregnancy?.gynecologicalHistory ?? '',
+    menarcheAge: patient?.menarcheAge?.toString() ?? '',
+    menstrualCycle: patient?.menstrualCycle ?? '',
+    dysmenorrhea: !!patient?.dysmenorrhea,
+    hasAllergy: !!patient?.allergies,
+    allergyText: patient?.allergies ?? '',
+  };
+
+  // Parse comorbidities (string list) back into checkboxes
+  const coms: string[] = patient?.comorbiditiesSelected ?? [];
+  for (const c of coms) {
+    if (/Hipertens/i.test(c)) d.cmHas = true;
+    else if (/Diabetes/i.test(c)) {
+      d.cmDm = true;
+      const m = c.match(/\((dm1|dm2|lada|mody)\)/i);
+      if (m) d.cmDmSubtype = m[1].toLowerCase();
+    }
+    else if (/Dislipidemia/i.test(c)) d.cmDislipidemia = true;
+    else if (/tireoid/i.test(c)) {
+      d.cmThyroid = true;
+      const m = c.match(/\((hipotireoidismo|hipertireoidismo|hashimoto|graves)\)/i);
+      if (m) d.cmThyroidSubtype = m[1].toLowerCase();
+    }
+    else if (/Trombofil/i.test(c)) d.cmTrombo = true;
+    else if (/Enxaqueca/i.test(c)) d.cmEnxaqueca = true;
+    else if (/autoimune/i.test(c)) {
+      d.cmAutoimmune = true;
+      d.cmAutoimmuneText = c.replace(/^Doenças autoimunes:?\s*/i, '');
+    }
+    else if (/cardiovascul/i.test(c)) {
+      d.cmCardio = true;
+      d.cmCardioText = c.replace(/^Doenças cardiovasculares:?\s*/i, '');
+    }
+    else if (/respirat/i.test(c)) {
+      d.cmRespiratory = true;
+      d.cmRespiratoryText = c.replace(/^Doenças respiratórias:?\s*/i, '');
+    }
+    else if (/infecciosas crônicas/i.test(c)) {
+      const list = c.replace(/^Doenças infecciosas crônicas:?\s*/i, '');
+      if (/HIV/i.test(list)) d.cmInfHiv = true;
+      if (/Hepatite B/i.test(list)) d.cmInfHepB = true;
+      if (/Hepatite C/i.test(list)) d.cmInfHepC = true;
+      if (/Tuberculose/i.test(list)) d.cmInfTb = true;
+      if (/Sífilis/i.test(list)) d.cmInfSifilis = true;
+    }
+    else if (/psiqui/i.test(c)) {
+      d.cmPsych = true;
+      d.cmPsychText = c.replace(/^Doenças psiquiátricas:?\s*/i, '');
+    }
+    else if (/neurológ/i.test(c)) {
+      d.cmNeuro = true;
+      d.cmNeuroText = c.replace(/^Doenças neurológicas:?\s*/i, '');
+    }
+    else if (/renais/i.test(c)) {
+      d.cmRenal = true;
+      d.cmRenalText = c.replace(/^Doenças renais:?\s*/i, '');
+    }
+    else {
+      d.cmOther = true;
+      d.cmOtherText = (d.cmOtherText ? d.cmOtherText + '; ' : '') + c;
+    }
+  }
+
+  // Addictions
+  const adds: string[] = patient?.addictionsSelected ?? [];
+  if (adds.some((a) => /Tabagismo/i.test(a))) d.habitSmoking = true;
+  if (adds.some((a) => /Etilismo/i.test(a))) d.habitAlcohol = true;
+  if (adds.some((a) => /drogas/i.test(a))) d.habitDrugs = true;
+
+  // Patologias da gestacao atual
+  const cur: string = pregnancy?.currentPathologies ?? '';
+  if (/DMG/i.test(cur)) d.cgDmg = true;
+  if (/Pré-eclâmpsia/i.test(cur)) d.cgPe = true;
+  if (/Eclâmpsia(?!.*Pré)/i.test(cur)) d.cgEclampsia = true;
+  if (/HELLP/i.test(cur)) d.cgHellp = true;
+  if (/Colestase/i.test(cur)) d.cgColestase = true;
+  if (/Hiperêmese/i.test(cur)) d.cgHiperemese = true;
+  if (/ITU/i.test(cur)) d.cgItu = true;
+  if (/RPMO/i.test(cur)) d.cgRpmo = true;
+  if (/parto pré-termo/i.test(cur)) d.cgTpp = true;
+  if (/Anemia/i.test(cur)) d.cgAnemia = true;
+
+  return d;
 }
 
 interface FormData {
@@ -65,7 +166,18 @@ interface FormData {
   // Cirurgicos
   surgeries: string;
   // Patologias da gestacao atual
-  currentPathologies: string;
+  cgDmg: boolean;
+  cgPe: boolean;
+  cgEclampsia: boolean;
+  cgHellp: boolean;
+  cgColestase: boolean;
+  cgHiperemese: boolean;
+  cgItu: boolean;
+  cgRpmo: boolean;
+  cgTpp: boolean;
+  cgAnemia: boolean;
+  cgOther: boolean;
+  cgOtherText: string;
   // Habitos
   habitSmoking: boolean;
   habitAlcohol: boolean;
@@ -91,16 +203,11 @@ function bmiCategory(bmi: number): { label: string; cls: string } {
 }
 
 export default function InitialAssessmentModal({
-  pregnancyId, patientId, initialWeightKg, initialHeight, onClose,
+  pregnancyId, patientId, initialWeightKg, initialHeight, patient, pregnancy, onClose,
 }: Props) {
   const qc = useQueryClient();
   const { register, handleSubmit, watch, formState: { isSubmitting } } = useForm<FormData>({
-    defaultValues: {
-      weightKg: initialWeightKg?.toString() ?? '',
-      height: initialHeight?.toString() ?? '',
-      gravida: '1', abortus: '0', para: '0',
-      pv: '0', pc: '0', pf: '0',
-    } as Partial<FormData>,
+    defaultValues: parseDefaults(patient, pregnancy, initialWeightKg, initialHeight) as Partial<FormData>,
   });
 
   const [openAp, setOpenAp] = useState(true);
@@ -118,6 +225,7 @@ export default function InitialAssessmentModal({
   const cmNeuroW = watch('cmNeuro');
   const cmRenalW = watch('cmRenal');
   const cmOtherW = watch('cmOther');
+  const cgOtherW = watch('cgOther');
   const hasAllergyW = watch('hasAllergy');
 
   const weightNum = parseFloat(weightW || '0');
@@ -200,6 +308,20 @@ export default function InitialAssessmentModal({
         await updatePatient(patientId, patientPayload);
       }
 
+      // Cria consulta inicial com o peso (peso e dado de consulta, nao da paciente)
+      if (data.weightKg) {
+        try {
+          await api.post(`/pregnancies/${pregnancyId}/consultations`, {
+            date: new Date().toISOString().split('T')[0],
+            weightKg: parseFloat(data.weightKg),
+            subjective: 'Avaliação inicial',
+          });
+        } catch (err) {
+          // Nao bloqueia o fluxo se ja existir consulta hoje
+          console.warn('Falha ao criar consulta inicial', err);
+        }
+      }
+
       // ── Pregnancy payload ──
       const pregnancyPayload: Record<string, unknown> = {
         gravida: parseInt(data.gravida || '1', 10),
@@ -213,9 +335,21 @@ export default function InitialAssessmentModal({
         if (data.pf) pregnancyPayload.forcepsDeliveries = parseInt(data.pf, 10);
       }
 
-      // Patologias da gestacao atual = currentPathologies + sumario de comorbidades para auto-deteccao de risco
-      const pathologyParts: string[] = [];
-      if (data.currentPathologies) pathologyParts.push(data.currentPathologies);
+      // Patologias da gestacao atual = checkboxes estruturadas + sumario de comorbidades para auto-deteccao de risco
+      const currentPathList: string[] = [];
+      if (data.cgDmg) currentPathList.push('DMG');
+      if (data.cgPe) currentPathList.push('Pré-eclâmpsia');
+      if (data.cgEclampsia) currentPathList.push('Eclâmpsia');
+      if (data.cgHellp) currentPathList.push('Síndrome HELLP');
+      if (data.cgColestase) currentPathList.push('Colestase gestacional');
+      if (data.cgHiperemese) currentPathList.push('Hiperêmese gravídica');
+      if (data.cgItu) currentPathList.push('ITU recorrente');
+      if (data.cgRpmo) currentPathList.push('RPMO');
+      if (data.cgTpp) currentPathList.push('Trabalho de parto pré-termo');
+      if (data.cgAnemia) currentPathList.push('Anemia');
+      if (data.cgOther && data.cgOtherText) currentPathList.push(data.cgOtherText);
+
+      const pathologyParts: string[] = [...currentPathList];
       const criticalForRisk = comorbidities.filter((c) =>
         /Hipertens|Diabetes|Trombofil|cardiovascul|renal|HIV|autoimune/i.test(c),
       );
@@ -424,8 +558,20 @@ export default function InitialAssessmentModal({
 
           {/* Patologias da gestacao atual */}
           <Section title="Patologias da gestação atual">
-            <textarea {...register('currentPathologies')} rows={2} placeholder="Ex: DMG, pré-eclâmpsia, colestase, ITU recorrente, descolamento..." className={cn(iCn, 'resize-none')} />
-            <p className="text-[10px] text-gray-400 mt-1">Diagnósticos surgidos nesta gestação. Comorbidades pré-existentes ficam acima.</p>
+            <p className="text-[10px] text-gray-400 mb-2">Diagnósticos surgidos nesta gestação. Comorbidades pré-existentes ficam acima.</p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              <CheckboxLine register={register('cgDmg')} label="DMG (Diabetes Mellitus Gestacional)" />
+              <CheckboxLine register={register('cgPe')} label="Pré-eclâmpsia" />
+              <CheckboxLine register={register('cgEclampsia')} label="Eclâmpsia" />
+              <CheckboxLine register={register('cgHellp')} label="Síndrome HELLP" />
+              <CheckboxLine register={register('cgColestase')} label="Colestase gestacional" />
+              <CheckboxLine register={register('cgHiperemese')} label="Hiperêmese gravídica" />
+              <CheckboxLine register={register('cgItu')} label="ITU recorrente" />
+              <CheckboxLine register={register('cgRpmo')} label="RPMO" />
+              <CheckboxLine register={register('cgTpp')} label="Trabalho de parto pré-termo" />
+              <CheckboxLine register={register('cgAnemia')} label="Anemia" />
+              <CondCheckbox label="Outros" watched={cgOtherW} register={register('cgOther')} textRegister={register('cgOtherText')} />
+            </div>
           </Section>
 
           {/* Habitos */}

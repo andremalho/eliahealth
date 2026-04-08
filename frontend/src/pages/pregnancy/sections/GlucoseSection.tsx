@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Droplets } from 'lucide-react';
+import { Droplets, Plus } from 'lucide-react';
 import { fetchGlucoseSummary, fetchGlucoseDailyTable } from '../../../api/pregnancy.api';
 import { cn } from '../../../utils/cn';
+import AddGlucoseReadingModal from './AddGlucoseReadingModal';
 
 const COLS = ['fasting', 'post_breakfast_1h', 'post_lunch_1h', 'pre_dinner', 'post_dinner_1h'] as const;
 const COL_LABELS: Record<string, string> = {
@@ -12,6 +14,7 @@ const THRESHOLDS: Record<string, number> = { fasting: 95 };
 const DEFAULT_THRESHOLD = 140;
 
 export default function GlucoseSection({ pregnancyId }: { pregnancyId: string }) {
+  const [addOpen, setAddOpen] = useState(false);
   const { data: summary } = useQuery({
     queryKey: ['glucose-summary', pregnancyId],
     queryFn: () => fetchGlucoseSummary(pregnancyId),
@@ -40,6 +43,9 @@ export default function GlucoseSection({ pregnancyId }: { pregnancyId: string })
               {altered}% alteradas
             </span>
           )}
+          <button onClick={() => setAddOpen(true)} className="flex items-center gap-1 px-3 py-1.5 bg-lilac text-white text-xs rounded-lg hover:bg-primary-dark">
+            <Plus className="w-3.5 h-3.5" /> Nova
+          </button>
         </div>
       </div>
 
@@ -79,6 +85,7 @@ export default function GlucoseSection({ pregnancyId }: { pregnancyId: string })
           </div>
         )}
       </div>
+      {addOpen && <AddGlucoseReadingModal pregnancyId={pregnancyId} onClose={() => setAddOpen(false)} />}
     </div>
   );
 }

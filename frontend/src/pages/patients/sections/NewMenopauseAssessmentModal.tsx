@@ -5,6 +5,8 @@ import { X, Loader2 } from 'lucide-react';
 import {
   createMenopauseAssessment,
   STRAW_LABELS,
+  STRAW_DESCRIPTIONS,
+  STRAW_BADGE_COLORS,
   MENOPAUSE_TYPE_LABELS,
   HOT_FLASH_LABELS,
   CARDIO_RISK_LABELS,
@@ -18,8 +20,8 @@ import {
   classifyMRS,
   classifyOsteoporosis,
   classifyCardioRisk,
+  classifySTRAW,
   type CreateMenopauseAssessmentDto,
-  type STRAWStage,
   type MenopauseType,
   type HotFlashIntensity,
   type HRTScheme,
@@ -30,7 +32,6 @@ import { cn } from '../../../utils/cn';
 
 interface FormData {
   assessmentDate: string;
-  strawStage: STRAWStage;
   menopauseDate: string;
   menopauseType: MenopauseType;
   ageAtMenopause: string;
@@ -128,7 +129,6 @@ export default function NewMenopauseAssessmentModal({
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     defaultValues: {
       assessmentDate: new Date().toISOString().split('T')[0],
-      strawStage: 'postmenopause_early_1a',
       menopauseType: 'natural',
       gsmDiagnosis: false,
       gsmVaginalDryness: false,
@@ -139,6 +139,13 @@ export default function NewMenopauseAssessmentModal({
       hrtContraindicated: false,
     },
   });
+
+  // Live STRAW: depende da data da menopausa + tipo + data da consulta
+  const strawResult = classifySTRAW(
+    watch('menopauseDate'),
+    watch('assessmentDate'),
+    watch('menopauseType'),
+  );
 
   // Live MRS total
   const mrsValues = MRS_FIELDS.map((f) => parseInt((watch(f.name) as string) ?? '0', 10) || 0);
@@ -159,7 +166,9 @@ export default function NewMenopauseAssessmentModal({
     mutationFn: async (data: FormData) => {
       const dto: CreateMenopauseAssessmentDto = {
         assessmentDate: data.assessmentDate,
-        strawStage: data.strawStage,
+        // STRAW vem do cálculo automático; quando não calculável (sem data
+        // e sem menopausa induzida), usa transição tardia como default seguro
+        strawStage: strawResult?.stage ?? 'menopausal_transition_late',
         menopauseType: data.menopauseType,
       };
 
@@ -244,7 +253,31 @@ export default function NewMenopauseAssessmentModal({
           )}
 
           {/* Identificação */}
-          <Section title="Identificação e estadiamento">
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                Identificação e estadiamento
+                <InfoTooltip title="STRAW+10 — Stages of Reproductive Aging Workshop">
+                  Sistema padronizado pela NAMS para classificar o status reprodutivo
+                  da mulher em 9 estágios:
+                  <br />
+                  <br />
+                  <strong>Reprodutivo (−5 a −3)</strong> — ciclos regulares.<br />
+                  <strong>Transição menopáusica (−2, −1)</strong> — variação ≥7 dias
+                  entre ciclos (−2) ou amenorreia ≥60 dias (−1).<br />
+                  <strong>Pós-menopausa precoce (+1a)</strong> — primeiro ano após a
+                  última menstruação (FMP).<br />
+                  <strong>+1b</strong> — segundo ano. <strong>+1c</strong> — 2 a 8 anos.<br />
+                  <strong>Pós-menopausa tardia (+2)</strong> — ≥8 anos da FMP.
+                  <br />
+                  <br />
+                  Cálculo automático abaixo a partir da data da última menstruação
+                  (FMP) e do tipo de menopausa. Menopausa cirúrgica/induzida entra
+                  diretamente em pós-menopausa.
+                </InfoTooltip>
+              </span>
+            }
+          >
             <div className="grid grid-cols-2 gap-4">
               <Field label="Data da avaliação *" error={errors.assessmentDate?.message}>
                 <input
@@ -263,17 +296,8 @@ export default function NewMenopauseAssessmentModal({
                 </select>
               </Field>
             </div>
-            <Field label="Estadiamento STRAW+10 *">
-              <select {...register('strawStage')} className={inputCn(false)}>
-                {Object.entries(STRAW_LABELS).map(([v, l]) => (
-                  <option key={v} value={v}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            </Field>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Data da menopausa">
+              <Field label="Data da última menstruação (FMP)">
                 <input {...register('menopauseDate')} type="date" className={inputCn(false)} />
               </Field>
               <Field label="Idade na menopausa">
@@ -286,6 +310,38 @@ export default function NewMenopauseAssessmentModal({
                 />
               </Field>
             </div>
+
+            {/* Card STRAW ao vivo */}
+            {strawResult ? (
+              <div
+                className={cn(
+                  'border rounded-lg p-3 space-y-1',
+                  STRAW_BADGE_COLORS[strawResult.stage],
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase font-semibold opacity-75">
+                      Estágio STRAW+10
+                    </p>
+                    <p className="text-base font-bold mt-0.5">
+                      {STRAW_LABELS[strawResult.stage]}
+                    </p>
+                  </div>
+                  <span className="text-xs px-2 py-1 bg-white/60 rounded font-semibold whitespace-nowrap">
+                    Calculado
+                  </span>
+                </div>
+                <p className="text-xs">{STRAW_DESCRIPTIONS[strawResult.stage]}</p>
+                <p className="text-xs opacity-75 italic">{strawResult.reason}</p>
+              </div>
+            ) : (
+              <div className="border border-dashed border-gray-300 rounded-lg p-3 text-sm text-gray-500">
+                Preencha a <strong>data da última menstruação</strong> (ou marque
+                menopausa cirúrgica/induzida) para classificação automática do estágio
+                STRAW+10.
+              </div>
+            )}
           </Section>
 
           {/* MRS */}

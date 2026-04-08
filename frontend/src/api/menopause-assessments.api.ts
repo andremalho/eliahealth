@@ -365,3 +365,84 @@ export const CARDIO_RISK_BADGE_COLORS: Record<CardioRisk, string> = {
   intermediate: 'bg-amber-100 text-amber-800 border-amber-200',
   high: 'bg-red-100 text-red-800 border-red-200',
 };
+
+// ── Auto-classificação STRAW+10 ──
+// Stages of Reproductive Aging Workshop (NAMS).
+// Pré-menopausa (-5 a -1) requer dados de padrão menstrual que NÃO temos no
+// form atual. Pós-menopausa é calculável a partir do tempo desde a FMP
+// (Final Menstrual Period = data da última menstruação espontânea).
+export function classifySTRAW(
+  menopauseDate: string | null | undefined,
+  assessmentDate: string | null | undefined,
+  menopauseType: MenopauseType | null | undefined,
+): { stage: STRAWStage; reason: string; method: 'computed' | 'induced' } | null {
+  // Menopausa induzida (cirúrgica/quimio/radio/POI) entra em pós-menopausa
+  // imediatamente, idealmente com data da intervenção
+  const isInduced =
+    menopauseType === 'surgical' ||
+    menopauseType === 'chemotherapy_induced' ||
+    menopauseType === 'radiation_induced' ||
+    menopauseType === 'premature_ovarian_insufficiency';
+
+  if (!menopauseDate) {
+    if (isInduced) {
+      return {
+        stage: 'postmenopause_early_1a',
+        reason: 'Menopausa induzida — preencha a data para subdividir o estágio',
+        method: 'induced',
+      };
+    }
+    return null;
+  }
+
+  if (!assessmentDate) return null;
+
+  const fmp = new Date(menopauseDate);
+  const today = new Date(assessmentDate);
+  const ms = today.getTime() - fmp.getTime();
+  if (isNaN(ms) || ms < 0) return null;
+
+  const years = ms / (365.25 * 24 * 3600 * 1000);
+  const months = Math.round(years * 12);
+  const reasonPrefix = isInduced ? 'Induzida · ' : '';
+  const elapsedLabel =
+    years < 1 ? `${months} meses` : `${years.toFixed(1)} anos`;
+
+  let stage: STRAWStage;
+  if (years < 1) stage = 'postmenopause_early_1a';
+  else if (years < 2) stage = 'postmenopause_early_1b';
+  else if (years < 8) stage = 'postmenopause_early_1c';
+  else stage = 'postmenopause_late';
+
+  return {
+    stage,
+    reason: `${reasonPrefix}${elapsedLabel} desde a última menstruação`,
+    method: isInduced ? 'induced' : 'computed',
+  };
+}
+
+export const STRAW_DESCRIPTIONS: Record<STRAWStage, string> = {
+  reproductive_peak: 'Período fértil pleno. Ciclos regulares, função ovariana ótima.',
+  reproductive_late_a: 'Início de discretas alterações no padrão menstrual.',
+  reproductive_late_b: 'Mudanças hormonais sutis, ciclos ainda regulares.',
+  menopausal_transition_early:
+    'Variação persistente ≥7 dias no intervalo entre ciclos consecutivos.',
+  menopausal_transition_late:
+    'Pelo menos um intervalo de amenorreia ≥60 dias. Sintomas vasomotores prováveis.',
+  postmenopause_early_1a: 'Primeiro ano após a última menstruação. Sintomas vasomotores frequentes.',
+  postmenopause_early_1b: 'Segundo ano após a FMP.',
+  postmenopause_early_1c: 'De 2 a ~8 anos após a FMP. Sintomas vasomotores ainda comuns.',
+  postmenopause_late: 'Pós-menopausa tardia (≥8 anos da FMP). Foco em saúde óssea e CV.',
+};
+
+export const STRAW_BADGE_COLORS: Record<STRAWStage, string> = {
+  reproductive_peak: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  reproductive_late_a: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  reproductive_late_b: 'bg-blue-100 text-blue-800 border-blue-200',
+  menopausal_transition_early: 'bg-amber-100 text-amber-800 border-amber-200',
+  menopausal_transition_late: 'bg-amber-100 text-amber-800 border-amber-200',
+  postmenopause_early_1a: 'bg-purple-100 text-purple-800 border-purple-200',
+  postmenopause_early_1b: 'bg-purple-100 text-purple-800 border-purple-200',
+  postmenopause_early_1c: 'bg-purple-100 text-purple-800 border-purple-200',
+  postmenopause_late: 'bg-gray-100 text-gray-800 border-gray-200',
+};

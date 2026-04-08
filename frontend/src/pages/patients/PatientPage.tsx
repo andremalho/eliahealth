@@ -21,6 +21,7 @@ import GynecologySection from './sections/GynecologySection';
 import MenstrualCycleSection from './sections/MenstrualCycleSection';
 import ContraceptionSection from './sections/ContraceptionSection';
 import PreventiveExamSection from './sections/PreventiveExamSection';
+import MenopauseSection from './sections/MenopauseSection';
 
 type ModuleKey =
   | 'gynecology'
@@ -44,9 +45,19 @@ const MODULES: ModuleDef[] = [
   { key: 'contraception', label: 'Contracepção', icon: Pill, available: true },
   { key: 'infertility', label: 'Infertilidade', icon: Sparkles, available: false },
   { key: 'art', label: 'Reprodução Assistida', icon: Baby, available: false },
-  { key: 'menopause', label: 'Menopausa', icon: Flower2, available: false },
+  { key: 'menopause', label: 'Menopausa', icon: Flower2, available: true },
   { key: 'preventive', label: 'Rastreios', icon: ClipboardCheck, available: true },
 ];
+
+const SECTION_COMPONENTS: Partial<
+  Record<ModuleKey, React.ComponentType<{ patientId: string }>>
+> = {
+  gynecology: GynecologySection,
+  menstrual: MenstrualCycleSection,
+  contraception: ContraceptionSection,
+  preventive: PreventiveExamSection,
+  menopause: MenopauseSection,
+};
 
 function calcAge(dob: string | null): number | null {
   if (!dob) return null;
@@ -183,29 +194,20 @@ export default function PatientPage() {
         </div>
 
         <div className="p-6">
-          {activeModule === 'gynecology' && (
-            <GynecologySection patientId={patient.id} />
-          )}
-          {activeModule === 'menstrual' && (
-            <MenstrualCycleSection patientId={patient.id} />
-          )}
-          {activeModule === 'contraception' && (
-            <ContraceptionSection patientId={patient.id} />
-          )}
-          {activeModule === 'preventive' && (
-            <PreventiveExamSection patientId={patient.id} />
-          )}
-          {activeModule !== 'gynecology' &&
-            activeModule !== 'menstrual' &&
-            activeModule !== 'contraception' &&
-            activeModule !== 'preventive' && (
-            <div className="flex flex-col items-center py-16 text-gray-400">
-              <p className="font-medium">Módulo em desenvolvimento</p>
-              <p className="text-sm mt-1">
-                Backend pronto, interface será adicionada em breve.
-              </p>
-            </div>
-          )}
+          {(() => {
+            const ActiveSection = SECTION_COMPONENTS[activeModule];
+            if (ActiveSection) {
+              return <ActiveSection patientId={patient.id} />;
+            }
+            return (
+              <div className="flex flex-col items-center py-16 text-gray-400">
+                <p className="font-medium">Módulo em desenvolvimento</p>
+                <p className="text-sm mt-1">
+                  Backend pronto, interface será adicionada em breve.
+                </p>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>

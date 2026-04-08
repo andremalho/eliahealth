@@ -183,6 +183,31 @@ export class PregnanciesService {
     return this.repo.save(pregnancy);
   }
 
+  async completeInitialAssessment(
+    id: string,
+    dto: UpdatePregnancyDto,
+    tenantId?: string | null,
+  ): Promise<Pregnancy> {
+    const pregnancy = await this.findOne(id, tenantId);
+    Object.assign(pregnancy, dto);
+    pregnancy.firstConsultationCompletedAt = new Date();
+
+    // Auto-classifica alto risco baseado em patologias críticas
+    const criticalFlags: string[] = [];
+    const path = (pregnancy.currentPathologies ?? '').toLowerCase();
+    if (/hipertens/.test(path)) criticalFlags.push('hipertensao');
+    if (/diabetes|dm[12]|lada|mody/.test(path)) criticalFlags.push('diabetes');
+    if (/trombofil/.test(path)) criticalFlags.push('trombofilia');
+    if (criticalFlags.length > 0) {
+      pregnancy.isHighRisk = true;
+      pregnancy.highRiskFlags = Array.from(
+        new Set([...(pregnancy.highRiskFlags ?? []), ...criticalFlags]),
+      );
+    }
+
+    return this.repo.save(pregnancy);
+  }
+
   getGestationalAge(pregnancy: Pregnancy, referenceDate: Date = new Date()) {
     let gaDays: number;
 

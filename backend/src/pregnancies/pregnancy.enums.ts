@@ -25,3 +25,10 @@ export enum PregnancyStatus {
   INTERRUPTED = 'interrupted',
   PREGNANCY_LOSS = 'pregnancy_loss',
 }
+
+export enum DiabetesSubtype {
+  DM1 = 'dm1',
+  DM2 = 'dm2',
+  LADA = 'lada',
+  MODY = 'mody',
+}

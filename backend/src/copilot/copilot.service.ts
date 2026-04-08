@@ -9,6 +9,7 @@ import { PregnanciesService } from '../pregnancies/pregnancies.service.js';
 import { ConsultationsService } from '../consultations/consultations.service.js';
 import { LabResultsService } from '../lab-results/lab-results.service.js';
 import { ClinicalProtocolsService } from '../clinical-protocols/clinical-protocols.service.js';
+import { Patient } from '../patients/patient.entity.js';
 
 const SYSTEM_PROMPT = `Você é um assistente clínico especializado em medicina materno-fetal e obstetrícia de alto risco, treinado nos protocolos da FEBRASGO, FIGO, FMF e Ministério da Saúde do Brasil. Analise os dados clínicos fornecidos e retorne APENAS um JSON válido com a estrutura: {"alerts": [{"type": "pattern_detected|exam_overdue|red_flag|suggestion|risk_increase", "severity": "info|warning|urgent|critical", "title": string, "message": string, "recommendation": string}], "riskLevel": "low|moderate|high|critical", "summary": string}. Seja objetivo, baseado em evidências e clinicamente preciso. Atenção especial para sinais de HELLP síndrome: elevação de enzimas hepáticas (TGO/TGP >70 U/L), plaquetopenia progressiva (<150.000), hemólise (DHL >600 U/L, esquizócitos, bilirrubina elevada), associados a hipertensão e proteinúria. Considere também hiperuricemia (>5,5 mg/dL) como marcador de risco para pré-eclâmpsia.`;
 
@@ -26,6 +27,8 @@ export class CopilotService {
   constructor(
     @InjectRepository(CopilotAlert)
     private readonly alertRepo: Repository<CopilotAlert>,
+    @InjectRepository(Patient)
+    private readonly patientRepo: Repository<Patient>,
     private readonly configService: ConfigService,
     private readonly pregnanciesService: PregnanciesService,
     @Inject(forwardRef(() => ConsultationsService))
@@ -188,6 +191,57 @@ export class CopilotService {
     const last3 = allConsultationsPage.data.slice(-3);
     const savedAlerts: CopilotAlert[] = [];
     const gaWeeks = Math.floor(consultation.gestationalAgeDays / 7);
+
+    // IMC — calcula a partir do peso da consulta + altura do patient
+    if (consultation.weightKg != null) {
+      const pregnancy = await this.pregnanciesService.findOne(consultation.pregnancyId);
+      const patient = await this.patientRepo.findOneBy({ id: pregnancy.patientId });
+      if (patient?.height) {
+        const heightM = Number(patient.height) / 100;
+        const bmi = Number(consultation.weightKg) / (heightM * heightM);
+        const bmiRounded = Math.round(bmi * 10) / 10;
+
+        const existingBmiAlerts = await this.alertRepo.find({
+          where: { pregnancyId: consultation.pregnancyId, triggeredBy: 'bmi' },
+        });
+
+        if (existingBmiAlerts.length === 0) {
+          let severity: AlertSeverity | null = null;
+          let title = '';
+          let recommendation = '';
+
+          if (bmi < 18.5) {
+            severity = AlertSeverity.WARNING;
+            title = 'IMC baixo (baixo peso)';
+            recommendation = 'Avaliar nutricao. Risco aumentado de RCIU e parto pre-termo. Considerar acompanhamento nutricional.';
+          } else if (bmi >= 25 && bmi < 30) {
+            severity = AlertSeverity.INFO;
+            title = 'IMC elevado (sobrepeso)';
+            recommendation = 'Orientar dieta balanceada e atividade fisica adequada para gestacao. Monitorar ganho ponderal.';
+          } else if (bmi >= 30 && bmi < 40) {
+            severity = AlertSeverity.WARNING;
+            title = 'IMC elevado (obesidade)';
+            recommendation = 'Risco aumentado de DMG, pre-eclampsia e macrossomia. Acompanhamento nutricional. Considerar TTOG precoce.';
+          } else if (bmi >= 40) {
+            severity = AlertSeverity.URGENT;
+            title = 'IMC muito elevado (obesidade grave)';
+            recommendation = 'Alto risco materno-fetal. Acompanhamento multidisciplinar. TTOG precoce. Vigilancia rigorosa de PA e ganho ponderal.';
+          }
+
+          if (severity) {
+            savedAlerts.push(await this.savePatternAlert(
+              consultation.pregnancyId,
+              consultationId,
+              severity,
+              title,
+              `IMC calculado: ${bmiRounded} kg/m² (peso ${consultation.weightKg}kg / altura ${patient.height}cm).`,
+              recommendation,
+              'bmi',
+            ));
+          }
+        }
+      }
+    }
 
     // PA elevação progressiva
     if (last3.length >= 3) {

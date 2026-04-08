@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -12,6 +12,7 @@ import BpSection from './sections/BpSection';
 import GlucoseSection from './sections/GlucoseSection';
 import CopilotPanel from './sections/CopilotPanel';
 import NewConsultationModal from './sections/NewConsultationModal';
+import InitialAssessmentModal from './sections/InitialAssessmentModal';
 import {
   VaccinesCard, VaginalSwabsCard, BiologicalFatherCard,
   UltrasoundsCard, LabResultsCard, PrescriptionsCard, FilesCard,
@@ -66,6 +67,7 @@ export default function PregnancyPage() {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<'table' | 'list'>('table');
   const [consultationModal, setConsultationModal] = useState(false);
+  const [initialAssessmentModal, setInitialAssessmentModal] = useState(false);
 
   const { data: pregnancy, isLoading: lp } = useQuery({
     queryKey: ['pregnancy', pregnancyId], queryFn: () => fetchPregnancyDetail(pregnancyId!), enabled: !!pregnancyId,
@@ -79,6 +81,18 @@ export default function PregnancyPage() {
 
   const consultations = consultationsData?.data ?? consultationsData ?? [];
   const isLoading = lp || lPat;
+  const initialAssessmentDone = !!(pregnancy as any)?.firstConsultationCompletedAt;
+
+  // Auto-abre o modal de avaliacao inicial uma vez ao entrar, se ainda nao foi preenchido
+  useEffect(() => {
+    if (pregnancy && patient && !initialAssessmentDone) {
+      const key = `assessment_prompted_${pregnancyId}`;
+      if (!sessionStorage.getItem(key)) {
+        setInitialAssessmentModal(true);
+        sessionStorage.setItem(key, '1');
+      }
+    }
+  }, [pregnancy, patient, initialAssessmentDone, pregnancyId]);
   const patientName = patient ? toTitleCase(patient.fullName) : '';
 
   let gaWeeks = pregnancy?.gestationalAge?.weeks ?? 0;
@@ -122,6 +136,15 @@ export default function PregnancyPage() {
                 <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span className="text-xs text-amber-700">E-mail ou telefone necessários para compartilhar cartão</span>
               </div>
+            )}
+            {!initialAssessmentDone && (
+              <button
+                onClick={() => setInitialAssessmentModal(true)}
+                className="mt-2 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition"
+              >
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                <span className="text-xs text-amber-700 font-medium">Avaliação inicial pendente — clique para preencher</span>
+              </button>
             )}
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -294,6 +317,14 @@ export default function PregnancyPage() {
       {pregnancyId && <CopilotPanel pregnancyId={pregnancyId} />}
       {consultationModal && pregnancyId && (
         <NewConsultationModal pregnancyId={pregnancyId} onClose={() => setConsultationModal(false)} />
+      )}
+      {initialAssessmentModal && pregnancyId && pregnancy?.patientId && (
+        <InitialAssessmentModal
+          pregnancyId={pregnancyId}
+          patientId={pregnancy.patientId}
+          initialHeight={(patient as any)?.height}
+          onClose={() => setInitialAssessmentModal(false)}
+        />
       )}
     </div>
   );

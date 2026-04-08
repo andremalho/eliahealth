@@ -122,6 +122,17 @@ export class CreatePatientDto {
   familyHistory?: string;
 
   @IsOptional()
+  @IsNumber()
+  menarcheAge?: number;
+
+  @IsOptional()
+  @IsString()
+  menstrualCycle?: string;
+
+  @IsOptional()
+  dysmenorrhea?: boolean;
+
+  @IsOptional()
   @IsString()
   profileNotes?: string;
 

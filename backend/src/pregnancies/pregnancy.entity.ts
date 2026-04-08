@@ -8,7 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Patient } from '../patients/patient.entity.js';
-import { GaMethod, Chorionicity, PregnancyStatus, IvfTransferType } from './pregnancy.enums.js';
+import { GaMethod, Chorionicity, PregnancyStatus, IvfTransferType, DiabetesSubtype } from './pregnancy.enums.js';
 
 @Entity('pregnancies')
 export class Pregnancy {
@@ -85,8 +85,23 @@ export class Pregnancy {
   @Column({ name: 'vaginal_deliveries', type: 'int', nullable: true })
   vaginalDeliveries: number | null;
 
+  @Column({ name: 'forceps_deliveries', type: 'int', nullable: true })
+  forcepsDeliveries: number | null;
+
   @Column({ name: 'previous_pregnancies_notes', type: 'text', nullable: true })
   previousPregnanciesNotes: string | null;
+
+  @Column({ name: 'diabetes_subtype', type: 'enum', enum: DiabetesSubtype, nullable: true })
+  diabetesSubtype: DiabetesSubtype | null;
+
+  @Column({ name: 'personal_history', type: 'text', nullable: true })
+  personalHistory: string | null;
+
+  @Column({ name: 'gynecological_history', type: 'text', nullable: true })
+  gynecologicalHistory: string | null;
+
+  @Column({ name: 'first_consultation_completed_at', type: 'timestamptz', nullable: true })
+  firstConsultationCompletedAt: Date | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

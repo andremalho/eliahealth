@@ -54,3 +54,13 @@ export async function quickCreatePregnancy(dto: Record<string, unknown>) {
   const { data } = await api.post('/pregnancies/quick-create', dto);
   return data;
 }
+
+export async function completeInitialAssessment(pregnancyId: string, dto: Record<string, unknown>) {
+  const { data } = await api.post(`/pregnancies/${pregnancyId}/initial-assessment`, dto);
+  return data;
+}
+
+export async function updatePatient(patientId: string, dto: Record<string, unknown>) {
+  const { data } = await api.patch(`/patients/${patientId}`, dto);
+  return data;
+}

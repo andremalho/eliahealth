@@ -79,6 +79,15 @@ export class PregnanciesController {
     return this.pregnanciesService.update(id, dto, tenantId);
   }
 
+  @Post('pregnancies/:id/initial-assessment')
+  completeInitialAssessment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser('tenantId') tenantId: string,
+    @Body() dto: UpdatePregnancyDto,
+  ) {
+    return this.pregnanciesService.completeInitialAssessment(id, dto, tenantId);
+  }
+
   @Get('pregnancies/:id/gestational-age')
   async getGestationalAge(@Param('id', ParseUUIDPipe) id: string, @CurrentUser('tenantId') tenantId: string) {
     const pregnancy = await this.pregnanciesService.findOne(id, tenantId);

@@ -9,7 +9,7 @@ import {
   Min,
   Max,
 } from 'class-validator';
-import { GaMethod, Chorionicity, IvfTransferType } from '../pregnancy.enums.js';
+import { GaMethod, Chorionicity, IvfTransferType, DiabetesSubtype } from '../pregnancy.enums.js';
 
 export class CreatePregnancyDto {
   @IsOptional()
@@ -105,6 +105,23 @@ export class CreatePregnancyDto {
   vaginalDeliveries?: number;
 
   @IsOptional()
+  @IsInt()
+  @Min(0)
+  forcepsDeliveries?: number;
+
+  @IsOptional()
   @IsString()
   previousPregnanciesNotes?: string;
+
+  @IsOptional()
+  @IsEnum(DiabetesSubtype)
+  diabetesSubtype?: DiabetesSubtype;
+
+  @IsOptional()
+  @IsString()
+  personalHistory?: string;
+
+  @IsOptional()
+  @IsString()
+  gynecologicalHistory?: string;
 }

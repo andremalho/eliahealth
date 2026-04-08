@@ -90,6 +90,15 @@ export class Patient {
   @Column({ name: 'family_history', type: 'text', nullable: true })
   familyHistory: string | null;
 
+  @Column({ name: 'menarche_age', type: 'int', nullable: true })
+  menarcheAge: number | null;
+
+  @Column({ name: 'menstrual_cycle', type: 'varchar', length: 20, nullable: true })
+  menstrualCycle: string | null;
+
+  @Column({ type: 'boolean', nullable: true })
+  dysmenorrhea: boolean | null;
+
   @Column({ name: 'profile_notes', type: 'text', nullable: true })
   profileNotes: string | null;
 

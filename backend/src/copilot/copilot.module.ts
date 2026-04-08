@@ -1,6 +1,7 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CopilotAlert } from './copilot-alert.entity.js';
+import { Patient } from '../patients/patient.entity.js';
 import { CopilotService } from './copilot.service.js';
 import { CopilotController } from './copilot.controller.js';
 import { PregnanciesModule } from '../pregnancies/pregnancies.module.js';
@@ -10,7 +11,7 @@ import { ClinicalProtocolsModule } from '../clinical-protocols/clinical-protocol
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CopilotAlert]),
+    TypeOrmModule.forFeature([CopilotAlert, Patient]),
     PregnanciesModule,
     forwardRef(() => ConsultationsModule),
     LabResultsModule,

@@ -19,6 +19,7 @@ import { cn } from '../../utils/cn';
 import { toTitleCase, formatCPF, formatPhone } from '../../utils/formatters';
 import GynecologySection from './sections/GynecologySection';
 import MenstrualCycleSection from './sections/MenstrualCycleSection';
+import ContraceptionSection from './sections/ContraceptionSection';
 
 type ModuleKey =
   | 'gynecology'
@@ -39,7 +40,7 @@ interface ModuleDef {
 const MODULES: ModuleDef[] = [
   { key: 'gynecology', label: 'Ginecologia', icon: Stethoscope, available: true },
   { key: 'menstrual', label: 'Ciclo / SUA', icon: Activity, available: true },
-  { key: 'contraception', label: 'Contracepção', icon: Pill, available: false },
+  { key: 'contraception', label: 'Contracepção', icon: Pill, available: true },
   { key: 'infertility', label: 'Infertilidade', icon: Sparkles, available: false },
   { key: 'art', label: 'Reprodução Assistida', icon: Baby, available: false },
   { key: 'menopause', label: 'Menopausa', icon: Flower2, available: false },
@@ -187,7 +188,12 @@ export default function PatientPage() {
           {activeModule === 'menstrual' && (
             <MenstrualCycleSection patientId={patient.id} />
           )}
-          {activeModule !== 'gynecology' && activeModule !== 'menstrual' && (
+          {activeModule === 'contraception' && (
+            <ContraceptionSection patientId={patient.id} />
+          )}
+          {activeModule !== 'gynecology' &&
+            activeModule !== 'menstrual' &&
+            activeModule !== 'contraception' && (
             <div className="flex flex-col items-center py-16 text-gray-400">
               <p className="font-medium">Módulo em desenvolvimento</p>
               <p className="text-sm mt-1">

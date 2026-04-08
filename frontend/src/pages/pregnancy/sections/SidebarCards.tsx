@@ -13,6 +13,13 @@ import AddLabResultModal from './AddLabResultModal';
 import AddPrescriptionModal from './AddPrescriptionModal';
 import EditBiologicalFatherModal from './EditBiologicalFatherModal';
 import AddFileModal from './AddFileModal';
+import DetailModal, { type DetailField } from './DetailModal';
+
+function fmtDate(d: any): string | null {
+  if (!d) return null;
+  try { return new Date(String(d) + 'T12:00:00').toLocaleDateString('pt-BR'); }
+  catch { return String(d); }
+}
 
 function ItemActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
   return (
@@ -78,9 +85,20 @@ function StatusBadge({ status }: { status: string }) {
 export function VaccinesCard({ pregnancyId }: { pregnancyId: string }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
+  const [viewing, setViewing] = useState<any>(null);
   const { data } = useQuery({ queryKey: ['vaccines', pregnancyId], queryFn: () => fetchVaccines(pregnancyId) });
   const vaccines = data?.data ?? data ?? [];
   const del = useDeleteItem(deleteVaccine, ['vaccines', pregnancyId]);
+  const fields = (v: any): DetailField[] => [
+    { label: 'Vacina', value: v.vaccineName ?? v.vaccine_name, span: 2 },
+    { label: 'Dose', value: v.doseNumber ?? v.dose_number },
+    { label: 'Status', value: v.status },
+    { label: 'Data de aplicação', value: fmtDate(v.administeredDate ?? v.administered_date) },
+    { label: 'Data agendada', value: fmtDate(v.scheduledDate ?? v.scheduled_date) },
+    { label: 'Lote', value: v.batchNumber ?? v.batch_number },
+    { label: 'Local', value: v.location },
+    { label: 'Observações', value: v.notes, span: 2, multiline: true },
+  ];
   return (
     <>
       <SideCard title="Vacinas" icon={Syringe} count={vaccines.length} onAdd={() => { setEditing(null); setOpen(true); }}>
@@ -88,7 +106,9 @@ export function VaccinesCard({ pregnancyId }: { pregnancyId: string }) {
           <div className="space-y-2">
             {vaccines.slice(0, 6).map((v: any) => (
               <div key={v.id} className="group flex items-center justify-between">
-                <span className="text-xs text-gray-700 truncate flex-1">{v.vaccineName ?? v.vaccine_name}</span>
+                <button onClick={() => setViewing(v)} className="text-xs text-gray-700 truncate flex-1 text-left hover:text-lilac">
+                  {v.vaccineName ?? v.vaccine_name}
+                </button>
                 <StatusBadge status={v.status} />
                 <ItemActions
                   onEdit={() => { setEditing(v); setOpen(true); }}
@@ -100,6 +120,15 @@ export function VaccinesCard({ pregnancyId }: { pregnancyId: string }) {
         )}
       </SideCard>
       {open && <AddVaccineModal pregnancyId={pregnancyId} initial={editing} onClose={() => { setOpen(false); setEditing(null); }} />}
+      {viewing && (
+        <DetailModal
+          title="Vacina"
+          fields={fields(viewing)}
+          onEdit={() => { setEditing(viewing); setViewing(null); setOpen(true); }}
+          onDelete={() => { if (confirmDelete(`a vacina ${viewing.vaccineName ?? viewing.vaccine_name}`)) { del.mutate(viewing.id); setViewing(null); } }}
+          onClose={() => setViewing(null)}
+        />
+      )}
     </>
   );
 }
@@ -107,9 +136,19 @@ export function VaccinesCard({ pregnancyId }: { pregnancyId: string }) {
 export function VaginalSwabsCard({ pregnancyId }: { pregnancyId: string }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
+  const [viewing, setViewing] = useState<any>(null);
   const { data } = useQuery({ queryKey: ['vaginal-swabs', pregnancyId], queryFn: () => fetchVaginalSwabs(pregnancyId) });
   const swabs = data?.data ?? data ?? [];
   const del = useDeleteItem(deleteVaginalSwab, ['vaginal-swabs', pregnancyId]);
+  const fields = (s: any): DetailField[] => [
+    { label: 'Exame', value: s.examType ?? s.exam_type, span: 2 },
+    { label: 'Data da coleta', value: fmtDate(s.collectionDate ?? s.collection_date) },
+    { label: 'Resultado', value: s.resultDropdown ?? s.result_dropdown },
+    { label: 'Detalhes', value: s.result, span: 2 },
+    { label: 'Laboratório', value: s.labName ?? s.lab_name },
+    { label: 'Status', value: s.status },
+    { label: 'Observações', value: s.notes, span: 2, multiline: true },
+  ];
   return (
     <>
       <SideCard title="Coletas Vaginais" icon={FlaskConical} count={swabs.length} onAdd={() => { setEditing(null); setOpen(true); }}>
@@ -117,7 +156,9 @@ export function VaginalSwabsCard({ pregnancyId }: { pregnancyId: string }) {
           <div className="space-y-2">
             {swabs.slice(0, 5).map((s: any) => (
               <div key={s.id} className="group flex items-center justify-between">
-                <span className="text-xs text-gray-700 truncate flex-1">{s.examType ?? s.exam_type}</span>
+                <button onClick={() => setViewing(s)} className="text-xs text-gray-700 truncate flex-1 text-left hover:text-lilac">
+                  {s.examType ?? s.exam_type}
+                </button>
                 <StatusBadge status={s.status} />
                 <ItemActions
                   onEdit={() => { setEditing(s); setOpen(true); }}
@@ -129,6 +170,15 @@ export function VaginalSwabsCard({ pregnancyId }: { pregnancyId: string }) {
         )}
       </SideCard>
       {open && <AddVaginalSwabModal pregnancyId={pregnancyId} initial={editing} onClose={() => { setOpen(false); setEditing(null); }} />}
+      {viewing && (
+        <DetailModal
+          title="Coleta Vaginal"
+          fields={fields(viewing)}
+          onEdit={() => { setEditing(viewing); setViewing(null); setOpen(true); }}
+          onDelete={() => { if (confirmDelete('esta coleta')) { del.mutate(viewing.id); setViewing(null); } }}
+          onClose={() => setViewing(null)}
+        />
+      )}
     </>
   );
 }
@@ -168,9 +218,17 @@ export function BiologicalFatherCard({ pregnancyId }: { pregnancyId: string }) {
 export function UltrasoundsCard({ pregnancyId }: { pregnancyId: string }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
+  const [viewing, setViewing] = useState<any>(null);
   const { data } = useQuery({ queryKey: ['ultrasounds', pregnancyId], queryFn: () => fetchUltrasounds(pregnancyId) });
   const items = data?.data ?? data ?? [];
   const del = useDeleteItem(deleteUltrasound, ['ultrasounds', pregnancyId]);
+  const fields = (u: any): DetailField[] => [
+    { label: 'Tipo de exame', value: u.examType ?? u.exam_type },
+    { label: 'Data', value: fmtDate(u.examDate ?? u.exam_date) },
+    { label: 'Operador', value: u.operatorName ?? u.operator_name },
+    { label: 'Equipamento', value: u.equipmentModel ?? u.equipment_model },
+    { label: 'Laudo', value: u.finalReport ?? u.final_report, span: 2, multiline: true },
+  ];
   return (
     <>
       <SideCard title="Ultrassonografias" icon={Stethoscope} count={items.length} onAdd={() => { setEditing(null); setOpen(true); }}>
@@ -178,10 +236,10 @@ export function UltrasoundsCard({ pregnancyId }: { pregnancyId: string }) {
           <div className="space-y-2">
             {items.slice(0, 4).map((u: any) => (
               <div key={u.id} className="group flex items-start justify-between text-xs">
-                <div className="flex-1">
+                <button onClick={() => setViewing(u)} className="flex-1 text-left hover:text-lilac">
                   <p className="text-gray-700 font-medium">{u.examType ?? u.exam_type}</p>
                   <p className="text-gray-400">{new Date((u.examDate ?? u.exam_date) + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
-                </div>
+                </button>
                 <ItemActions
                   onEdit={() => { setEditing(u); setOpen(true); }}
                   onDelete={() => { if (confirmDelete('esta USG')) del.mutate(u.id); }}
@@ -192,6 +250,15 @@ export function UltrasoundsCard({ pregnancyId }: { pregnancyId: string }) {
         )}
       </SideCard>
       {open && <AddUltrasoundModal pregnancyId={pregnancyId} initial={editing} onClose={() => { setOpen(false); setEditing(null); }} />}
+      {viewing && (
+        <DetailModal
+          title="Ultrassonografia"
+          fields={fields(viewing)}
+          onEdit={() => { setEditing(viewing); setViewing(null); setOpen(true); }}
+          onDelete={() => { if (confirmDelete('esta USG')) { del.mutate(viewing.id); setViewing(null); } }}
+          onClose={() => setViewing(null)}
+        />
+      )}
     </>
   );
 }
@@ -199,9 +266,28 @@ export function UltrasoundsCard({ pregnancyId }: { pregnancyId: string }) {
 export function LabResultsCard({ pregnancyId }: { pregnancyId: string }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
+  const [viewing, setViewing] = useState<any>(null);
   const { data } = useQuery({ queryKey: ['lab-results', pregnancyId], queryFn: () => fetchLabResults(pregnancyId) });
   const items = data?.data ?? data ?? [];
   const del = useDeleteItem(deleteLabResult, ['lab-results', pregnancyId]);
+  const fields = (e: any): DetailField[] => {
+    const refMin = e.referenceMin ?? e.reference_min;
+    const refMax = e.referenceMax ?? e.reference_max;
+    const refRange = refMin != null || refMax != null ? `${refMin ?? '?'} – ${refMax ?? '?'}` : null;
+    return [
+      { label: 'Exame', value: e.examName ?? e.exam_name, span: 2 },
+      { label: 'Categoria', value: e.examCategory ?? e.exam_category },
+      { label: 'Status', value: e.status },
+      { label: 'Solicitado em', value: fmtDate(e.requestedAt ?? e.requested_at) },
+      { label: 'Resultado em', value: fmtDate(e.resultDate ?? e.result_date) },
+      { label: 'Valor', value: e.value != null ? `${e.value} ${e.unit ?? ''}`.trim() : null },
+      { label: 'Referência', value: refRange },
+      { label: 'Resultado em texto', value: e.resultText ?? e.result_text, span: 2 },
+      { label: 'Laboratório', value: e.labName ?? e.lab_name, span: 2 },
+      { label: 'Interpretação IA', value: e.aiInterpretation ?? e.ai_interpretation, span: 2, multiline: true },
+      { label: 'Observações', value: e.notes, span: 2, multiline: true },
+    ];
+  };
   return (
     <>
       <SideCard title="Exames Laboratoriais" icon={FileText} count={items.length} onAdd={() => { setEditing(null); setOpen(true); }}>
@@ -209,7 +295,9 @@ export function LabResultsCard({ pregnancyId }: { pregnancyId: string }) {
           <div className="space-y-2">
             {items.slice(0, 5).map((e: any) => (
               <div key={e.id} className="group flex items-center justify-between">
-                <span className="text-xs text-gray-700 truncate flex-1">{e.examName ?? e.exam_name}</span>
+                <button onClick={() => setViewing(e)} className="text-xs text-gray-700 truncate flex-1 text-left hover:text-lilac">
+                  {e.examName ?? e.exam_name}
+                </button>
                 <StatusBadge status={e.status} />
                 <ItemActions
                   onEdit={() => { setEditing(e); setOpen(true); }}
@@ -221,6 +309,15 @@ export function LabResultsCard({ pregnancyId }: { pregnancyId: string }) {
         )}
       </SideCard>
       {open && <AddLabResultModal pregnancyId={pregnancyId} initial={editing} onClose={() => { setOpen(false); setEditing(null); }} />}
+      {viewing && (
+        <DetailModal
+          title="Exame Laboratorial"
+          fields={fields(viewing)}
+          onEdit={() => { setEditing(viewing); setViewing(null); setOpen(true); }}
+          onDelete={() => { if (confirmDelete(`o exame ${viewing.examName ?? viewing.exam_name}`)) { del.mutate(viewing.id); setViewing(null); } }}
+          onClose={() => setViewing(null)}
+        />
+      )}
     </>
   );
 }
@@ -228,9 +325,22 @@ export function LabResultsCard({ pregnancyId }: { pregnancyId: string }) {
 export function PrescriptionsCard({ pregnancyId }: { pregnancyId: string }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
+  const [viewing, setViewing] = useState<any>(null);
   const { data } = useQuery({ queryKey: ['prescriptions', pregnancyId], queryFn: () => fetchPrescriptions(pregnancyId) });
   const items = data?.data ?? data ?? [];
   const del = useDeleteItem(deletePrescription, ['prescriptions', pregnancyId]);
+  const fields = (p: any): DetailField[] => {
+    const meds = (p.medications ?? []) as any[];
+    const medsText = meds
+      .map((m: any) => `• ${m.name ?? ''}${m.dose ? ' ' + m.dose : ''}${m.route ? ' (' + m.route + ')' : ''}${m.frequency ? ' — ' + m.frequency : ''}${m.duration ? ' por ' + m.duration : ''}`)
+      .join('\n');
+    return [
+      { label: 'Data', value: fmtDate(p.prescriptionDate ?? p.prescription_date) },
+      { label: 'Status', value: p.status },
+      { label: 'Medicamentos', value: medsText, span: 2, multiline: true },
+      { label: 'Observações', value: p.notes, span: 2, multiline: true },
+    ];
+  };
   return (
     <>
       <SideCard title="Prescrições" icon={Pill} count={items.length} onAdd={() => { setEditing(null); setOpen(true); }}>
@@ -238,10 +348,10 @@ export function PrescriptionsCard({ pregnancyId }: { pregnancyId: string }) {
           <div className="space-y-2">
             {items.slice(0, 4).map((p: any) => (
               <div key={p.id} className="group flex items-start justify-between text-xs">
-                <div className="flex-1">
+                <button onClick={() => setViewing(p)} className="flex-1 text-left hover:text-lilac">
                   <p className="text-gray-700">{new Date((p.prescriptionDate ?? p.prescription_date) + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
                   <StatusBadge status={p.status} />
-                </div>
+                </button>
                 <ItemActions
                   onEdit={() => { setEditing(p); setOpen(true); }}
                   onDelete={() => { if (confirmDelete('esta prescrição')) del.mutate(p.id); }}
@@ -252,6 +362,15 @@ export function PrescriptionsCard({ pregnancyId }: { pregnancyId: string }) {
         )}
       </SideCard>
       {open && <AddPrescriptionModal pregnancyId={pregnancyId} initial={editing} onClose={() => { setOpen(false); setEditing(null); }} />}
+      {viewing && (
+        <DetailModal
+          title="Prescrição"
+          fields={fields(viewing)}
+          onEdit={() => { setEditing(viewing); setViewing(null); setOpen(true); }}
+          onDelete={() => { if (confirmDelete('esta prescrição')) { del.mutate(viewing.id); setViewing(null); } }}
+          onClose={() => setViewing(null)}
+        />
+      )}
     </>
   );
 }
@@ -259,9 +378,18 @@ export function PrescriptionsCard({ pregnancyId }: { pregnancyId: string }) {
 export function FilesCard({ pregnancyId }: { pregnancyId: string }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
+  const [viewing, setViewing] = useState<any>(null);
   const { data } = useQuery({ queryKey: ['files', pregnancyId], queryFn: () => fetchFiles(pregnancyId) });
   const items = data?.data ?? data ?? [];
   const del = useDeleteItem(deleteFile, ['files', pregnancyId]);
+  const fields = (f: any): DetailField[] => [
+    { label: 'Nome', value: f.fileName ?? f.file_name, span: 2 },
+    { label: 'Tipo', value: f.fileType ?? f.file_type },
+    { label: 'Tamanho', value: f.fileSize ?? f.file_size },
+    { label: 'URL', value: f.fileUrl ?? f.file_url, span: 2 },
+    { label: 'Visível para paciente', value: f.isVisibleToPatient ?? f.is_visible_to_patient },
+    { label: 'Descrição', value: f.description, span: 2, multiline: true },
+  ];
   return (
     <>
       <SideCard title="Arquivos" icon={FolderOpen} count={items.length} onAdd={() => { setEditing(null); setOpen(true); }}>
@@ -269,7 +397,9 @@ export function FilesCard({ pregnancyId }: { pregnancyId: string }) {
           <div className="space-y-2">
             {items.slice(0, 4).map((f: any) => (
               <div key={f.id} className="group flex items-center justify-between">
-                <span className="text-xs text-gray-700 truncate flex-1">{f.fileName ?? f.file_name}</span>
+                <button onClick={() => setViewing(f)} className="text-xs text-gray-700 truncate flex-1 text-left hover:text-lilac">
+                  {f.fileName ?? f.file_name}
+                </button>
                 <ItemActions
                   onEdit={() => { setEditing(f); setOpen(true); }}
                   onDelete={() => { if (confirmDelete(`o arquivo ${f.fileName ?? f.file_name}`)) del.mutate(f.id); }}
@@ -280,6 +410,15 @@ export function FilesCard({ pregnancyId }: { pregnancyId: string }) {
         )}
       </SideCard>
       {open && <AddFileModal pregnancyId={pregnancyId} initial={editing} onClose={() => { setOpen(false); setEditing(null); }} />}
+      {viewing && (
+        <DetailModal
+          title="Arquivo"
+          fields={fields(viewing)}
+          onEdit={() => { setEditing(viewing); setViewing(null); setOpen(true); }}
+          onDelete={() => { if (confirmDelete(`o arquivo ${viewing.fileName ?? viewing.file_name}`)) { del.mutate(viewing.id); setViewing(null); } }}
+          onClose={() => setViewing(null)}
+        />
+      )}
     </>
   );
 }

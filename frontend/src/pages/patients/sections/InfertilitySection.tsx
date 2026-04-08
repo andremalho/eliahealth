@@ -169,18 +169,18 @@ function Card({
 
       {expanded && (
         <div className="px-4 pb-4 pt-2 border-t bg-gray-50/50 space-y-4">
-          {c.ovarianReserve && (
-            <Block label="Reserva ovariana">
-              <pre className="text-xs whitespace-pre-wrap font-sans">
-                {JSON.stringify(c.ovarianReserve, null, 2)}
-              </pre>
+          {c.ovarianReserve && <OvarianReserveDisplay data={c.ovarianReserve} />}
+          {c.semenAnalysis && <SemenAnalysisDisplay data={c.semenAnalysis} />}
+          {c.dnaFragmentation && <DnaFragmentationDisplay data={c.dnaFragmentation} />}
+          {c.hsg && <HsgDisplay data={c.hsg} />}
+          {c.diagnosticHysteroscopy && (
+            <Block label="Histeroscopia diagnóstica">
+              {asString(c.diagnosticHysteroscopy)}
             </Block>
           )}
-          {c.semenAnalysis && (
-            <Block label="Espermograma">
-              <pre className="text-xs whitespace-pre-wrap font-sans">
-                {JSON.stringify(c.semenAnalysis, null, 2)}
-              </pre>
+          {c.laparoscopyDiagnostic && (
+            <Block label="Laparoscopia diagnóstica">
+              {asString(c.laparoscopyDiagnostic)}
             </Block>
           )}
           {c.mullerianAnomaly && (
@@ -220,6 +220,193 @@ function Block({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <p className="text-xs font-semibold text-gray-500 uppercase mb-1">{label}</p>
       <div className="text-sm text-gray-700">{children}</div>
+    </div>
+  );
+}
+
+// ── Displays estruturados para JSONB ──
+
+function asString(v: unknown): string {
+  if (v === null || v === undefined) return '—';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number') return String(v);
+  if (typeof v === 'boolean') return v ? 'sim' : 'não';
+  if (typeof v === 'object') {
+    // Tenta extrair `findings` ou similar; senão JSON compacto
+    const obj = v as Record<string, unknown>;
+    if (typeof obj.findings === 'string') return obj.findings;
+    return Object.entries(obj)
+      .map(([k, val]) => `${k}: ${asString(val)}`)
+      .join(' · ');
+  }
+  return String(v);
+}
+
+interface MetricItem {
+  label: string;
+  value: string;
+  status?: 'normal' | 'low' | 'high' | 'borderline';
+}
+
+function MetricGrid({ label, items }: { label: string; items: MetricItem[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div>
+      <p className="text-xs font-semibold text-gray-500 uppercase mb-2">{label}</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {items.map((item) => {
+          const colorCls =
+            item.status === 'low' || item.status === 'high'
+              ? 'border-red-200 bg-red-50'
+              : item.status === 'borderline'
+                ? 'border-amber-200 bg-amber-50'
+                : 'border-gray-100 bg-white';
+          return (
+            <div
+              key={item.label}
+              className={cn('rounded p-2.5 border', colorCls)}
+            >
+              <p className="text-[10px] font-semibold text-gray-400 uppercase">
+                {item.label}
+              </p>
+              <p className="text-sm font-medium text-gray-800 mt-0.5">{item.value}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function num(v: unknown): number | null {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return isNaN(n) ? null : n;
+}
+
+function OvarianReserveDisplay({ data }: { data: Record<string, unknown> }) {
+  const amh = num((data.amh as Record<string, unknown>)?.value_ng_ml);
+  const fsh = num((data.fsh as Record<string, unknown>)?.value);
+  const afc = num((data.antralFollicleCount as Record<string, unknown>)?.value);
+
+  const items: MetricItem[] = [];
+  if (amh !== null) {
+    items.push({
+      label: 'AMH',
+      value: `${amh} ng/mL`,
+      status: amh < 0.5 ? 'low' : amh < 1.1 ? 'borderline' : 'normal',
+    });
+  }
+  if (fsh !== null) {
+    items.push({
+      label: 'FSH basal',
+      value: `${fsh} mUI/mL`,
+      status: fsh > 10 ? 'high' : 'normal',
+    });
+  }
+  if (afc !== null) {
+    items.push({
+      label: 'CFA',
+      value: `${afc} folículos`,
+      status: afc < 5 ? 'low' : 'normal',
+    });
+  }
+  if (items.length === 0) return null;
+  return <MetricGrid label="Reserva ovariana" items={items} />;
+}
+
+function SemenAnalysisDisplay({ data }: { data: Record<string, unknown> }) {
+  const conc = num(data.concentration_M_ml);
+  const motProg = num(data.progressiveMotility_pct);
+  const morf = num(data.morphology_pct_kruger);
+  const motTotal = num(data.totalMotility_pct);
+  const vol = num(data.volume_ml);
+
+  const items: MetricItem[] = [];
+  if (vol !== null) items.push({ label: 'Volume', value: `${vol} mL` });
+  if (conc !== null) {
+    items.push({
+      label: 'Concentração',
+      value: `${conc} M/mL`,
+      status: conc < 16 ? 'low' : 'normal',
+    });
+  }
+  if (motProg !== null) {
+    items.push({
+      label: 'Mot. progressiva',
+      value: `${motProg}%`,
+      status: motProg < 30 ? 'low' : 'normal',
+    });
+  }
+  if (motTotal !== null) {
+    items.push({
+      label: 'Mot. total',
+      value: `${motTotal}%`,
+      status: motTotal < 42 ? 'low' : 'normal',
+    });
+  }
+  if (morf !== null) {
+    items.push({
+      label: 'Morfologia (Kruger)',
+      value: `${morf}%`,
+      status: morf < 4 ? 'low' : 'normal',
+    });
+  }
+  if (items.length === 0) return null;
+  return <MetricGrid label="Espermograma (OMS 2021)" items={items} />;
+}
+
+function DnaFragmentationDisplay({ data }: { data: Record<string, unknown> }) {
+  const dfi = num(data.dfi_pct);
+  if (dfi === null) return null;
+  return (
+    <MetricGrid
+      label="Fragmentação de DNA espermático"
+      items={[
+        {
+          label: 'DFI',
+          value: `${dfi}%`,
+          status: dfi > 30 ? 'high' : dfi > 15 ? 'borderline' : 'normal',
+        },
+      ]}
+    />
+  );
+}
+
+function HsgDisplay({ data }: { data: Record<string, unknown> }) {
+  // HSG pode vir como { findings: '...' } ou { leftTube, rightTube, uterineCavity, findings, date }
+  const findings = typeof data.findings === 'string' ? data.findings : null;
+  const left = typeof data.leftTube === 'string' ? data.leftTube : null;
+  const right = typeof data.rightTube === 'string' ? data.rightTube : null;
+  const cavity = typeof data.uterineCavity === 'string' ? data.uterineCavity : null;
+  const date = typeof data.date === 'string' ? data.date : null;
+
+  return (
+    <div>
+      <p className="text-xs font-semibold text-gray-500 uppercase mb-1">
+        HSG (Histerossalpingografia)
+        {date && (
+          <span className="text-gray-400 normal-case ml-2 font-normal">{date}</span>
+        )}
+      </p>
+      <div className="text-sm text-gray-700 space-y-0.5">
+        {left && (
+          <p>
+            <span className="text-gray-400">Trompa esquerda:</span> {left}
+          </p>
+        )}
+        {right && (
+          <p>
+            <span className="text-gray-400">Trompa direita:</span> {right}
+          </p>
+        )}
+        {cavity && (
+          <p>
+            <span className="text-gray-400">Cavidade uterina:</span> {cavity}
+          </p>
+        )}
+        {findings && <p className="whitespace-pre-wrap">{findings}</p>}
+      </div>
     </div>
   );
 }

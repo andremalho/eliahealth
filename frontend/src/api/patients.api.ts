@@ -19,6 +19,11 @@ export interface PaginatedResponse<T> {
   totalPages: number;
 }
 
+export async function fetchPatient(id: string) {
+  const { data } = await api.get<Patient>(`/patients/${id}`);
+  return data;
+}
+
 export async function fetchPatients(page = 1, limit = 20) {
   const { data } = await api.get<PaginatedResponse<Patient>>('/patients', {
     params: { page, limit },

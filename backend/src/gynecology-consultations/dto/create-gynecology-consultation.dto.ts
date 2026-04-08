@@ -20,6 +20,7 @@ import {
   PhysicalActivityLevel,
   EndometriosisStage,
   BiRads,
+  AlcoholUsePattern,
   GynecologyAlert,
 } from '../gynecology-consultation.enums.js';
 
@@ -55,6 +56,9 @@ export class CreateGynecologyConsultationDto {
   @IsOptional() @IsEnum(SmokingStatus) smokingStatus?: SmokingStatus;
   @IsOptional() @IsNumber() smokingPacksPerYear?: number;
   @IsOptional() @IsBoolean() alcoholUse?: boolean;
+  @IsOptional() @IsEnum(AlcoholUsePattern) alcoholUsePattern?: AlcoholUsePattern;
+  @IsOptional() @IsBoolean() drugUse?: boolean;
+  @IsOptional() @IsString() drugUseDetails?: string;
   @IsOptional() @IsEnum(PhysicalActivityLevel) physicalActivity?: PhysicalActivityLevel;
 
   // ── Antecedentes ginecológicos ──

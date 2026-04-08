@@ -26,6 +26,13 @@ export enum SmokingStatus {
   CURRENT = 'current',
 }
 
+export enum AlcoholUsePattern {
+  NONE = 'none',           // Não usa
+  SOCIAL = 'social',       // Social/eventual
+  FREQUENT = 'frequent',   // Frequente
+  ABUSE = 'abuse',         // Abusivo / dependência
+}
+
 export enum PhysicalActivityLevel {
   SEDENTARY = 'sedentary',
   LIGHT = 'light',

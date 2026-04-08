@@ -16,6 +16,7 @@ import {
   PhysicalActivityLevel,
   EndometriosisStage,
   BiRads,
+  AlcoholUsePattern,
   GynecologyAlert,
 } from './gynecology-consultation.enums.js';
 
@@ -105,6 +106,20 @@ export class GynecologyConsultation {
 
   @Column({ name: 'alcohol_use', type: 'boolean', nullable: true })
   alcoholUse: boolean | null;
+
+  @Column({
+    name: 'alcohol_use_pattern',
+    type: 'enum',
+    enum: AlcoholUsePattern,
+    nullable: true,
+  })
+  alcoholUsePattern: AlcoholUsePattern | null;
+
+  @Column({ name: 'drug_use', type: 'boolean', nullable: true })
+  drugUse: boolean | null;
+
+  @Column({ name: 'drug_use_details', type: 'text', nullable: true })
+  drugUseDetails: string | null;
 
   @Column({ name: 'physical_activity', type: 'enum', enum: PhysicalActivityLevel, nullable: true })
   physicalActivity: PhysicalActivityLevel | null;

@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2 } from 'lucide-react';
 import {
   createGynecologyConsultation,
+  updateGynecologyConsultation,
   CONSULTATION_TYPE_LABELS,
   SMOKING_LABELS,
   ALCOHOL_USE_LABELS,
@@ -12,6 +13,7 @@ import {
   CONTRACEPTIVE_METHOD_OPTIONS,
   BREAST_FINDING_OPTIONS,
   type CreateGynecologyConsultationDto,
+  type GynecologyConsultation,
   type GynecologyConsultationType,
   type SmokingStatus,
   type AlcoholUsePattern,
@@ -147,23 +149,85 @@ function computeBmi(weightStr: string, heightStr: string): { value: number; labe
 
 export default function NewGynecologyConsultationModal({
   patientId,
+  consultation,
   onClose,
 }: {
   patientId: string;
+  consultation?: GynecologyConsultation;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
+  const isEdit = !!consultation;
+
+  // Pré-extração: o método contraceptivo no entity é texto livre,
+  // não dá pra mapear de volta direto pro select. Tentamos extrair "marca"
+  // separada se vier no formato "Label — Marca"
+  let initialContraceptiveKey = '';
+  let initialContraceptiveBrand = '';
+  if (consultation?.contraceptiveMethod) {
+    const m = consultation.contraceptiveMethod;
+    const sepIdx = m.indexOf(' — ');
+    if (sepIdx >= 0) {
+      initialContraceptiveBrand = m.slice(sepIdx + 3);
+    }
+    // Mantém o select vazio (médico re-seleciona se quiser auditar)
+    void initialContraceptiveKey;
+  }
+
+  // Achados mamários: o backend grava como string concatenada "Label: desc; Label: desc".
+  // Pré-popular checkboxes a partir disso é error-prone — deixamos vazio em edição
+  // (médico pode re-marcar se quiser).
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
-    defaultValues: {
-      consultationDate: new Date().toISOString().split('T')[0],
-      consultationType: 'routine',
-      breastExamPerformed: false,
-      pelvicExamPerformed: false,
-      papSmearCollected: false,
-      breastFindings: [],
-      drugUse: false,
-    },
+    defaultValues: consultation
+      ? {
+          consultationDate: consultation.consultationDate,
+          consultationType: consultation.consultationType,
+          chiefComplaint: consultation.chiefComplaint ?? '',
+          currentIllnessHistory: consultation.currentIllnessHistory ?? '',
+          lastMenstrualPeriod: consultation.lastMenstrualPeriod ?? '',
+          cycleInterval: consultation.cycleInterval?.toString() ?? '',
+          cycleDuration: consultation.cycleDuration?.toString() ?? '',
+          cycleVolume: consultation.cycleVolume ?? '',
+          dysmenorrhea: consultation.dysmenorrhea ?? '',
+          lastPapSmear: consultation.lastPapSmear ?? '',
+          lastMammography: consultation.lastMammography ?? '',
+          contraceptiveMethodKey: initialContraceptiveKey as any,
+          contraceptiveBrand: initialContraceptiveBrand,
+          smokingStatus: consultation.smokingStatus ?? '',
+          alcoholUsePattern: consultation.alcoholUsePattern ?? '',
+          drugUse: !!consultation.drugUse,
+          drugUseDetails: consultation.drugUseDetails ?? '',
+          weight: consultation.weight?.toString() ?? '',
+          height: consultation.height?.toString() ?? '',
+          bloodPressureSystolic: consultation.bloodPressureSystolic?.toString() ?? '',
+          bloodPressureDiastolic: consultation.bloodPressureDiastolic?.toString() ?? '',
+          heartRate: consultation.heartRate?.toString() ?? '',
+          breastExamPerformed: !!consultation.breastExamPerformed,
+          breastFindings: [],
+          breastFindingDescNodulo: '',
+          breastFindingDescRetracao: '',
+          breastFindingDescAlteracaoPele: '',
+          breastFindingDescDescargaPapilar: '',
+          breastFindingDescOutros: consultation.breastExamFindings ?? '',
+          biradsClassification: consultation.biradsClassification ?? '',
+          pelvicExamPerformed: !!consultation.pelvicExamPerformed,
+          cervixAppearance: consultation.cervixAppearance ?? '',
+          papSmearCollected: !!consultation.papSmearCollected,
+          diagnosis: consultation.diagnosis ?? '',
+          referrals: consultation.referrals ?? '',
+          returnDate: consultation.returnDate ?? '',
+          notes: consultation.notes ?? '',
+        }
+      : {
+          consultationDate: new Date().toISOString().split('T')[0],
+          consultationType: 'routine',
+          breastExamPerformed: false,
+          pelvicExamPerformed: false,
+          papSmearCollected: false,
+          breastFindings: [],
+          drugUse: false,
+        },
   });
 
   // Live watches
@@ -271,6 +335,9 @@ export default function NewGynecologyConsultationModal({
       if (data.returnDate) dto.returnDate = data.returnDate;
       if (data.notes) dto.notes = data.notes;
 
+      if (isEdit && consultation) {
+        return updateGynecologyConsultation(patientId, consultation.id, dto);
+      }
       return createGynecologyConsultation(patientId, dto);
     },
     onSuccess: () => {
@@ -289,7 +356,9 @@ export default function NewGynecologyConsultationModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-semibold text-navy">Nova consulta ginecológica</h2>
+          <h2 className="text-lg font-semibold text-navy">
+            {isEdit ? 'Editar consulta ginecológica' : 'Nova consulta ginecológica'}
+          </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
@@ -660,7 +729,7 @@ export default function NewGynecologyConsultationModal({
               {(isSubmitting || mutation.isPending) && (
                 <Loader2 className="w-4 h-4 animate-spin" />
               )}
-              Salvar consulta
+              {isEdit ? 'Atualizar consulta' : 'Salvar consulta'}
             </button>
           </div>
         </form>

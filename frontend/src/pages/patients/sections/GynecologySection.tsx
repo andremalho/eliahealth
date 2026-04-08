@@ -9,6 +9,7 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
+  Pencil,
 } from 'lucide-react';
 import {
   fetchGynecologyConsultations,
@@ -26,6 +27,7 @@ function Skeleton({ className = '' }: { className?: string }) {
 
 export default function GynecologySection({ patientId }: { patientId: string }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<GynecologyConsultation | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -35,6 +37,15 @@ export default function GynecologySection({ patientId }: { patientId: string }) 
   });
 
   const consultations = data?.data ?? [];
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditingItem(null);
+  };
+  const openEdit = (c: GynecologyConsultation) => {
+    setEditingItem(c);
+    setModalOpen(true);
+  };
 
   return (
     <div>
@@ -76,6 +87,7 @@ export default function GynecologySection({ patientId }: { patientId: string }) 
               consultation={c}
               expanded={expandedId === c.id}
               onToggle={() => setExpandedId(expandedId === c.id ? null : c.id)}
+              onEdit={() => openEdit(c)}
             />
           ))}
         </div>
@@ -84,7 +96,8 @@ export default function GynecologySection({ patientId }: { patientId: string }) 
       {modalOpen && (
         <NewGynecologyConsultationModal
           patientId={patientId}
-          onClose={() => setModalOpen(false)}
+          consultation={editingItem ?? undefined}
+          onClose={closeModal}
         />
       )}
     </div>
@@ -95,10 +108,12 @@ function ConsultationCard({
   consultation: c,
   expanded,
   onToggle,
+  onEdit,
 }: {
   consultation: GynecologyConsultation;
   expanded: boolean;
   onToggle: () => void;
+  onEdit: () => void;
 }) {
   const alerts = c.alerts ?? [];
   const urgentCount = alerts.filter((a) => a.severity === 'urgent').length;
@@ -106,24 +121,26 @@ function ConsultationCard({
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden hover:border-lilac/50 transition">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition text-left"
-      >
-        <div className="w-10 h-10 rounded-lg bg-lilac/10 text-lilac flex items-center justify-center shrink-0">
-          <Calendar className="w-5 h-5" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-gray-800">{formatDate(c.consultationDate)}</span>
-            <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
-              {CONSULTATION_TYPE_LABELS[c.consultationType]}
-            </span>
+      <div className="flex items-center gap-2 p-4 hover:bg-gray-50 transition">
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-4 flex-1 text-left min-w-0"
+        >
+          <div className="w-10 h-10 rounded-lg bg-lilac/10 text-lilac flex items-center justify-center shrink-0">
+            <Calendar className="w-5 h-5" />
           </div>
-          {c.chiefComplaint && (
-            <p className="text-sm text-gray-500 mt-1 truncate">{c.chiefComplaint}</p>
-          )}
-        </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium text-gray-800">{formatDate(c.consultationDate)}</span>
+              <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                {CONSULTATION_TYPE_LABELS[c.consultationType]}
+              </span>
+            </div>
+            {c.chiefComplaint && (
+              <p className="text-sm text-gray-500 mt-1 truncate">{c.chiefComplaint}</p>
+            )}
+          </div>
+        </button>
         <div className="flex items-center gap-2 shrink-0">
           {urgentCount > 0 && (
             <span className="flex items-center gap-1 px-2 py-1 bg-red-50 text-red-600 text-xs font-semibold rounded">
@@ -137,13 +154,21 @@ function ConsultationCard({
               {warningCount}
             </span>
           )}
-          {expanded ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
-          )}
+          <button
+            onClick={onEdit}
+            className="p-2 text-gray-400 hover:text-lilac hover:bg-lilac/5 rounded transition"
+            title="Editar"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onToggle}
+            className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
+          >
+            {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </button>
         </div>
-      </button>
+      </div>
 
       {expanded && (
         <div className="px-4 pb-4 pt-2 border-t bg-gray-50/50 space-y-4">

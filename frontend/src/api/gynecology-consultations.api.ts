@@ -160,6 +160,20 @@ export async function createGynecologyConsultation(
   return data;
 }
 
+export type UpdateGynecologyConsultationDto = Partial<CreateGynecologyConsultationDto>;
+
+export async function updateGynecologyConsultation(
+  patientId: string,
+  id: string,
+  dto: UpdateGynecologyConsultationDto,
+): Promise<GynecologyConsultation> {
+  const { data } = await api.patch(
+    `/patients/${patientId}/gynecology-consultations/${id}`,
+    dto,
+  );
+  return data;
+}
+
 export async function deleteGynecologyConsultation(
   patientId: string,
   id: string,

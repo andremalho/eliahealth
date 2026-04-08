@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2 } from 'lucide-react';
 import {
   createContraceptionRecord,
+  updateContraceptionRecord,
   computeWHOMEC,
   METHOD_OPTIONS,
   METHOD_LABELS,
@@ -15,6 +16,7 @@ import {
   isIud,
   isImplant,
   type CreateContraceptionRecordDto,
+  type ContraceptionRecord,
   type ContraceptiveMethod,
   type ReproductiveDesire,
   type SmokingStatus,
@@ -83,33 +85,72 @@ Checkbox.displayName = 'Checkbox';
 
 export default function NewContraceptionRecordModal({
   patientId,
+  record,
   onClose,
 }: {
   patientId: string;
+  record?: ContraceptionRecord;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
+  const isEdit = !!record;
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
-    defaultValues: {
-      consultationDate: new Date().toISOString().split('T')[0],
-      currentMethodKey: 'none',
-      desireForPregnancy: 'undecided',
-      breastfeeding: false,
-      smokingAge35Plus: false,
-      historyOfVTE: false,
-      thrombophilia: false,
-      migraineWithAura: false,
-      uncontrolledHypertension: false,
-      diabetesWith15yearsPlus: false,
-      breastCancerHistory: false,
-      liverDisease: false,
-      cardiovascularDisease: false,
-      stroke: false,
-      emergencyContraceptionUsed: false,
-      counselingProvided: false,
-      methodPrescribedKey: '',
-    },
+    defaultValues: record
+      ? {
+          consultationDate: record.consultationDate,
+          currentMethodKey: record.currentMethod,
+          currentMethodStartDate: record.currentMethodStartDate ?? '',
+          currentMethodDetails: record.currentMethodDetails ?? '',
+          desireForPregnancy: record.desireForPregnancy,
+          breastfeeding: record.breastfeeding,
+          smokingStatus: record.smokingStatus ?? '',
+          smokingAge35Plus: record.smokingAge35Plus,
+          historyOfVTE: record.historyOfVTE,
+          thrombophilia: record.thrombophilia,
+          thrombophiliaDetails: record.thrombophiliaDetails ?? '',
+          migraineWithAura: record.migraineWithAura,
+          uncontrolledHypertension: record.uncontrolledHypertension,
+          diabetesWith15yearsPlus: record.diabetesWith15yearsPlus,
+          breastCancerHistory: record.breastCancerHistory,
+          liverDisease: record.liverDisease,
+          cardiovascularDisease: record.cardiovascularDisease,
+          stroke: record.stroke,
+          iudInsertionDate: record.iudInsertionDate ?? '',
+          iudExpirationDate: record.iudExpirationDate ?? '',
+          iudPositionUltrasound: record.iudPositionUltrasound ?? '',
+          iudNextCheckDate: record.iudNextCheckDate ?? '',
+          implantInsertionDate: record.implantInsertionDate ?? '',
+          implantExpirationDate: record.implantExpirationDate ?? '',
+          implantLocation: record.implantLocation ?? '',
+          emergencyContraceptionUsed: record.emergencyContraceptionUsed,
+          emergencyContraceptionDate: record.emergencyContraceptionDate ?? '',
+          emergencyContraceptionMethod: record.emergencyContraceptionMethod ?? '',
+          methodPrescribedKey: record.methodPrescribed ?? '',
+          methodPrescribedDetails: record.methodPrescribedDetails ?? '',
+          counselingProvided: record.counselingProvided,
+          returnDate: record.returnDate ?? '',
+          notes: record.notes ?? '',
+        }
+      : {
+          consultationDate: new Date().toISOString().split('T')[0],
+          currentMethodKey: 'none',
+          desireForPregnancy: 'undecided',
+          breastfeeding: false,
+          smokingAge35Plus: false,
+          historyOfVTE: false,
+          thrombophilia: false,
+          migraineWithAura: false,
+          uncontrolledHypertension: false,
+          diabetesWith15yearsPlus: false,
+          breastCancerHistory: false,
+          liverDisease: false,
+          cardiovascularDisease: false,
+          stroke: false,
+          emergencyContraceptionUsed: false,
+          counselingProvided: false,
+          methodPrescribedKey: '',
+        },
   });
 
   const currentMethodKey = watch('currentMethodKey') as ContraceptiveMethod | '';
@@ -196,6 +237,9 @@ export default function NewContraceptionRecordModal({
       if (data.returnDate) dto.returnDate = data.returnDate;
       if (data.notes) dto.notes = data.notes;
 
+      if (isEdit && record) {
+        return updateContraceptionRecord(patientId, record.id, dto);
+      }
       return createContraceptionRecord(patientId, dto);
     },
     onSuccess: () => {
@@ -214,7 +258,9 @@ export default function NewContraceptionRecordModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-semibold text-navy">Nova consulta de contracepção</h2>
+          <h2 className="text-lg font-semibold text-navy">
+            {isEdit ? 'Editar consulta de contracepção' : 'Nova consulta de contracepção'}
+          </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
@@ -526,7 +572,7 @@ export default function NewContraceptionRecordModal({
               {(isSubmitting || mutation.isPending) && (
                 <Loader2 className="w-4 h-4 animate-spin" />
               )}
-              Salvar consulta
+              {isEdit ? 'Atualizar consulta' : 'Salvar consulta'}
             </button>
           </div>
         </form>

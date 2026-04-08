@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2 } from 'lucide-react';
 import {
   createMenopauseAssessment,
+  updateMenopauseAssessment,
   STRAW_LABELS,
   STRAW_DESCRIPTIONS,
   STRAW_BADGE_COLORS,
@@ -21,11 +22,14 @@ import {
   classifyOsteoporosis,
   classifyCardioRisk,
   classifySTRAW,
+  MENSTRUAL_PATTERN_LABELS,
   type CreateMenopauseAssessmentDto,
+  type MenopauseAssessment,
   type MenopauseType,
   type HotFlashIntensity,
   type HRTScheme,
   type EstrogenRoute,
+  type MenstrualPattern,
 } from '../../../api/menopause-assessments.api';
 import { InfoTooltip } from '../../../components/forms/InfoTooltip';
 import { cn } from '../../../utils/cn';
@@ -35,6 +39,7 @@ interface FormData {
   menopauseDate: string;
   menopauseType: MenopauseType;
   ageAtMenopause: string;
+  menstrualPattern: MenstrualPattern | '';
 
   // MRS — 11 itens 0-4
   mrsHotFlashes: string;
@@ -119,32 +124,85 @@ const MRS_FIELDS: { name: keyof FormData; label: string; group: string }[] = [
 
 export default function NewMenopauseAssessmentModal({
   patientId,
+  assessment,
   onClose,
 }: {
   patientId: string;
+  assessment?: MenopauseAssessment;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
+  const isEdit = !!assessment;
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
-    defaultValues: {
-      assessmentDate: new Date().toISOString().split('T')[0],
-      menopauseType: 'natural',
-      gsmDiagnosis: false,
-      gsmVaginalDryness: false,
-      gsmDyspareunia: false,
-      gsmRecurrentUTI: false,
-      gsmUrinaryIncontinence: false,
-      hrtIndicated: false,
-      hrtContraindicated: false,
-    },
+    defaultValues: assessment
+      ? {
+          assessmentDate: assessment.assessmentDate,
+          menopauseDate: assessment.menopauseDate ?? '',
+          menopauseType: assessment.menopauseType,
+          ageAtMenopause: assessment.ageAtMenopause?.toString() ?? '',
+          menstrualPattern: '',
+          mrsHotFlashes: assessment.mrsHotFlashes?.toString() ?? '0',
+          mrsHeartPalpitations: assessment.mrsHeartPalpitations?.toString() ?? '0',
+          mrsSleepDisorders: assessment.mrsSleepDisorders?.toString() ?? '0',
+          mrsJointMuscleDiscomfort: assessment.mrsJointMuscleDiscomfort?.toString() ?? '0',
+          mrsDepressiveMood: assessment.mrsDepressiveMood?.toString() ?? '0',
+          mrsIrritability: assessment.mrsIrritability?.toString() ?? '0',
+          mrsAnxiety: assessment.mrsAnxiety?.toString() ?? '0',
+          mrsPhysicalMentalExhaustion: assessment.mrsPhysicalMentalExhaustion?.toString() ?? '0',
+          mrsSexualProblems: assessment.mrsSexualProblems?.toString() ?? '0',
+          mrsBladderProblems: assessment.mrsBladderProblems?.toString() ?? '0',
+          mrsDrynessVagina: assessment.mrsDrynessVagina?.toString() ?? '0',
+          hotFlashesPerDay: assessment.hotFlashesPerDay?.toString() ?? '',
+          hotFlashesPerNight: assessment.hotFlashesPerNight?.toString() ?? '',
+          hotFlashIntensity: assessment.hotFlashIntensity ?? '',
+          gsmDiagnosis: assessment.gsmDiagnosis,
+          gsmVaginalDryness: !!assessment.gsmVaginalDryness,
+          gsmDyspareunia: !!assessment.gsmDyspareunia,
+          gsmRecurrentUTI: !!assessment.gsmRecurrentUTI,
+          gsmUrinaryIncontinence: !!assessment.gsmUrinaryIncontinence,
+          dexaLumbarTScore: assessment.dexaLumbarTScore?.toString() ?? '',
+          dexaFemoralNeckTScore: assessment.dexaFemoralNeckTScore?.toString() ?? '',
+          dexaTotalHipTScore: assessment.dexaTotalHipTScore?.toString() ?? '',
+          dexaDate: assessment.dexaDate ?? '',
+          fraxScore10yrMajor: assessment.fraxScore10yrMajor?.toString() ?? '',
+          fraxScore10yrHip: assessment.fraxScore10yrHip?.toString() ?? '',
+          framinghamScore: assessment.framinghamScore?.toString() ?? '',
+          vitaminDLevel: assessment.vitaminDLevel?.toString() ?? '',
+          calciumSupplementation: assessment.calciumSupplementation?.toString() ?? '',
+          vitaminDSupplementation: assessment.vitaminDSupplementation?.toString() ?? '',
+          hrtIndicated: assessment.hrtIndicated,
+          hrtContraindicated: assessment.hrtContraindicated,
+          hrtScheme: assessment.hrtScheme ?? '',
+          estrogenRoute: assessment.estrogenRoute ?? '',
+          estrogenDrug: assessment.estrogenDrug ?? '',
+          progestogenDrug: assessment.progestogenDrug ?? '',
+          hrtStartDate: assessment.hrtStartDate ?? '',
+          diagnosis: assessment.diagnosis ?? '',
+          treatmentPlan: assessment.treatmentPlan ?? '',
+          returnDate: assessment.returnDate ?? '',
+          notes: assessment.notes ?? '',
+        }
+      : {
+          assessmentDate: new Date().toISOString().split('T')[0],
+          menopauseType: 'natural',
+          gsmDiagnosis: false,
+          gsmVaginalDryness: false,
+          gsmDyspareunia: false,
+          gsmRecurrentUTI: false,
+          gsmUrinaryIncontinence: false,
+          hrtIndicated: false,
+          hrtContraindicated: false,
+        },
   });
 
   // Live STRAW: depende da data da menopausa + tipo + data da consulta
+  // OU do padrão menstrual atual (para pré-menopausa)
   const strawResult = classifySTRAW(
     watch('menopauseDate'),
     watch('assessmentDate'),
     watch('menopauseType'),
+    (watch('menstrualPattern') || null) as MenstrualPattern | null,
   );
 
   // Live MRS total
@@ -221,6 +279,9 @@ export default function NewMenopauseAssessmentModal({
       if (data.returnDate) dto.returnDate = data.returnDate;
       if (data.notes) dto.notes = data.notes;
 
+      if (isEdit && assessment) {
+        return updateMenopauseAssessment(patientId, assessment.id, dto);
+      }
       return createMenopauseAssessment(patientId, dto);
     },
     onSuccess: () => {
@@ -239,7 +300,9 @@ export default function NewMenopauseAssessmentModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-semibold text-navy">Nova avaliação de menopausa</h2>
+          <h2 className="text-lg font-semibold text-navy">
+            {isEdit ? 'Editar avaliação de menopausa' : 'Nova avaliação de menopausa'}
+          </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
@@ -311,6 +374,20 @@ export default function NewMenopauseAssessmentModal({
               </Field>
             </div>
 
+            {/* Padrão menstrual — só relevante quando paciente ainda menstrua (sem FMP) */}
+            <Field label="Padrão menstrual atual (se ainda menstrua)">
+              <select {...register('menstrualPattern')} className={inputCn(false)}>
+                <option value="">— não informado —</option>
+                {(Object.entries(MENSTRUAL_PATTERN_LABELS) as [MenstrualPattern, string][])
+                  .filter(([k]) => k !== 'unknown')
+                  .map(([v, l]) => (
+                    <option key={v} value={v}>
+                      {l}
+                    </option>
+                  ))}
+              </select>
+            </Field>
+
             {/* Card STRAW ao vivo */}
             {strawResult ? (
               <div
@@ -337,9 +414,10 @@ export default function NewMenopauseAssessmentModal({
               </div>
             ) : (
               <div className="border border-dashed border-gray-300 rounded-lg p-3 text-sm text-gray-500">
-                Preencha a <strong>data da última menstruação</strong> (ou marque
-                menopausa cirúrgica/induzida) para classificação automática do estágio
-                STRAW+10.
+                Para classificação automática preencha <strong>uma</strong> das opções:
+                <br />· Data da última menstruação (FMP) → pós-menopausa
+                <br />· Tipo de menopausa cirúrgica/induzida → pós-menopausa imediata
+                <br />· Padrão menstrual atual → estágio de transição/reprodutivo
               </div>
             )}
           </Section>
@@ -678,7 +756,7 @@ export default function NewMenopauseAssessmentModal({
               {(isSubmitting || mutation.isPending) && (
                 <Loader2 className="w-4 h-4 animate-spin" />
               )}
-              Salvar avaliação
+              {isEdit ? 'Atualizar avaliação' : 'Salvar avaliação'}
             </button>
           </div>
         </form>

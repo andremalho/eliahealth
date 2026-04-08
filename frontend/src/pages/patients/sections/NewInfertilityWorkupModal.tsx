@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2 } from 'lucide-react';
 import {
   createInfertilityWorkup,
+  updateInfertilityWorkup,
   DEFINITION_LABELS,
   OVULATORY_STATUS_LABELS,
   WHO_GROUP_LABELS,
@@ -11,6 +12,7 @@ import {
   PRESERVATION_LABELS,
   TREATMENT_LABELS,
   type CreateInfertilityWorkupDto,
+  type InfertilityWorkup,
   type InfertilityDefinition,
   type OvulatoryStatus,
   type WHOOvulationGroup,
@@ -78,24 +80,72 @@ Checkbox.displayName = 'Checkbox';
 
 export default function NewInfertilityWorkupModal({
   patientId,
+  workup,
   onClose,
 }: {
   patientId: string;
+  workup?: InfertilityWorkup;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
+  const isEdit = !!workup;
+
+  // Extrai valores aninhados de JSONB para campos planos
+  const reserve = workup?.ovarianReserve as
+    | { amh?: { value_ng_ml?: number }; fsh?: { value?: number }; antralFollicleCount?: { value?: number } }
+    | undefined;
+  const semen = workup?.semenAnalysis as
+    | { concentration_M_ml?: number; progressiveMotility_pct?: number; morphology_pct_kruger?: number }
+    | undefined;
+  const dfi = workup?.dnaFragmentation as { dfi_pct?: number } | undefined;
+  const hsgFindings =
+    workup?.hsg && typeof (workup.hsg as Record<string, unknown>).findings === 'string'
+      ? ((workup.hsg as Record<string, unknown>).findings as string)
+      : '';
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
-    defaultValues: {
-      workupDate: new Date().toISOString().split('T')[0],
-      infertilityDefinition: 'primary',
-      tubalFactor: false,
-      mullerianAnomaly: false,
-      maleFactor: false,
-      maleFertilitySpecialistReferral: false,
-      fertilityPreservation: false,
-      referralToART: false,
-    },
+    defaultValues: workup
+      ? {
+          workupDate: workup.workupDate,
+          infertilityDefinition: workup.infertilityDefinition,
+          durationMonths: workup.durationMonths.toString(),
+          ageAtPresentation: workup.ageAtPresentation.toString(),
+          ovulatoryStatus: workup.ovulatoryStatus ?? '',
+          whoGroupOvulation: workup.whoGroupOvulation ?? '',
+          amhValue: reserve?.amh?.value_ng_ml?.toString() ?? '',
+          fshValue: reserve?.fsh?.value?.toString() ?? '',
+          afcValue: reserve?.antralFollicleCount?.value?.toString() ?? '',
+          tubalFactor: !!workup.tubalFactor,
+          hsgFindings,
+          mullerianAnomaly: workup.mullerianAnomaly,
+          mullerianAnomalyType: workup.mullerianAnomalyType ?? '',
+          maleFactor: !!workup.maleFactor,
+          semenConcentration: semen?.concentration_M_ml?.toString() ?? '',
+          semenProgressiveMotility: semen?.progressiveMotility_pct?.toString() ?? '',
+          semenMorphology: semen?.morphology_pct_kruger?.toString() ?? '',
+          dnaFragmentation: dfi?.dfi_pct?.toString() ?? '',
+          maleFertilitySpecialistReferral: workup.maleFertilitySpecialistReferral,
+          primaryDiagnosis: workup.primaryDiagnosis ?? '',
+          fertilityPreservation: workup.fertilityPreservation,
+          preservationIndication: workup.preservationIndication ?? '',
+          preservationMethod: workup.preservationMethod ?? '',
+          preservationDate: workup.preservationDate ?? '',
+          treatmentPlan: workup.treatmentPlan ?? '',
+          referralToART: workup.referralToART,
+          artClinicName: workup.artClinicName ?? '',
+          notes: workup.notes ?? '',
+          returnDate: workup.returnDate ?? '',
+        }
+      : {
+          workupDate: new Date().toISOString().split('T')[0],
+          infertilityDefinition: 'primary',
+          tubalFactor: false,
+          mullerianAnomaly: false,
+          maleFactor: false,
+          maleFertilitySpecialistReferral: false,
+          fertilityPreservation: false,
+          referralToART: false,
+        },
   });
 
   const fertilityPreservationChecked = watch('fertilityPreservation');
@@ -160,6 +210,9 @@ export default function NewInfertilityWorkupModal({
       if (data.notes) dto.notes = data.notes;
       if (data.returnDate) dto.returnDate = data.returnDate;
 
+      if (isEdit && workup) {
+        return updateInfertilityWorkup(patientId, workup.id, dto);
+      }
       return createInfertilityWorkup(patientId, dto);
     },
     onSuccess: () => {
@@ -178,7 +231,9 @@ export default function NewInfertilityWorkupModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-semibold text-navy">Nova investigação de infertilidade</h2>
+          <h2 className="text-lg font-semibold text-navy">
+            {isEdit ? 'Editar investigação de infertilidade' : 'Nova investigação de infertilidade'}
+          </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
@@ -471,7 +526,7 @@ export default function NewInfertilityWorkupModal({
               {(isSubmitting || mutation.isPending) && (
                 <Loader2 className="w-4 h-4 animate-spin" />
               )}
-              Salvar investigação
+              {isEdit ? 'Atualizar investigação' : 'Salvar investigação'}
             </button>
           </div>
         </form>

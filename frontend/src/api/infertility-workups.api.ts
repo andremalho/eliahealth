@@ -158,6 +158,27 @@ export async function createInfertilityWorkup(
   return data;
 }
 
+export type UpdateInfertilityWorkupDto = Partial<CreateInfertilityWorkupDto>;
+
+export async function updateInfertilityWorkup(
+  patientId: string,
+  id: string,
+  dto: UpdateInfertilityWorkupDto,
+): Promise<InfertilityWorkup> {
+  const { data } = await api.patch(
+    `/patients/${patientId}/infertility-workups/${id}`,
+    dto,
+  );
+  return data;
+}
+
+export async function deleteInfertilityWorkup(
+  patientId: string,
+  id: string,
+): Promise<void> {
+  await api.delete(`/patients/${patientId}/infertility-workups/${id}`);
+}
+
 // ── Labels ──
 
 export const DEFINITION_LABELS: Record<InfertilityDefinition, string> = {

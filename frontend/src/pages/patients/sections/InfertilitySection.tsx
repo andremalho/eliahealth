@@ -9,6 +9,7 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
+  Pencil,
 } from 'lucide-react';
 import {
   fetchInfertilityWorkups,
@@ -28,6 +29,7 @@ function Skeleton({ className = '' }: { className?: string }) {
 
 export default function InfertilitySection({ patientId }: { patientId: string }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<InfertilityWorkup | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -37,6 +39,15 @@ export default function InfertilitySection({ patientId }: { patientId: string })
   });
 
   const items = data?.data ?? [];
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditingItem(null);
+  };
+  const openEdit = (it: InfertilityWorkup) => {
+    setEditingItem(it);
+    setModalOpen(true);
+  };
 
   return (
     <div>
@@ -76,6 +87,7 @@ export default function InfertilitySection({ patientId }: { patientId: string })
               item={it}
               expanded={expandedId === it.id}
               onToggle={() => setExpandedId(expandedId === it.id ? null : it.id)}
+              onEdit={() => openEdit(it)}
             />
           ))}
         </div>
@@ -84,7 +96,8 @@ export default function InfertilitySection({ patientId }: { patientId: string })
       {modalOpen && (
         <NewInfertilityWorkupModal
           patientId={patientId}
-          onClose={() => setModalOpen(false)}
+          workup={editingItem ?? undefined}
+          onClose={closeModal}
         />
       )}
     </div>
@@ -95,10 +108,12 @@ function Card({
   item: c,
   expanded,
   onToggle,
+  onEdit,
 }: {
   item: InfertilityWorkup;
   expanded: boolean;
   onToggle: () => void;
+  onEdit: () => void;
 }) {
   const alerts = c.alerts ?? [];
   const urgentCount = alerts.filter((a) => a.severity === 'urgent').length;
@@ -106,46 +121,48 @@ function Card({
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden hover:border-lilac/50 transition">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition text-left"
-      >
-        <div className="w-10 h-10 rounded-lg bg-lilac/10 text-lilac flex items-center justify-center shrink-0">
-          <Calendar className="w-5 h-5" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-gray-800">{formatDate(c.workupDate)}</span>
-            <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
-              {DEFINITION_LABELS[c.infertilityDefinition]}
-            </span>
-            <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
-              {c.ageAtPresentation} anos · {c.durationMonths} meses
-            </span>
+      <div className="flex items-center gap-2 p-4 hover:bg-gray-50 transition">
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-4 flex-1 text-left min-w-0"
+        >
+          <div className="w-10 h-10 rounded-lg bg-lilac/10 text-lilac flex items-center justify-center shrink-0">
+            <Calendar className="w-5 h-5" />
           </div>
-          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            {c.primaryDiagnosis && (
-              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-purple-50 text-purple-700 rounded">
-                {DIAGNOSIS_LABELS[c.primaryDiagnosis]}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium text-gray-800">{formatDate(c.workupDate)}</span>
+              <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                {DEFINITION_LABELS[c.infertilityDefinition]}
               </span>
-            )}
-            {c.treatmentPlan && (
-              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 rounded">
-                {TREATMENT_LABELS[c.treatmentPlan]}
+              <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                {c.ageAtPresentation} anos · {c.durationMonths} meses
               </span>
-            )}
-            {c.fertilityPreservation && (
-              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 rounded">
-                Preservação
-              </span>
-            )}
-            {c.referralToART && (
-              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-pink-50 text-pink-700 rounded">
-                → TRA
-              </span>
-            )}
+            </div>
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              {c.primaryDiagnosis && (
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-purple-50 text-purple-700 rounded">
+                  {DIAGNOSIS_LABELS[c.primaryDiagnosis]}
+                </span>
+              )}
+              {c.treatmentPlan && (
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 rounded">
+                  {TREATMENT_LABELS[c.treatmentPlan]}
+                </span>
+              )}
+              {c.fertilityPreservation && (
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 rounded">
+                  Preservação
+                </span>
+              )}
+              {c.referralToART && (
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-pink-50 text-pink-700 rounded">
+                  → TRA
+                </span>
+              )}
+            </div>
           </div>
-        </div>
+        </button>
         <div className="flex items-center gap-2 shrink-0">
           {urgentCount > 0 && (
             <span className="flex items-center gap-1 px-2 py-1 bg-red-50 text-red-600 text-xs font-semibold rounded">
@@ -159,13 +176,21 @@ function Card({
               {warningCount}
             </span>
           )}
-          {expanded ? (
-            <ChevronUp className="w-5 h-5 text-gray-400" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-400" />
-          )}
+          <button
+            onClick={onEdit}
+            className="p-2 text-gray-400 hover:text-lilac hover:bg-lilac/5 rounded transition"
+            title="Editar"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onToggle}
+            className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
+          >
+            {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </button>
         </div>
-      </button>
+      </div>
 
       {expanded && (
         <div className="px-4 pb-4 pt-2 border-t bg-gray-50/50 space-y-4">

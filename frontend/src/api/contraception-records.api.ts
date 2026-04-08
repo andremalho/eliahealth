@@ -172,6 +172,27 @@ export async function createContraceptionRecord(
   return data;
 }
 
+export type UpdateContraceptionRecordDto = Partial<CreateContraceptionRecordDto>;
+
+export async function updateContraceptionRecord(
+  patientId: string,
+  id: string,
+  dto: UpdateContraceptionRecordDto,
+): Promise<ContraceptionRecord> {
+  const { data } = await api.patch(
+    `/patients/${patientId}/contraception-records/${id}`,
+    dto,
+  );
+  return data;
+}
+
+export async function deleteContraceptionRecord(
+  patientId: string,
+  id: string,
+): Promise<void> {
+  await api.delete(`/patients/${patientId}/contraception-records/${id}`);
+}
+
 // ── Labels ──
 
 export const METHOD_OPTIONS: { value: ContraceptiveMethod; label: string; group: string }[] = [

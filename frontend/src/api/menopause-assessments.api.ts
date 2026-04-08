@@ -215,6 +215,27 @@ export async function createMenopauseAssessment(
   return data;
 }
 
+export type UpdateMenopauseAssessmentDto = Partial<CreateMenopauseAssessmentDto>;
+
+export async function updateMenopauseAssessment(
+  patientId: string,
+  id: string,
+  dto: UpdateMenopauseAssessmentDto,
+): Promise<MenopauseAssessment> {
+  const { data } = await api.patch(
+    `/patients/${patientId}/menopause-assessments/${id}`,
+    dto,
+  );
+  return data;
+}
+
+export async function deleteMenopauseAssessment(
+  patientId: string,
+  id: string,
+): Promise<void> {
+  await api.delete(`/patients/${patientId}/menopause-assessments/${id}`);
+}
+
 // ── Labels ──
 
 export const STRAW_LABELS: Record<STRAWStage, string> = {
@@ -366,59 +387,99 @@ export const CARDIO_RISK_BADGE_COLORS: Record<CardioRisk, string> = {
   high: 'bg-red-100 text-red-800 border-red-200',
 };
 
+// ── Padrão menstrual (input para STRAW pré-menopausa) ──
+export type MenstrualPattern =
+  | 'regular' // ciclos regulares (-3 reproductive_late_b)
+  | 'variation_7days' // variação ≥7 dias entre ciclos consecutivos (-2)
+  | 'amenorrhea_60days' // amenorreia ≥60 dias (-1)
+  | 'unknown';
+
+export const MENSTRUAL_PATTERN_LABELS: Record<MenstrualPattern, string> = {
+  regular: 'Ciclos regulares',
+  variation_7days: 'Variação ≥7 dias entre ciclos consecutivos',
+  amenorrhea_60days: 'Pelo menos um intervalo de amenorreia ≥60 dias',
+  unknown: 'Não informado',
+};
+
 // ── Auto-classificação STRAW+10 ──
-// Stages of Reproductive Aging Workshop (NAMS).
-// Pré-menopausa (-5 a -1) requer dados de padrão menstrual que NÃO temos no
-// form atual. Pós-menopausa é calculável a partir do tempo desde a FMP
-// (Final Menstrual Period = data da última menstruação espontânea).
+// Pós-menopausa: calculável pelo tempo desde a FMP.
+// Pré-menopausa (-3 a -1): calculável a partir do padrão menstrual.
 export function classifySTRAW(
   menopauseDate: string | null | undefined,
   assessmentDate: string | null | undefined,
   menopauseType: MenopauseType | null | undefined,
-): { stage: STRAWStage; reason: string; method: 'computed' | 'induced' } | null {
-  // Menopausa induzida (cirúrgica/quimio/radio/POI) entra em pós-menopausa
-  // imediatamente, idealmente com data da intervenção
+  menstrualPattern?: MenstrualPattern | null,
+): {
+  stage: STRAWStage;
+  reason: string;
+  method: 'computed' | 'induced' | 'pattern';
+} | null {
   const isInduced =
     menopauseType === 'surgical' ||
     menopauseType === 'chemotherapy_induced' ||
     menopauseType === 'radiation_induced' ||
     menopauseType === 'premature_ovarian_insufficiency';
 
-  if (!menopauseDate) {
-    if (isInduced) {
+  // Caso 1: tem data da FMP → calcula pós-menopausa pelo tempo
+  if (menopauseDate && assessmentDate) {
+    const fmp = new Date(menopauseDate);
+    const today = new Date(assessmentDate);
+    const ms = today.getTime() - fmp.getTime();
+    if (!isNaN(ms) && ms >= 0) {
+      const years = ms / (365.25 * 24 * 3600 * 1000);
+      const months = Math.round(years * 12);
+      const reasonPrefix = isInduced ? 'Induzida · ' : '';
+      const elapsedLabel = years < 1 ? `${months} meses` : `${years.toFixed(1)} anos`;
+
+      let stage: STRAWStage;
+      if (years < 1) stage = 'postmenopause_early_1a';
+      else if (years < 2) stage = 'postmenopause_early_1b';
+      else if (years < 8) stage = 'postmenopause_early_1c';
+      else stage = 'postmenopause_late';
+
       return {
-        stage: 'postmenopause_early_1a',
-        reason: 'Menopausa induzida — preencha a data para subdividir o estágio',
-        method: 'induced',
+        stage,
+        reason: `${reasonPrefix}${elapsedLabel} desde a última menstruação`,
+        method: isInduced ? 'induced' : 'computed',
       };
     }
-    return null;
   }
 
-  if (!assessmentDate) return null;
+  // Caso 2: induzida sem data → pós-menopausa imediata
+  if (isInduced) {
+    return {
+      stage: 'postmenopause_early_1a',
+      reason: 'Menopausa induzida — preencha a data para subdividir o estágio',
+      method: 'induced',
+    };
+  }
 
-  const fmp = new Date(menopauseDate);
-  const today = new Date(assessmentDate);
-  const ms = today.getTime() - fmp.getTime();
-  if (isNaN(ms) || ms < 0) return null;
+  // Caso 3: pré-menopausa → padrão menstrual
+  if (menstrualPattern && menstrualPattern !== 'unknown') {
+    if (menstrualPattern === 'amenorrhea_60days') {
+      return {
+        stage: 'menopausal_transition_late',
+        reason: 'Amenorreia ≥60 dias — transição menopáusica tardia',
+        method: 'pattern',
+      };
+    }
+    if (menstrualPattern === 'variation_7days') {
+      return {
+        stage: 'menopausal_transition_early',
+        reason: 'Variação ≥7 dias entre ciclos — transição menopáusica precoce',
+        method: 'pattern',
+      };
+    }
+    if (menstrualPattern === 'regular') {
+      return {
+        stage: 'reproductive_late_b',
+        reason: 'Ciclos regulares — fase reprodutiva tardia',
+        method: 'pattern',
+      };
+    }
+  }
 
-  const years = ms / (365.25 * 24 * 3600 * 1000);
-  const months = Math.round(years * 12);
-  const reasonPrefix = isInduced ? 'Induzida · ' : '';
-  const elapsedLabel =
-    years < 1 ? `${months} meses` : `${years.toFixed(1)} anos`;
-
-  let stage: STRAWStage;
-  if (years < 1) stage = 'postmenopause_early_1a';
-  else if (years < 2) stage = 'postmenopause_early_1b';
-  else if (years < 8) stage = 'postmenopause_early_1c';
-  else stage = 'postmenopause_late';
-
-  return {
-    stage,
-    reason: `${reasonPrefix}${elapsedLabel} desde a última menstruação`,
-    method: isInduced ? 'induced' : 'computed',
-  };
+  return null;
 }
 
 export const STRAW_DESCRIPTIONS: Record<STRAWStage, string> = {

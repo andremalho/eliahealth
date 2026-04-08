@@ -8,17 +8,24 @@ import {
   MENOPAUSE_TYPE_LABELS,
   HOT_FLASH_LABELS,
   CARDIO_RISK_LABELS,
+  CARDIO_RISK_DESCRIPTIONS,
+  CARDIO_RISK_BADGE_COLORS,
   HRT_SCHEME_LABELS,
   ESTROGEN_ROUTE_LABELS,
+  OSTEOPOROSIS_LABELS,
+  OSTEOPOROSIS_DESCRIPTIONS,
+  OSTEOPOROSIS_BADGE_COLORS,
   classifyMRS,
+  classifyOsteoporosis,
+  classifyCardioRisk,
   type CreateMenopauseAssessmentDto,
   type STRAWStage,
   type MenopauseType,
   type HotFlashIntensity,
-  type CardioRisk,
   type HRTScheme,
   type EstrogenRoute,
 } from '../../../api/menopause-assessments.api';
+import { InfoTooltip } from '../../../components/forms/InfoTooltip';
 import { cn } from '../../../utils/cn';
 
 interface FormData {
@@ -62,7 +69,6 @@ interface FormData {
 
   // CV
   framinghamScore: string;
-  cardioRiskCategory: CardioRisk | '';
 
   // Vit D / Cálcio
   vitaminDLevel: string;
@@ -139,6 +145,16 @@ export default function NewMenopauseAssessmentModal({
   const mrsTotal = mrsValues.reduce((a, b) => a + b, 0);
   const mrsClass = mrsTotal > 0 ? classifyMRS(mrsTotal) : null;
 
+  // Live osteoporose: usa o menor T-score entre os 3 sítios
+  const osteoResult = classifyOsteoporosis(
+    parseFloat(watch('dexaLumbarTScore') || '') || null,
+    parseFloat(watch('dexaFemoralNeckTScore') || '') || null,
+    parseFloat(watch('dexaTotalHipTScore') || '') || null,
+  );
+
+  // Live risco CV pelo Framingham
+  const cardioRiskCalc = classifyCardioRisk(parseFloat(watch('framinghamScore') || '') || null);
+
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
       const dto: CreateMenopauseAssessmentDto = {
@@ -176,7 +192,8 @@ export default function NewMenopauseAssessmentModal({
       if (data.fraxScore10yrHip) dto.fraxScore10yrHip = Number(data.fraxScore10yrHip);
 
       if (data.framinghamScore) dto.framinghamScore = Number(data.framinghamScore);
-      if (data.cardioRiskCategory) dto.cardioRiskCategory = data.cardioRiskCategory;
+      // Categoria de risco CV vem do cálculo automático (Framingham)
+      if (cardioRiskCalc) dto.cardioRiskCategory = cardioRiskCalc;
 
       if (data.vitaminDLevel) dto.vitaminDLevel = Number(data.vitaminDLevel);
       if (data.calciumSupplementation) dto.calciumSupplementation = Number(data.calciumSupplementation);
@@ -354,7 +371,25 @@ export default function NewMenopauseAssessmentModal({
           </Section>
 
           {/* Osso */}
-          <Section title="Saúde óssea — DEXA / FRAX">
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                Saúde óssea — DEXA / FRAX
+                <InfoTooltip title="Classificação OMS de massa óssea">
+                  Avaliação pelo MENOR T-score entre os sítios medidos:
+                  <br />
+                  <br />
+                  <strong>Normal</strong>: T-score &gt; −1<br />
+                  <strong>Osteopenia</strong>: −2.5 &lt; T-score ≤ −1<br />
+                  <strong>Osteoporose</strong>: T-score ≤ −2.5<br />
+                  <strong>Osteoporose grave</strong>: T-score ≤ −2.5 + fratura por fragilidade
+                  <br />
+                  <br />
+                  Cálculo automático abaixo conforme você preenche os T-scores.
+                </InfoTooltip>
+              </span>
+            }
+          >
             <Field label="Data DEXA">
               <input {...register('dexaDate')} type="date" className={inputCn(false)} />
             </Field>
@@ -385,6 +420,32 @@ export default function NewMenopauseAssessmentModal({
                 />
               </Field>
             </div>
+
+            {/* Card de classificação ao vivo */}
+            {osteoResult && (
+              <div
+                className={cn(
+                  'border rounded-lg p-3 space-y-1',
+                  OSTEOPOROSIS_BADGE_COLORS[osteoResult.category],
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase font-semibold opacity-75">
+                      Menor T-score: {osteoResult.lowestSite} {osteoResult.lowestValue.toFixed(1)}
+                    </p>
+                    <p className="text-base font-bold mt-0.5">
+                      {OSTEOPOROSIS_LABELS[osteoResult.category]}
+                    </p>
+                  </div>
+                  <span className="text-xs px-2 py-1 bg-white/60 rounded font-semibold whitespace-nowrap">
+                    Calculado
+                  </span>
+                </div>
+                <p className="text-xs">{OSTEOPOROSIS_DESCRIPTIONS[osteoResult.category]}</p>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <Field label="FRAX fratura major (%)">
                 <input
@@ -406,27 +467,52 @@ export default function NewMenopauseAssessmentModal({
           </Section>
 
           {/* Risco CV */}
-          <Section title="Risco cardiovascular">
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Framingham (%)">
-                <input
-                  {...register('framinghamScore')}
-                  type="number"
-                  step="0.1"
-                  className={inputCn(false)}
-                />
-              </Field>
-              <Field label="Categoria">
-                <select {...register('cardioRiskCategory')} className={inputCn(false)}>
-                  <option value="">—</option>
-                  {Object.entries(CARDIO_RISK_LABELS).map(([v, l]) => (
-                    <option key={v} value={v}>
-                      {l}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            </div>
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                Risco cardiovascular
+                <InfoTooltip title="Estratificação de risco CV (ACC/AHA)">
+                  Classificação pelo escore Framingham 10-year:
+                  <br />
+                  <br />
+                  <strong>Baixo</strong>: &lt;10%<br />
+                  <strong>Intermediário</strong>: 10-19%<br />
+                  <strong>Alto</strong>: ≥20%
+                  <br />
+                  <br />
+                  Cálculo automático abaixo conforme você preenche o Framingham.
+                </InfoTooltip>
+              </span>
+            }
+          >
+            <Field label="Framingham 10 anos (%)">
+              <input
+                {...register('framinghamScore')}
+                type="number"
+                step="0.1"
+                placeholder="Calcular separadamente"
+                className={inputCn(false)}
+              />
+            </Field>
+
+            {cardioRiskCalc && (
+              <div
+                className={cn(
+                  'border rounded-lg p-3 space-y-1',
+                  CARDIO_RISK_BADGE_COLORS[cardioRiskCalc],
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-base font-bold">
+                    Risco {CARDIO_RISK_LABELS[cardioRiskCalc]}
+                  </p>
+                  <span className="text-xs px-2 py-1 bg-white/60 rounded font-semibold whitespace-nowrap">
+                    Calculado
+                  </span>
+                </div>
+                <p className="text-xs">{CARDIO_RISK_DESCRIPTIONS[cardioRiskCalc]}</p>
+              </div>
+            )}
           </Section>
 
           {/* Vit D / Cálcio */}
@@ -545,7 +631,7 @@ export default function NewMenopauseAssessmentModal({
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-semibold text-navy uppercase tracking-wide">{title}</h3>
@@ -559,7 +645,7 @@ function Field({
   error,
   children,
 }: {
-  label: string;
+  label: React.ReactNode;
   error?: string;
   children: React.ReactNode;
 }) {

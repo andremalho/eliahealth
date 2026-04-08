@@ -285,3 +285,83 @@ export function classifyMRS(score: number): { label: string; color: string } {
   if (score <= 16) return { label: 'Severo', color: 'bg-orange-100 text-orange-700' };
   return { label: 'Muito severo', color: 'bg-red-100 text-red-700' };
 }
+
+// ── Auto-classificação de osteoporose pela DEXA ──
+// Critério OMS/NAMS: usa o MENOR T-score entre os sítios.
+// Normal: > -1
+// Osteopenia: -2.5 < T ≤ -1
+// Osteoporose: T ≤ -2.5
+// Osteoporose grave: T ≤ -2.5 + fratura por fragilidade (não capturado no form)
+export function classifyOsteoporosis(
+  lumbar: number | null | undefined,
+  femoralNeck: number | null | undefined,
+  totalHip: number | null | undefined,
+): {
+  category: OsteoporosisClassification;
+  lowestSite: string;
+  lowestValue: number;
+} | null {
+  const sites: { name: string; value: number }[] = [];
+  if (lumbar !== null && lumbar !== undefined && !isNaN(Number(lumbar))) {
+    sites.push({ name: 'Lombar', value: Number(lumbar) });
+  }
+  if (femoralNeck !== null && femoralNeck !== undefined && !isNaN(Number(femoralNeck))) {
+    sites.push({ name: 'Colo do fêmur', value: Number(femoralNeck) });
+  }
+  if (totalHip !== null && totalHip !== undefined && !isNaN(Number(totalHip))) {
+    sites.push({ name: 'Quadril total', value: Number(totalHip) });
+  }
+  if (sites.length === 0) return null;
+
+  const lowest = sites.reduce((acc, s) => (s.value < acc.value ? s : acc));
+  let category: OsteoporosisClassification;
+  if (lowest.value > -1) category = 'normal';
+  else if (lowest.value > -2.5) category = 'osteopenia';
+  else category = 'osteoporosis';
+
+  return { category, lowestSite: lowest.name, lowestValue: lowest.value };
+}
+
+export const OSTEOPOROSIS_DESCRIPTIONS: Record<OsteoporosisClassification, string> = {
+  normal: 'T-score > −1. Massa óssea dentro da normalidade.',
+  osteopenia:
+    'T-score entre −1 e −2.5. Baixa massa óssea — otimizar cálcio/vitamina D, exercício resistido. Repetir DEXA em 2 anos.',
+  osteoporosis:
+    'T-score ≤ −2.5. Indicar tratamento específico (bisfosfonato, denosumabe ou similar).',
+  severe_osteoporosis:
+    'T-score ≤ −2.5 com fratura por fragilidade. Considerar teriparatida; referência à reumatologia.',
+};
+
+export const OSTEOPOROSIS_BADGE_COLORS: Record<OsteoporosisClassification, string> = {
+  normal: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  osteopenia: 'bg-amber-100 text-amber-800 border-amber-200',
+  osteoporosis: 'bg-red-100 text-red-800 border-red-200',
+  severe_osteoporosis: 'bg-red-100 text-red-800 border-red-200',
+};
+
+// ── Auto-classificação de risco CV pelo Framingham 10-year ──
+// Critério ACC/AHA: <10% baixo, 10-19% intermediário, ≥20% alto
+export function classifyCardioRisk(
+  framinghamPct: number | null | undefined,
+): CardioRisk | null {
+  if (framinghamPct === null || framinghamPct === undefined || isNaN(Number(framinghamPct))) {
+    return null;
+  }
+  const v = Number(framinghamPct);
+  if (v < 10) return 'low';
+  if (v < 20) return 'intermediate';
+  return 'high';
+}
+
+export const CARDIO_RISK_DESCRIPTIONS: Record<CardioRisk, string> = {
+  low: 'Risco <10% em 10 anos. Manejo padrão de prevenção primária.',
+  intermediate:
+    'Risco 10-19% em 10 anos. Considerar avaliação adicional (escore de cálcio coronário, lipoproteína(a), PCR-us).',
+  high: 'Risco ≥20% em 10 anos. Tratamento intensivo de fatores modificáveis. Estatina, controle pressórico e glicêmico rigoroso.',
+};
+
+export const CARDIO_RISK_BADGE_COLORS: Record<CardioRisk, string> = {
+  low: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  intermediate: 'bg-amber-100 text-amber-800 border-amber-200',
+  high: 'bg-red-100 text-red-800 border-red-200',
+};

@@ -17,7 +17,6 @@ import {
   type CreateContraceptionRecordDto,
   type ContraceptiveMethod,
   type ReproductiveDesire,
-  type WHOMECCategory,
   type SmokingStatus,
 } from '../../../api/contraception-records.api';
 import { InfoTooltip } from '../../../components/forms/InfoTooltip';
@@ -32,8 +31,6 @@ interface FormData {
 
   desireForPregnancy: ReproductiveDesire;
   breastfeeding: boolean;
-
-  whomecCategory: WHOMECCategory | '';
 
   // Fatores de risco
   smokingStatus: SmokingStatus | '';
@@ -135,9 +132,8 @@ export default function NewContraceptionRecordModal({
     breastfeeding: !!watch('breastfeeding'),
   };
 
-  // Calcula contra o método prescrito (preferido) ou o atual
-  const targetMethod = methodPrescribedKey || currentMethodKey;
-  const mecResult = computeWHOMEC(targetMethod, watchedRisks);
+  // Cálculo MEC sempre contra o método sendo prescrito
+  const mecResult = computeWHOMEC(methodPrescribedKey, watchedRisks);
 
   // DIU/implante: mostrar campos se o método atual OU prescrito for DIU/implante
   const showIudFields = isIud(currentMethodKey || 'none') || isIud(methodPrescribedKey || 'none');
@@ -162,10 +158,8 @@ export default function NewContraceptionRecordModal({
       if (data.currentMethodDetails) dto.currentMethodDetails = data.currentMethodDetails;
 
       dto.breastfeeding = data.breastfeeding;
-      // Override manual tem prioridade; senão usa o cálculo automático
-      if (data.whomecCategory) {
-        dto.whomecCategory = data.whomecCategory;
-      } else if (mecResult) {
+      // Categoria sempre vem do cálculo automático (sem override)
+      if (mecResult) {
         dto.whomecCategory = mecResult.category;
       }
       if (data.smokingStatus) dto.smokingStatus = data.smokingStatus;
@@ -256,9 +250,126 @@ export default function NewContraceptionRecordModal({
             <Checkbox label="Amamentando" {...register('breastfeeding')} />
           </Section>
 
-          {/* Método atual */}
-          <Section title="Método atual">
-            <Field label="Método em uso">
+          {/* 1. Método a prescrever + fatores de risco + cálculo MEC ao vivo */}
+          <Section
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                Método e elegibilidade OMS MEC
+                <InfoTooltip title="OMS MEC — Medical Eligibility Criteria 2015">
+                  Critério da OMS para indicar contracepção com base em condições
+                  clínicas da paciente. Cada combinação método × condição recebe uma
+                  categoria:
+                  <br />
+                  <br />
+                  <strong>Cat 1</strong> — Sem restrição. Uso livre.<br />
+                  <strong>Cat 2</strong> — Vantagens superam riscos. Uso geralmente seguro.<br />
+                  <strong>Cat 3</strong> — Riscos superam vantagens. Não recomendado.<br />
+                  <strong>Cat 4</strong> — Risco inaceitável. Contraindicação absoluta.
+                  <br />
+                  <br />
+                  Selecione o método candidato e marque os fatores de risco da
+                  paciente — a categoria é calculada automaticamente. Se a categoria
+                  for 1 ou 2, este será o método prescrito.
+                </InfoTooltip>
+              </span>
+            }
+          >
+            <Field label="Método a prescrever *">
+              <select {...register('methodPrescribedKey')} className={inputCn(false)}>
+                <option value="">— selecione um método —</option>
+                {Object.entries(grouped).map(([groupName, opts]) => (
+                  <optgroup key={groupName} label={groupName}>
+                    {opts.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </Field>
+
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                Fatores de risco da paciente
+              </p>
+              <Field label="Tabagismo">
+                <select {...register('smokingStatus')} className={inputCn(false)}>
+                  <option value="">—</option>
+                  {Object.entries(SMOKING_LABELS).map(([v, l]) => (
+                    <option key={v} value={v}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <Checkbox label="Tabagista ≥35 anos" {...register('smokingAge35Plus')} />
+                <Checkbox label="História de TEV" {...register('historyOfVTE')} />
+                <Checkbox label="Trombofilia" {...register('thrombophilia')} />
+                <Checkbox label="Enxaqueca com aura" {...register('migraineWithAura')} />
+                <Checkbox label="HAS não controlada" {...register('uncontrolledHypertension')} />
+                <Checkbox label="Diabetes ≥15 anos" {...register('diabetesWith15yearsPlus')} />
+                <Checkbox label="Câncer de mama prévio" {...register('breastCancerHistory')} />
+                <Checkbox label="Doença hepática" {...register('liverDisease')} />
+                <Checkbox label="Doença cardiovascular" {...register('cardiovascularDisease')} />
+                <Checkbox label="AVC prévio" {...register('stroke')} />
+              </div>
+              {thrombophiliaChecked && (
+                <div className="mt-2">
+                  <Field label="Detalhes da trombofilia">
+                    <input {...register('thrombophiliaDetails')} className={inputCn(false)} />
+                  </Field>
+                </div>
+              )}
+            </div>
+
+            {/* Card de elegibilidade ao vivo */}
+            {!methodPrescribedKey || methodPrescribedKey === 'none' ? (
+              <p className="text-sm text-gray-400 italic">
+                Selecione um método para calcular a elegibilidade.
+              </p>
+            ) : mecResult ? (
+              <div
+                className={cn(
+                  'border rounded-lg p-3 space-y-2',
+                  WHOMEC_BADGE_COLORS[mecResult.category],
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs uppercase font-semibold opacity-75">
+                      {METHOD_LABELS[methodPrescribedKey]}
+                    </p>
+                    <p className="text-base font-bold mt-0.5">
+                      {WHOMEC_LABELS[mecResult.category]}
+                    </p>
+                  </div>
+                  <span className="text-xs px-2 py-1 bg-white/60 rounded font-semibold whitespace-nowrap">
+                    Calculado
+                  </span>
+                </div>
+                <p className="text-xs">{WHOMEC_DESCRIPTIONS[mecResult.category]}</p>
+                {mecResult.reasons.length > 0 && (
+                  <div className="pt-2 border-t border-current/20">
+                    <p className="text-xs font-semibold mb-1">Razões:</p>
+                    <ul className="text-xs space-y-0.5">
+                      {mecResult.reasons.map((r, i) => (
+                        <li key={i}>
+                          • {r.reason}{' '}
+                          <span className="opacity-60">({r.cat.toUpperCase()})</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </Section>
+
+          {/* 2. Método atual (histórico) */}
+          <Section title="Método atual (histórico)">
+            <Field label="Método em uso hoje">
               <select {...register('currentMethodKey')} className={inputCn(false)}>
                 {Object.entries(grouped).map(([groupName, opts]) => (
                   <optgroup key={groupName} label={groupName}>
@@ -287,114 +398,6 @@ export default function NewContraceptionRecordModal({
                 />
               </Field>
             </div>
-          </Section>
-
-          {/* Fatores de risco */}
-          <Section title="Fatores de risco">
-            <Field label="Tabagismo">
-              <select {...register('smokingStatus')} className={inputCn(false)}>
-                <option value="">—</option>
-                {Object.entries(SMOKING_LABELS).map(([v, l]) => (
-                  <option key={v} value={v}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <div className="grid grid-cols-2 gap-2">
-              <Checkbox label="Tabagista ≥35 anos" {...register('smokingAge35Plus')} />
-              <Checkbox label="História de TEV" {...register('historyOfVTE')} />
-              <Checkbox label="Trombofilia" {...register('thrombophilia')} />
-              <Checkbox label="Enxaqueca com aura" {...register('migraineWithAura')} />
-              <Checkbox label="HAS não controlada" {...register('uncontrolledHypertension')} />
-              <Checkbox label="Diabetes ≥15 anos" {...register('diabetesWith15yearsPlus')} />
-              <Checkbox label="Câncer de mama prévio" {...register('breastCancerHistory')} />
-              <Checkbox label="Doença hepática" {...register('liverDisease')} />
-              <Checkbox label="Doença cardiovascular" {...register('cardiovascularDisease')} />
-              <Checkbox label="AVC prévio" {...register('stroke')} />
-            </div>
-            {thrombophiliaChecked && (
-              <Field label="Detalhes da trombofilia">
-                <input {...register('thrombophiliaDetails')} className={inputCn(false)} />
-              </Field>
-            )}
-          </Section>
-
-          {/* Cálculo OMS MEC ao vivo */}
-          <Section
-            title={
-              <span className="inline-flex items-center gap-1.5">
-                Elegibilidade OMS MEC
-                <InfoTooltip title="OMS MEC — Medical Eligibility Criteria 2015">
-                  Critério da OMS para indicar contracepção com base em condições
-                  clínicas da paciente. Cada combinação método × condição recebe uma
-                  categoria:
-                  <br />
-                  <br />
-                  <strong>Cat 1</strong> — Sem restrição. Uso livre.<br />
-                  <strong>Cat 2</strong> — Vantagens superam riscos. Uso geralmente seguro.<br />
-                  <strong>Cat 3</strong> — Riscos superam vantagens. Não recomendado.<br />
-                  <strong>Cat 4</strong> — Risco inaceitável. Contraindicação absoluta.
-                  <br />
-                  <br />
-                  O cálculo abaixo é feito automaticamente a partir do método selecionado
-                  (prescrito ou atual) e dos fatores de risco marcados. Você pode
-                  sobrescrever manualmente se necessário.
-                </InfoTooltip>
-              </span>
-            }
-          >
-            {!targetMethod || targetMethod === 'none' ? (
-              <p className="text-sm text-gray-400 italic">
-                Selecione um método (atual ou prescrito) para calcular a elegibilidade.
-              </p>
-            ) : mecResult ? (
-              <div
-                className={cn(
-                  'border rounded-lg p-3 space-y-2',
-                  WHOMEC_BADGE_COLORS[mecResult.category],
-                )}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs uppercase font-semibold opacity-75">
-                      {METHOD_LABELS[targetMethod]}
-                    </p>
-                    <p className="text-base font-bold mt-0.5">
-                      {WHOMEC_LABELS[mecResult.category]}
-                    </p>
-                  </div>
-                  <span className="text-xs px-2 py-1 bg-white/60 rounded font-semibold whitespace-nowrap">
-                    Calculado
-                  </span>
-                </div>
-                <p className="text-xs">{WHOMEC_DESCRIPTIONS[mecResult.category]}</p>
-                {mecResult.reasons.length > 0 && (
-                  <div className="pt-2 border-t border-current/20">
-                    <p className="text-xs font-semibold mb-1">Razões:</p>
-                    <ul className="text-xs space-y-0.5">
-                      {mecResult.reasons.map((r, i) => (
-                        <li key={i}>
-                          • {r.reason}{' '}
-                          <span className="opacity-60">({r.cat.toUpperCase()})</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            ) : null}
-
-            <Field label="Sobrescrever categoria (opcional)">
-              <select {...register('whomecCategory')} className={inputCn(false)}>
-                <option value="">— usar cálculo automático —</option>
-                {Object.entries(WHOMEC_LABELS).map(([v, l]) => (
-                  <option key={v} value={v}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            </Field>
           </Section>
 
           {/* DIU — campos condicionais */}
@@ -473,22 +476,24 @@ export default function NewContraceptionRecordModal({
             )}
           </Section>
 
-          {/* Conduta */}
+          {/* Conduta — método já foi escolhido na seção de elegibilidade */}
           <Section title="Conduta">
-            <Field label="Método prescrito">
-              <select {...register('methodPrescribedKey')} className={inputCn(false)}>
-                <option value="">— sem prescrição nova —</option>
-                {Object.entries(grouped).map(([groupName, opts]) => (
-                  <optgroup key={groupName} label={groupName}>
-                    {opts.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-            </Field>
+            {methodPrescribedKey && methodPrescribedKey !== 'none' && mecResult && (
+              <div
+                className={cn(
+                  'border rounded-lg px-3 py-2.5 text-sm',
+                  WHOMEC_BADGE_COLORS[mecResult.category],
+                )}
+              >
+                <p className="text-xs uppercase font-semibold opacity-75">Método prescrito</p>
+                <p className="font-bold mt-0.5">
+                  {METHOD_LABELS[methodPrescribedKey]}{' '}
+                  <span className="font-normal opacity-75">
+                    · {WHOMEC_LABELS[mecResult.category]}
+                  </span>
+                </p>
+              </div>
+            )}
             <Field label="Detalhes da prescrição">
               <input
                 {...register('methodPrescribedDetails')}

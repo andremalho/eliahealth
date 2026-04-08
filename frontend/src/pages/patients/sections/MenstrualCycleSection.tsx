@@ -19,6 +19,8 @@ import {
   type MenstrualCycleAssessment,
   type MenstrualCycleAlert,
 } from '../../../api/menstrual-cycle-assessments.api';
+import { isImage, isPdf, resolveUploadUrl } from '../../../api/uploads.api';
+import { FileText, Paperclip } from 'lucide-react';
 import { cn } from '../../../utils/cn';
 import { formatDate } from '../../../utils/formatters';
 import NewMenstrualCycleAssessmentModal from './NewMenstrualCycleAssessmentModal';
@@ -263,6 +265,23 @@ function Card({
                         <span className="text-gray-400">Conduta: </span>
                         {h.conduct}
                       </p>
+                    )}
+                    {h.attachmentUrl && (
+                      <a
+                        href={resolveUploadUrl(h.attachmentUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 mt-2 px-2 py-1 bg-lilac/10 text-lilac rounded hover:bg-lilac/20 transition"
+                      >
+                        {isImage(h.attachmentMimeType) ? (
+                          <Paperclip className="w-3 h-3" />
+                        ) : isPdf(h.attachmentMimeType) ? (
+                          <FileText className="w-3 h-3" />
+                        ) : (
+                          <Paperclip className="w-3 h-3" />
+                        )}
+                        {h.attachmentName ?? 'arquivo'}
+                      </a>
                     )}
                   </div>
                 ))}

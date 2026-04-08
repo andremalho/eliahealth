@@ -1,7 +1,7 @@
 import { forwardRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Loader2, Plus, Trash2 } from 'lucide-react';
+import { X, Loader2, Plus, Trash2, Paperclip, FileText } from 'lucide-react';
 import {
   createMenstrualCycleAssessment,
   updateMenstrualCycleAssessment,
@@ -15,6 +15,16 @@ import {
   type EndometriosisStage,
   type HysteroscopyEntry,
 } from '../../../api/menstrual-cycle-assessments.api';
+import {
+  uploadFile,
+  isImage,
+  isPdf,
+  resolveUploadUrl,
+  ALLOWED_UPLOAD_TYPES,
+  MAX_UPLOAD_SIZE_MB,
+} from '../../../api/uploads.api';
+import { NumberField } from '../../../components/forms/NumberField';
+import { InfoTooltip } from '../../../components/forms/InfoTooltip';
 import { cn } from '../../../utils/cn';
 
 interface FormData {
@@ -195,6 +205,43 @@ export default function NewMenstrualCycleAssessmentModal({
     setHysteroscopies((prev) => prev.map((h, i) => (i === idx ? { ...h, ...patch } : h)));
   };
 
+  // Upload state isolado por índice de histeroscopia
+  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const handleFileUpload = async (idx: number, file: File) => {
+    setUploadError(null);
+    if (!ALLOWED_UPLOAD_TYPES.includes(file.type)) {
+      setUploadError('Tipo de arquivo não permitido (use JPG, PNG, WebP ou PDF).');
+      return;
+    }
+    if (file.size > MAX_UPLOAD_SIZE_MB * 1024 * 1024) {
+      setUploadError(`Arquivo muito grande (máximo ${MAX_UPLOAD_SIZE_MB}MB).`);
+      return;
+    }
+    setUploadingIdx(idx);
+    try {
+      const result = await uploadFile(file);
+      updateHysteroscopy(idx, {
+        attachmentUrl: result.url,
+        attachmentName: result.fileName,
+        attachmentMimeType: result.mimeType,
+      });
+    } catch (e: any) {
+      setUploadError(e?.response?.data?.message ?? 'Falha no upload do arquivo.');
+    } finally {
+      setUploadingIdx(null);
+    }
+  };
+
+  const removeAttachment = (idx: number) => {
+    updateHysteroscopy(idx, {
+      attachmentUrl: null,
+      attachmentName: null,
+      attachmentMimeType: null,
+    });
+  };
+
   const cycleClass = classifyCycle(
     watch('cycleIntervalDays'),
     watch('cycleDurationDays'),
@@ -338,54 +385,66 @@ export default function NewMenstrualCycleAssessmentModal({
             </Field>
             <div className="grid grid-cols-3 gap-4">
               <Field label="Intervalo (dias)">
-                <input
+                <NumberField
                   {...register('cycleIntervalDays')}
-                  type="number"
                   min={10}
                   max={120}
                   placeholder="28"
-                  className={inputCn(false)}
                 />
               </Field>
               <Field label="Duração (dias)">
-                <input
+                <NumberField
                   {...register('cycleDurationDays')}
-                  type="number"
                   min={1}
                   max={30}
                   placeholder="5"
-                  className={inputCn(false)}
                 />
               </Field>
               <Field label="Absorventes/dia">
-                <input
+                <NumberField
                   {...register('numberOfPadsPerDay')}
-                  type="number"
                   min={0}
                   max={50}
-                  className={inputCn(false)}
                 />
               </Field>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Field label="Volume estimado (mL)">
-                <input
+                <NumberField
                   {...register('estimatedBloodVolumeMl')}
-                  type="number"
                   min={0}
                   max={1000}
                   placeholder="≤80 normal"
-                  className={inputCn(false)}
                 />
               </Field>
-              <Field label="PBAC score">
-                <input
+              <Field
+                label={
+                  <span className="inline-flex items-center gap-1.5">
+                    PBAC score
+                    <InfoTooltip title="PBAC — Pictorial Blood Assessment Chart">
+                      Score visual em que a paciente registra, ao longo do ciclo, quantos
+                      absorventes/tampões usou e o nível de saturação de cada um (parcial,
+                      total, com coágulos). Cada item recebe pontos:
+                      <br />
+                      <br />
+                      • Absorvente parcial: 1 pt<br />
+                      • Absorvente moderado: 5 pts<br />
+                      • Absorvente totalmente saturado: 20 pts<br />
+                      • Coágulo pequeno: 1 pt · grande: 5 pts
+                      <br />
+                      <br />
+                      <strong>Score &gt; 100</strong> = sangramento menstrual aumentado
+                      (menorragia objetiva). Aplicar o gráfico durante 1-2 ciclos para
+                      diagnóstico de SUA.
+                    </InfoTooltip>
+                  </span>
+                }
+              >
+                <NumberField
                   {...register('pictorialBloodChart')}
-                  type="number"
                   min={0}
                   max={1000}
                   placeholder=">100 = aumentado"
-                  className={inputCn(false)}
                 />
               </Field>
             </div>
@@ -569,9 +628,111 @@ export default function NewMenstrualCycleAssessmentModal({
                         className={inputCn(false)}
                       />
                     </Field>
+
+                    {/* Anexo (foto ou PDF) */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Anexo (foto ou PDF)
+                      </label>
+                      {h.attachmentUrl ? (
+                        <div className="flex items-center gap-2 p-2 bg-white border border-gray-200 rounded">
+                          {isImage(h.attachmentMimeType) ? (
+                            <a
+                              href={resolveUploadUrl(h.attachmentUrl)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="shrink-0"
+                            >
+                              <img
+                                src={resolveUploadUrl(h.attachmentUrl)}
+                                alt={h.attachmentName ?? ''}
+                                className="w-12 h-12 object-cover rounded border border-gray-200"
+                              />
+                            </a>
+                          ) : isPdf(h.attachmentMimeType) ? (
+                            <a
+                              href={resolveUploadUrl(h.attachmentUrl)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-12 h-12 flex items-center justify-center bg-red-50 text-red-600 rounded border border-red-200 shrink-0"
+                              title="Abrir PDF"
+                            >
+                              <FileText className="w-6 h-6" />
+                            </a>
+                          ) : (
+                            <div className="w-12 h-12 flex items-center justify-center bg-gray-100 text-gray-400 rounded shrink-0">
+                              <Paperclip className="w-5 h-5" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <a
+                              href={resolveUploadUrl(h.attachmentUrl)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-lilac hover:underline truncate block"
+                            >
+                              {h.attachmentName ?? 'arquivo'}
+                            </a>
+                            <p className="text-xs text-gray-400">
+                              {isImage(h.attachmentMimeType)
+                                ? 'Imagem'
+                                : isPdf(h.attachmentMimeType)
+                                  ? 'PDF'
+                                  : 'Arquivo'}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeAttachment(idx)}
+                            className="shrink-0 text-gray-400 hover:text-red-600 p-1"
+                            title="Remover anexo"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label
+                          className={cn(
+                            'flex items-center justify-center gap-2 px-3 py-2 border border-dashed border-gray-300 text-sm text-gray-600 rounded-lg cursor-pointer hover:border-lilac hover:text-lilac transition',
+                            uploadingIdx === idx && 'opacity-60 cursor-wait',
+                          )}
+                        >
+                          {uploadingIdx === idx ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Enviando...
+                            </>
+                          ) : (
+                            <>
+                              <Paperclip className="w-4 h-4" />
+                              Anexar foto ou PDF
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,application/pdf"
+                            className="hidden"
+                            disabled={uploadingIdx === idx}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleFileUpload(idx, file);
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
+                      )}
+                      <p className="text-[10px] text-gray-400 mt-1">
+                        Formatos: JPG, PNG, WebP, PDF (máx {MAX_UPLOAD_SIZE_MB}MB)
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
+            )}
+            {uploadError && (
+              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+                {uploadError}
+              </p>
             )}
             <button
               type="button"
@@ -650,7 +811,7 @@ function Field({
   error,
   children,
 }: {
-  label: string;
+  label: React.ReactNode;
   error?: string;
   children: React.ReactNode;
 }) {

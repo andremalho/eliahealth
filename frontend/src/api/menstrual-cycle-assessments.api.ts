@@ -35,6 +35,9 @@ export interface HysteroscopyEntry {
   date: string;
   findings: string;
   conduct: string;
+  attachmentUrl?: string | null;
+  attachmentName?: string | null;
+  attachmentMimeType?: string | null;
 }
 
 export interface MenstrualCycleAssessment {

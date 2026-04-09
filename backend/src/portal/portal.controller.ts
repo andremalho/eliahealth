@@ -261,6 +261,14 @@ export class PortalController {
     return this.dataService.deletePatientExam(patientId, id);
   }
 
+  // ── Module 11: Postpartum Consultations ──
+
+  @Get('postpartum')
+  @Roles(UserRole.PATIENT)
+  getPostpartum(@CurrentUser('patientId') patientId: string) {
+    return this.dataService.getPostpartumConsultations(patientId);
+  }
+
   // ── Doctor Exam Review ──
 
   @Get('patient-exams/pending/:pregnancyId')

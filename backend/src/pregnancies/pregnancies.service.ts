@@ -175,7 +175,7 @@ export class PregnanciesService {
   async getTimeline(id: string, tenantId?: string | null) {
     await this.findOne(id, tenantId);
 
-    const [consultations, ultrasounds, labs, vaccines, prescriptions, alerts] = await Promise.all([
+    const [consultations, ultrasounds, labs, vaccines, prescriptions, alerts, postpartum] = await Promise.all([
       this.repo.query(
         `SELECT id, date, gestational_age_days, weight_kg, bp_systolic, bp_diastolic, fetal_heart_rate, fundal_height_cm, subjective
          FROM consultations WHERE pregnancy_id = $1 ORDER BY date DESC`,
@@ -204,6 +204,12 @@ export class PregnanciesService {
       this.repo.query(
         `SELECT id, title, message, severity, alert_type, created_at
          FROM copilot_alerts WHERE pregnancy_id = $1 ORDER BY created_at DESC LIMIT 30`,
+        [id],
+      ).catch(() => []),
+      this.repo.query(
+        `SELECT id, date, days_postpartum, bp_systolic, bp_diastolic, weight_kg,
+                uterine_involution, lochia_type, breastfeeding_status, mood_screening, subjective
+         FROM postpartum_consultations WHERE pregnancy_id = $1 ORDER BY date DESC`,
         [id],
       ).catch(() => []),
     ]);
@@ -291,6 +297,26 @@ export class PregnanciesService {
           message: a.message,
           severity: a.severity,
           alertType: a.alert_type,
+        },
+      });
+    }
+
+    for (const pp of postpartum) {
+      events.push({
+        id: pp.id,
+        type: 'postpartum',
+        date: pp.date,
+        title: `Consulta puerperal — ${pp.days_postpartum}d pos-parto`,
+        details: {
+          daysPostpartum: pp.days_postpartum,
+          bpSystolic: pp.bp_systolic,
+          bpDiastolic: pp.bp_diastolic,
+          weightKg: pp.weight_kg,
+          uterineInvolution: pp.uterine_involution,
+          lochiaType: pp.lochia_type,
+          breastfeedingStatus: pp.breastfeeding_status,
+          moodScreening: pp.mood_screening,
+          subjective: pp.subjective,
         },
       });
     }

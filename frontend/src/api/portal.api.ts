@@ -84,6 +84,11 @@ export const fetchPortalPatientExams = async () => {
   return data;
 };
 
+export const fetchPortalPostpartum = async () => {
+  const { data } = await portalApi.get('/portal/postpartum');
+  return data;
+};
+
 export const extractFromFilePortal = async (file: File, type: 'lab_result' | 'ultrasound') => {
   const form = new FormData();
   form.append('file', file);

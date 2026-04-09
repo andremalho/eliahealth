@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Heart, ArrowLeft, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { requestOtp, verifyOtp } from '../../api/portal.api';
 import { usePatientAuthStore } from '../../store/patientAuth.store';
 import { cn } from '../../utils/cn';
@@ -39,6 +40,7 @@ export default function PortalLoginPage() {
       setChannels(result.channels);
       setDevCode(result.devCode);
       setStep('code');
+      toast.success('Codigo enviado');
     } catch (err: any) {
       setError(err?.response?.data?.message ?? 'Falha ao enviar código');
     } finally {

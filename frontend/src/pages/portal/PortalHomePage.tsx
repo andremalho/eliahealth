@@ -3,12 +3,12 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
   Heart, LogOut, Calendar, Loader2, AlertCircle, Activity, Droplets,
-  Syringe, FileText, Stethoscope, Plus, FlaskConical,
+  Syringe, FileText, Stethoscope, Plus, FlaskConical, Baby,
 } from 'lucide-react';
 import {
   fetchDashboard, fetchPortalProfile, fetchPortalConsultations, fetchPortalVaccines,
   fetchPortalLabResults, fetchPortalUltrasounds, fetchPortalBp, fetchPortalGlucose,
-  fetchPortalVaginalSwabs, fetchPortalPatientExams,
+  fetchPortalVaginalSwabs, fetchPortalPatientExams, fetchPortalPostpartum,
 } from '../../api/portal.api';
 import { usePatientAuthStore } from '../../store/patientAuth.store';
 import { toTitleCase } from '../../utils/formatters';
@@ -103,6 +103,12 @@ export default function PortalHomePage() {
     enabled: !!dashboard,
   });
 
+  const { data: postpartum } = useQuery({
+    queryKey: ['portal-postpartum'],
+    queryFn: fetchPortalPostpartum,
+    enabled: !!dashboard,
+  });
+
   const handleLogout = () => {
     logout();
     navigate('/portal/login');
@@ -146,6 +152,7 @@ export default function PortalHomePage() {
   const usgList = Array.isArray(ultrasounds) ? ultrasounds : [];
   const swabList = Array.isArray(swabs) ? swabs : [];
   const myExamsList = Array.isArray(myExams) ? myExams : [];
+  const ppList = Array.isArray(postpartum) ? postpartum : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-lilac/10 to-white pb-12">
@@ -232,6 +239,45 @@ export default function PortalHomePage() {
           )}
           <ActionButton icon={FileText} label="Enviar exame" color="text-violet-500" onClick={() => setExamOpen(true)} />
         </div>
+
+        {/* Consultas Puerperais */}
+        {ppList.length > 0 && (
+          <Section title="Consultas pos-parto" icon={Baby} count={ppList.length}>
+            <div className="space-y-3">
+              {ppList.map((c: any, i: number) => {
+                const days = c.days_postpartum ?? 0;
+                const bp = c.bp_systolic ? `${c.bp_systolic}/${c.bp_diastolic}` : null;
+                const bfLabels: Record<string, string> = { exclusive: 'Exclusivo', predominant: 'Predominante', complemented: 'Complementado', not_breastfeeding: 'Nao amamenta' };
+                const moodLabels: Record<string, string> = { normal: 'Normal', mild: 'Leve', moderate: 'Moderado', severe: 'Grave' };
+                const alerts = c.alerts ?? [];
+                return (
+                  <div key={i} className="border-b border-gray-100 pb-3 last:border-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="px-2 py-0.5 bg-lilac/10 text-lilac text-[10px] font-semibold rounded-full">{days}d pos-parto</span>
+                      <span className="text-xs text-gray-500">{fmtDate(c.date)}</span>
+                    </div>
+                    <div className="flex gap-2 flex-wrap text-[10px]">
+                      {bp && <span className={cn('px-1.5 py-0.5 rounded-full', (c.bp_systolic ?? 0) >= 140 ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-600')}>PA: {bp}</span>}
+                      {c.breastfeeding_status && <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full">Aleit: {bfLabels[c.breastfeeding_status] ?? c.breastfeeding_status}</span>}
+                      {c.mood_screening && <span className={cn('px-1.5 py-0.5 rounded-full', c.mood_screening === 'severe' || c.mood_screening === 'moderate' ? 'bg-red-50 text-red-700' : 'bg-gray-100 text-gray-600')}>Humor: {moodLabels[c.mood_screening] ?? c.mood_screening}</span>}
+                      {c.weight_kg && <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full">{c.weight_kg}kg</span>}
+                    </div>
+                    {alerts.length > 0 && (
+                      <div className="mt-1.5 space-y-0.5">
+                        {alerts.map((a: any, j: number) => (
+                          <p key={j} className={cn('text-[10px] flex items-center gap-1', a.level === 'critical' ? 'text-red-600' : a.level === 'urgent' ? 'text-amber-600' : 'text-blue-600')}>
+                            <AlertCircle className="w-3 h-3 shrink-0" /> {a.message}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    {c.subjective && <p className="text-xs text-gray-500 mt-1 line-clamp-1">{c.subjective}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          </Section>
+        )}
 
         {/* Consultas */}
         <Section title="Consultas" icon={Stethoscope} count={consList.length}>

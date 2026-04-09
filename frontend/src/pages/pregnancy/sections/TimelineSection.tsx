@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Activity, Stethoscope, FileText, Syringe, Pill, Bot, Clock } from 'lucide-react';
+import { Activity, Stethoscope, FileText, Syringe, Pill, Bot, Clock, Baby } from 'lucide-react';
 import { fetchTimeline, type TimelineEvent } from '../../../api/pregnancy.api';
 import { cn } from '../../../utils/cn';
 
@@ -12,6 +12,7 @@ const TYPE_META: Record<string, { icon: any; color: string; bg: string; label: s
   vaccine: { icon: Syringe, color: 'text-teal-600', bg: 'bg-teal-50 border-teal-200', label: 'Vacina' },
   prescription: { icon: Pill, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200', label: 'Prescrição' },
   alert: { icon: Bot, color: 'text-red-600', bg: 'bg-red-50 border-red-200', label: 'Alerta' },
+  postpartum: { icon: Baby, color: 'text-pink-600', bg: 'bg-pink-50 border-pink-200', label: 'Puerpério' },
 };
 
 function fmtDate(d: string): string {

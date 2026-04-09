@@ -673,6 +673,29 @@ export class PortalDataService {
     return { deleted: true };
   }
 
+  // ── MODULE 11: Postpartum Consultations ──
+
+  async getPostpartumConsultations(patientId: string) {
+    const pregnancy = await this.getActivePregnancy(patientId);
+
+    const consultations = await this.pregnancyRepo.query(
+      `SELECT id, date, days_postpartum,
+              bp_systolic, bp_diastolic, weight_kg,
+              uterine_involution, lochia_type,
+              breastfeeding_status, breast_condition,
+              mood_screening, epds_score,
+              wound_status, subjective, plan,
+              alerts, newborn_data
+       FROM postpartum_consultations
+       WHERE pregnancy_id = $1
+       ORDER BY date ASC`,
+      [pregnancy.id],
+    );
+
+    this.audit(patientId, 'postpartum', pregnancy.id);
+    return consultations;
+  }
+
   // ── DOCTOR EXAM REVIEW ──
 
   async listPendingPatientExams(pregnancyId: string) {

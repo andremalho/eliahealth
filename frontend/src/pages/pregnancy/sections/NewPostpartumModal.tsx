@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2, Lock, Baby } from 'lucide-react';
+import { toast } from 'sonner';
 import { createPostpartumConsultation, updatePostpartumConsultation } from '../../../api/pregnancy.api';
 import { cn } from '../../../utils/cn';
 
@@ -172,6 +173,7 @@ export default function NewPostpartumModal({ pregnancyId, isFirst, initial, onCl
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['postpartum', pregnancyId] });
+      toast.success(isEdit ? 'Consulta puerperal atualizada' : 'Consulta puerperal registrada');
       onClose();
     },
   });

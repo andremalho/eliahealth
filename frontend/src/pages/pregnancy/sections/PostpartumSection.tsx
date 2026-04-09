@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Baby, Plus, Pencil, Trash2, AlertCircle, FileText } from 'lucide-react';
+import { toast } from 'sonner';
 import { fetchPostpartumConsultations, deletePostpartumConsultation } from '../../../api/pregnancy.api';
 import { cn } from '../../../utils/cn';
 import NewPostpartumModal from './NewPostpartumModal';
@@ -44,7 +45,10 @@ export default function PostpartumSection({ pregnancyId }: Props) {
 
   const deleteMut = useMutation({
     mutationFn: (id: string) => deletePostpartumConsultation(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['postpartum', pregnancyId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['postpartum', pregnancyId] });
+      toast.success('Consulta puerperal excluida');
+    },
   });
 
   return (

@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2 } from 'lucide-react';
@@ -20,7 +20,20 @@ import {
   type FertilityPreservationIndication,
   type InfertilityTreatment,
 } from '../../../api/infertility-workups.api';
+import { AttachmentField, type AttachmentValue } from '../../../components/forms/AttachmentField';
 import { cn } from '../../../utils/cn';
+
+const EMPTY_ATTACHMENT: AttachmentValue = { url: null, name: null, mimeType: null };
+
+function extractAttachment(jsonb: unknown): AttachmentValue {
+  if (!jsonb || typeof jsonb !== 'object') return EMPTY_ATTACHMENT;
+  const obj = jsonb as Record<string, unknown>;
+  return {
+    url: typeof obj.attachmentUrl === 'string' ? obj.attachmentUrl : null,
+    name: typeof obj.attachmentName === 'string' ? obj.attachmentName : null,
+    mimeType: typeof obj.attachmentMimeType === 'string' ? obj.attachmentMimeType : null,
+  };
+}
 
 interface FormData {
   workupDate: string;
@@ -103,6 +116,20 @@ export default function NewInfertilityWorkupModal({
       ? ((workup.hsg as Record<string, unknown>).findings as string)
       : '';
 
+  // Anexos (state separado, vão dentro dos JSONBs no submit)
+  const [reserveAttachment, setReserveAttachment] = useState<AttachmentValue>(
+    extractAttachment(workup?.ovarianReserve),
+  );
+  const [semenAttachment, setSemenAttachment] = useState<AttachmentValue>(
+    extractAttachment(workup?.semenAnalysis),
+  );
+  const [dfiAttachment, setDfiAttachment] = useState<AttachmentValue>(
+    extractAttachment(workup?.dnaFragmentation),
+  );
+  const [hsgAttachment, setHsgAttachment] = useState<AttachmentValue>(
+    extractAttachment(workup?.hsg),
+  );
+
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     defaultValues: workup
       ? {
@@ -172,15 +199,28 @@ export default function NewInfertilityWorkupModal({
       if (data.ovulatoryStatus) dto.ovulatoryStatus = data.ovulatoryStatus;
       if (data.whoGroupOvulation) dto.whoGroupOvulation = data.whoGroupOvulation;
 
-      // Reserva ovariana → JSONB
+      // Reserva ovariana → JSONB (com anexo opcional)
       const reserve: Record<string, unknown> = {};
       if (data.amhValue) reserve.amh = { value_ng_ml: Number(data.amhValue) };
       if (data.fshValue) reserve.fsh = { value: Number(data.fshValue) };
       if (data.afcValue) reserve.antralFollicleCount = { value: Number(data.afcValue) };
+      if (reserveAttachment.url) {
+        reserve.attachmentUrl = reserveAttachment.url;
+        reserve.attachmentName = reserveAttachment.name;
+        reserve.attachmentMimeType = reserveAttachment.mimeType;
+      }
       if (Object.keys(reserve).length > 0) dto.ovarianReserve = reserve;
 
       dto.tubalFactor = data.tubalFactor;
-      if (data.hsgFindings) dto.hsg = { findings: data.hsgFindings };
+      // HSG → JSONB (com anexo opcional)
+      const hsg: Record<string, unknown> = {};
+      if (data.hsgFindings) hsg.findings = data.hsgFindings;
+      if (hsgAttachment.url) {
+        hsg.attachmentUrl = hsgAttachment.url;
+        hsg.attachmentName = hsgAttachment.name;
+        hsg.attachmentMimeType = hsgAttachment.mimeType;
+      }
+      if (Object.keys(hsg).length > 0) dto.hsg = hsg;
       dto.mullerianAnomaly = data.mullerianAnomaly;
       if (data.mullerianAnomalyType) dto.mullerianAnomalyType = data.mullerianAnomalyType;
 
@@ -190,11 +230,21 @@ export default function NewInfertilityWorkupModal({
       if (data.semenProgressiveMotility)
         semen.progressiveMotility_pct = Number(data.semenProgressiveMotility);
       if (data.semenMorphology) semen.morphology_pct_kruger = Number(data.semenMorphology);
+      if (semenAttachment.url) {
+        semen.attachmentUrl = semenAttachment.url;
+        semen.attachmentName = semenAttachment.name;
+        semen.attachmentMimeType = semenAttachment.mimeType;
+      }
       if (Object.keys(semen).length > 0) dto.semenAnalysis = semen;
 
-      if (data.dnaFragmentation) {
-        dto.dnaFragmentation = { dfi_pct: Number(data.dnaFragmentation) };
+      const dfiObj: Record<string, unknown> = {};
+      if (data.dnaFragmentation) dfiObj.dfi_pct = Number(data.dnaFragmentation);
+      if (dfiAttachment.url) {
+        dfiObj.attachmentUrl = dfiAttachment.url;
+        dfiObj.attachmentName = dfiAttachment.name;
+        dfiObj.attachmentMimeType = dfiAttachment.mimeType;
       }
+      if (Object.keys(dfiObj).length > 0) dto.dnaFragmentation = dfiObj;
       dto.maleFertilitySpecialistReferral = data.maleFertilitySpecialistReferral;
 
       if (data.primaryDiagnosis) dto.primaryDiagnosis = data.primaryDiagnosis;
@@ -362,6 +412,11 @@ export default function NewInfertilityWorkupModal({
                 />
               </Field>
             </div>
+            <AttachmentField
+              label="Anexar laudo (USG transvaginal, dosagens hormonais)"
+              value={reserveAttachment}
+              onChange={setReserveAttachment}
+            />
           </Section>
 
           {/* Tubário/uterino */}
@@ -375,6 +430,11 @@ export default function NewInfertilityWorkupModal({
                 className={inputCn(false)}
               />
             </Field>
+            <AttachmentField
+              label="Anexar laudo HSG"
+              value={hsgAttachment}
+              onChange={setHsgAttachment}
+            />
             <Checkbox label="Anomalia mülleriana" {...register('mullerianAnomaly')} />
             {mullerianChecked && (
               <Field label="Tipo de anomalia">
@@ -420,6 +480,11 @@ export default function NewInfertilityWorkupModal({
                 />
               </Field>
             </div>
+            <AttachmentField
+              label="Anexar laudo do espermograma"
+              value={semenAttachment}
+              onChange={setSemenAttachment}
+            />
             <Field label="Fragmentação de DNA (DFI %)">
               <input
                 {...register('dnaFragmentation')}
@@ -429,6 +494,11 @@ export default function NewInfertilityWorkupModal({
                 className={inputCn(false)}
               />
             </Field>
+            <AttachmentField
+              label="Anexar laudo de fragmentação de DNA"
+              value={dfiAttachment}
+              onChange={setDfiAttachment}
+            />
             <Checkbox
               label="Encaminhamento para andrologista"
               {...register('maleFertilitySpecialistReferral')}

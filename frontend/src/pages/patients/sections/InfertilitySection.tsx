@@ -10,7 +10,10 @@ import {
   ChevronDown,
   ChevronUp,
   Pencil,
+  Paperclip,
+  FileText,
 } from 'lucide-react';
+import { isPdf, resolveUploadUrl } from '../../../api/uploads.api';
 import {
   fetchInfertilityWorkups,
   deleteInfertilityWorkup,
@@ -298,34 +301,70 @@ interface MetricItem {
   status?: 'normal' | 'low' | 'high' | 'borderline';
 }
 
-function MetricGrid({ label, items }: { label: string; items: MetricItem[] }) {
-  if (items.length === 0) return null;
+function MetricGrid({
+  label,
+  items,
+  attachment,
+}: {
+  label: string;
+  items: MetricItem[];
+  attachment?: { url: string; name: string | null; mimeType: string | null } | null;
+}) {
+  if (items.length === 0 && !attachment) return null;
   return (
     <div>
       <p className="text-xs font-semibold text-gray-500 uppercase mb-2">{label}</p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        {items.map((item) => {
-          const colorCls =
-            item.status === 'low' || item.status === 'high'
-              ? 'border-red-200 bg-red-50'
-              : item.status === 'borderline'
-                ? 'border-amber-200 bg-amber-50'
-                : 'border-gray-100 bg-white';
-          return (
-            <div
-              key={item.label}
-              className={cn('rounded p-2.5 border', colorCls)}
-            >
-              <p className="text-[10px] font-semibold text-gray-400 uppercase">
-                {item.label}
-              </p>
-              <p className="text-sm font-medium text-gray-800 mt-0.5">{item.value}</p>
-            </div>
-          );
-        })}
-      </div>
+      {items.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {items.map((item) => {
+            const colorCls =
+              item.status === 'low' || item.status === 'high'
+                ? 'border-red-200 bg-red-50'
+                : item.status === 'borderline'
+                  ? 'border-amber-200 bg-amber-50'
+                  : 'border-gray-100 bg-white';
+            return (
+              <div
+                key={item.label}
+                className={cn('rounded p-2.5 border', colorCls)}
+              >
+                <p className="text-[10px] font-semibold text-gray-400 uppercase">
+                  {item.label}
+                </p>
+                <p className="text-sm font-medium text-gray-800 mt-0.5">{item.value}</p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {attachment && (
+        <a
+          href={resolveUploadUrl(attachment.url)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 mt-2 px-2 py-1 bg-lilac/10 text-lilac rounded hover:bg-lilac/20 transition text-xs"
+        >
+          {isPdf(attachment.mimeType) ? (
+            <FileText className="w-3 h-3" />
+          ) : (
+            <Paperclip className="w-3 h-3" />
+          )}
+          {attachment.name ?? 'arquivo'}
+        </a>
+      )}
     </div>
   );
+}
+
+function extractAttachmentFromJsonb(
+  data: Record<string, unknown>,
+): { url: string; name: string | null; mimeType: string | null } | null {
+  if (typeof data.attachmentUrl !== 'string') return null;
+  return {
+    url: data.attachmentUrl,
+    name: typeof data.attachmentName === 'string' ? data.attachmentName : null,
+    mimeType: typeof data.attachmentMimeType === 'string' ? data.attachmentMimeType : null,
+  };
 }
 
 function num(v: unknown): number | null {
@@ -338,6 +377,7 @@ function OvarianReserveDisplay({ data }: { data: Record<string, unknown> }) {
   const amh = num((data.amh as Record<string, unknown>)?.value_ng_ml);
   const fsh = num((data.fsh as Record<string, unknown>)?.value);
   const afc = num((data.antralFollicleCount as Record<string, unknown>)?.value);
+  const attachment = extractAttachmentFromJsonb(data);
 
   const items: MetricItem[] = [];
   if (amh !== null) {
@@ -361,8 +401,8 @@ function OvarianReserveDisplay({ data }: { data: Record<string, unknown> }) {
       status: afc < 5 ? 'low' : 'normal',
     });
   }
-  if (items.length === 0) return null;
-  return <MetricGrid label="Reserva ovariana" items={items} />;
+  if (items.length === 0 && !attachment) return null;
+  return <MetricGrid label="Reserva ovariana" items={items} attachment={attachment} />;
 }
 
 function SemenAnalysisDisplay({ data }: { data: Record<string, unknown> }) {
@@ -402,23 +442,30 @@ function SemenAnalysisDisplay({ data }: { data: Record<string, unknown> }) {
       status: morf < 4 ? 'low' : 'normal',
     });
   }
-  if (items.length === 0) return null;
-  return <MetricGrid label="Espermograma (OMS 2021)" items={items} />;
+  const attachment = extractAttachmentFromJsonb(data);
+  if (items.length === 0 && !attachment) return null;
+  return <MetricGrid label="Espermograma (OMS 2021)" items={items} attachment={attachment} />;
 }
 
 function DnaFragmentationDisplay({ data }: { data: Record<string, unknown> }) {
   const dfi = num(data.dfi_pct);
-  if (dfi === null) return null;
+  const attachment = extractAttachmentFromJsonb(data);
+  if (dfi === null && !attachment) return null;
   return (
     <MetricGrid
       label="Fragmentação de DNA espermático"
-      items={[
-        {
-          label: 'DFI',
-          value: `${dfi}%`,
-          status: dfi > 30 ? 'high' : dfi > 15 ? 'borderline' : 'normal',
-        },
-      ]}
+      items={
+        dfi !== null
+          ? [
+              {
+                label: 'DFI',
+                value: `${dfi}%`,
+                status: dfi > 30 ? 'high' : dfi > 15 ? 'borderline' : 'normal',
+              },
+            ]
+          : []
+      }
+      attachment={attachment}
     />
   );
 }
@@ -430,6 +477,7 @@ function HsgDisplay({ data }: { data: Record<string, unknown> }) {
   const right = typeof data.rightTube === 'string' ? data.rightTube : null;
   const cavity = typeof data.uterineCavity === 'string' ? data.uterineCavity : null;
   const date = typeof data.date === 'string' ? data.date : null;
+  const attachment = extractAttachmentFromJsonb(data);
 
   return (
     <div>
@@ -457,6 +505,21 @@ function HsgDisplay({ data }: { data: Record<string, unknown> }) {
         )}
         {findings && <p className="whitespace-pre-wrap">{findings}</p>}
       </div>
+      {attachment && (
+        <a
+          href={resolveUploadUrl(attachment.url)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 mt-2 px-2 py-1 bg-lilac/10 text-lilac rounded hover:bg-lilac/20 transition text-xs"
+        >
+          {isPdf(attachment.mimeType) ? (
+            <FileText className="w-3 h-3" />
+          ) : (
+            <Paperclip className="w-3 h-3" />
+          )}
+          {attachment.name ?? 'arquivo'}
+        </a>
+      )}
     </div>
   );
 }

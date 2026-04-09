@@ -1,7 +1,11 @@
-import { forwardRef } from 'react';
+import { forwardRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Loader2 } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { X, Loader2, Sparkles } from 'lucide-react';
+import {
+  fetchMenstrualCycleAssessments,
+  type MenstrualCycleAssessment,
+} from '../../../api/menstrual-cycle-assessments.api';
 import {
   createMenopauseAssessment,
   updateMenopauseAssessment,
@@ -108,6 +112,35 @@ const Checkbox = forwardRef<
 ));
 Checkbox.displayName = 'Checkbox';
 
+// Infere padrão menstrual a partir da última avaliação de Ciclo/SUA
+function inferMenstrualPattern(
+  latest: MenstrualCycleAssessment | undefined,
+): { pattern: MenstrualPattern; reason: string } | null {
+  if (!latest) return null;
+  if (latest.chiefComplaint === 'amenorrhea_secondary') {
+    return { pattern: 'amenorrhea_60days', reason: 'amenorreia secundária registrada' };
+  }
+  if (latest.chiefComplaint === 'amenorrhea_primary') {
+    return { pattern: 'amenorrhea_60days', reason: 'amenorreia primária registrada' };
+  }
+  if (latest.chiefComplaint === 'irregular_bleeding') {
+    return { pattern: 'variation_7days', reason: 'sangramento irregular registrado' };
+  }
+  if (latest.cycleIntervalDays !== null) {
+    if (latest.cycleIntervalDays < 24 || latest.cycleIntervalDays > 38) {
+      return {
+        pattern: 'variation_7days',
+        reason: `intervalo de ${latest.cycleIntervalDays} dias (fora 24-38)`,
+      };
+    }
+    return {
+      pattern: 'regular',
+      reason: `intervalo regular de ${latest.cycleIntervalDays} dias`,
+    };
+  }
+  return null;
+}
+
 const MRS_FIELDS: { name: keyof FormData; label: string; group: string }[] = [
   { name: 'mrsHotFlashes', label: 'Fogachos / sudorese', group: 'Somato-vegetativo' },
   { name: 'mrsHeartPalpitations', label: 'Palpitações', group: 'Somato-vegetativo' },
@@ -134,7 +167,7 @@ export default function NewMenopauseAssessmentModal({
   const qc = useQueryClient();
   const isEdit = !!assessment;
 
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
+  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     defaultValues: assessment
       ? {
           assessmentDate: assessment.assessmentDate,
@@ -204,6 +237,30 @@ export default function NewMenopauseAssessmentModal({
     watch('menopauseType'),
     (watch('menstrualPattern') || null) as MenstrualPattern | null,
   );
+
+  // ── Cross-module: puxa última avaliação de Ciclo/SUA da paciente ──
+  // Quando paciente não tem FMP nem menopausa induzida, infere o padrão
+  // menstrual a partir do registro mais recente do módulo Ciclo/SUA.
+  const { data: cycleData } = useQuery({
+    queryKey: ['menstrual-cycle-assessments', patientId],
+    queryFn: () => fetchMenstrualCycleAssessments(patientId, 1, 1),
+    enabled: !!patientId,
+  });
+  const latestCycle = cycleData?.data?.[0];
+  const inferred = inferMenstrualPattern(latestCycle);
+
+  // Se a paciente não tem FMP/menopausa induzida E o usuário ainda não
+  // selecionou padrão manualmente, aplica o padrão inferido do Ciclo/SUA.
+  // Só executa em modo create (não sobrescreve edição).
+  useEffect(() => {
+    if (isEdit) return;
+    if (!inferred) return;
+    const currentPattern = watch('menstrualPattern');
+    const hasMenopauseDate = !!watch('menopauseDate');
+    if (currentPattern || hasMenopauseDate) return;
+    setValue('menstrualPattern', inferred.pattern);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inferred?.pattern]);
 
   // Live MRS total
   const mrsValues = MRS_FIELDS.map((f) => parseInt((watch(f.name) as string) ?? '0', 10) || 0);
@@ -386,6 +443,15 @@ export default function NewMenopauseAssessmentModal({
                     </option>
                   ))}
               </select>
+              {inferred && (
+                <p className="mt-1 text-[11px] text-lilac flex items-start gap-1">
+                  <Sparkles className="w-3 h-3 mt-0.5 shrink-0" />
+                  <span>
+                    Sugerido pela última avaliação de Ciclo/SUA — {inferred.reason}.
+                    Você pode alterar acima.
+                  </span>
+                </p>
+              )}
             </Field>
 
             {/* Card STRAW ao vivo */}

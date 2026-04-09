@@ -12,21 +12,17 @@ import PrivateRoute from './components/PrivateRoute';
 import AppLayout from './components/layout/AppLayout';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import PregnancyPage from './pages/pregnancy/PregnancyPage';
+import PregnanciesListPage from './pages/pregnancies/PregnanciesListPage';
 import PatientsListPage from './pages/patients/PatientsListPage';
 import PatientPage from './pages/patients/PatientPage';
+import BirthCalendarPage from './pages/calendar/BirthCalendarPage';
+import TeamsPage from './pages/teams/TeamsPage';
+import SettingsPage from './pages/settings/SettingsPage';
 import { useAuthStore } from './store/auth.store';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30_000 } },
 });
-
-function Placeholder({ title }: { title: string }) {
-  return (
-    <div className="flex items-center justify-center h-full text-gray-400 text-lg p-12">
-      {title} — em construção
-    </div>
-  );
-}
 
 function PortalProtected({ children }: { children: React.ReactNode }) {
   const isAuth = usePatientAuthStore((s) => s.isAuthenticated);
@@ -68,13 +64,13 @@ export default function App() {
             }
           >
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/pregnancies" element={<Placeholder title="Gestações" />} />
+            <Route path="/pregnancies" element={<PregnanciesListPage />} />
             <Route path="/pregnancies/:pregnancyId" element={<PregnancyPage />} />
             <Route path="/patients" element={<PatientsListPage />} />
             <Route path="/patients/:patientId" element={<PatientPage />} />
-            <Route path="/birth-calendar" element={<Placeholder title="Calendário de Partos" />} />
-            <Route path="/teams" element={<Placeholder title="Equipes" />} />
-            <Route path="/settings" element={<Placeholder title="Configurações" />} />
+            <Route path="/birth-calendar" element={<BirthCalendarPage />} />
+            <Route path="/teams" element={<TeamsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

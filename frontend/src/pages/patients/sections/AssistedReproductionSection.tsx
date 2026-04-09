@@ -8,6 +8,7 @@ import {
   Info,
   ChevronDown,
   ChevronUp,
+  Pencil,
 } from 'lucide-react';
 import {
   fetchOICycles,
@@ -44,9 +45,21 @@ function Skeleton({ className = '' }: { className?: string }) {
   return <div className={cn('animate-pulse bg-gray-200 rounded', className)} />;
 }
 
+type ModalState =
+  | { type: 'oi'; cycle?: OvulationInductionCycle }
+  | { type: 'iui'; cycle?: IuiCycle }
+  | { type: 'ivf'; cycle?: IvfCycle }
+  | null;
+
 export default function AssistedReproductionSection({ patientId }: { patientId: string }) {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('oi');
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modal, setModal] = useState<ModalState>(null);
+
+  const openNew = () => setModal({ type: activeSubTab });
+  const closeModal = () => setModal(null);
+  const editOI = (cycle: OvulationInductionCycle) => setModal({ type: 'oi', cycle });
+  const editIui = (cycle: IuiCycle) => setModal({ type: 'iui', cycle });
+  const editIvf = (cycle: IvfCycle) => setModal({ type: 'ivf', cycle });
 
   return (
     <div>
@@ -56,7 +69,7 @@ export default function AssistedReproductionSection({ patientId }: { patientId: 
           <p className="text-xs text-gray-500 mt-0.5">Indução, IIU e FIV/ICSI</p>
         </div>
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={openNew}
           className="flex items-center gap-2 px-4 py-2 bg-lilac text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition"
         >
           <Plus className="w-4 h-4" />
@@ -83,18 +96,18 @@ export default function AssistedReproductionSection({ patientId }: { patientId: 
         ))}
       </div>
 
-      {activeSubTab === 'oi' && <OIList patientId={patientId} />}
-      {activeSubTab === 'iui' && <IuiList patientId={patientId} />}
-      {activeSubTab === 'ivf' && <IvfList patientId={patientId} />}
+      {activeSubTab === 'oi' && <OIList patientId={patientId} onEdit={editOI} />}
+      {activeSubTab === 'iui' && <IuiList patientId={patientId} onEdit={editIui} />}
+      {activeSubTab === 'ivf' && <IvfList patientId={patientId} onEdit={editIvf} />}
 
-      {modalOpen && activeSubTab === 'oi' && (
-        <NewOICycleModal patientId={patientId} onClose={() => setModalOpen(false)} />
+      {modal?.type === 'oi' && (
+        <NewOICycleModal patientId={patientId} cycle={modal.cycle} onClose={closeModal} />
       )}
-      {modalOpen && activeSubTab === 'iui' && (
-        <NewIuiCycleModal patientId={patientId} onClose={() => setModalOpen(false)} />
+      {modal?.type === 'iui' && (
+        <NewIuiCycleModal patientId={patientId} cycle={modal.cycle} onClose={closeModal} />
       )}
-      {modalOpen && activeSubTab === 'ivf' && (
-        <NewIvfCycleModal patientId={patientId} onClose={() => setModalOpen(false)} />
+      {modal?.type === 'ivf' && (
+        <NewIvfCycleModal patientId={patientId} cycle={modal.cycle} onClose={closeModal} />
       )}
     </div>
   );
@@ -102,7 +115,13 @@ export default function AssistedReproductionSection({ patientId }: { patientId: 
 
 // ── OI ──
 
-function OIList({ patientId }: { patientId: string }) {
+function OIList({
+  patientId,
+  onEdit,
+}: {
+  patientId: string;
+  onEdit: (cycle: OvulationInductionCycle) => void;
+}) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ['oi-cycles', patientId],
@@ -122,6 +141,7 @@ function OIList({ patientId }: { patientId: string }) {
           item={c}
           expanded={expandedId === c.id}
           onToggle={() => setExpandedId(expandedId === c.id ? null : c.id)}
+          onEdit={() => onEdit(c)}
         />
       ))}
     </div>
@@ -132,37 +152,49 @@ function OICard({
   item: c,
   expanded,
   onToggle,
+  onEdit,
 }: {
   item: OvulationInductionCycle;
   expanded: boolean;
   onToggle: () => void;
+  onEdit: () => void;
 }) {
   const alerts = c.alerts ?? [];
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden hover:border-lilac/50 transition">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition text-left"
-      >
-        <div className="w-10 h-10 rounded-lg bg-lilac/10 text-lilac flex items-center justify-center shrink-0 font-bold">
-          #{c.cycleNumber}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-gray-800">{formatDate(c.cycleStartDate)}</span>
-            <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
-              {OI_PROTOCOL_LABELS[c.protocol]}
-            </span>
+      <div className="flex items-center gap-2 p-4 hover:bg-gray-50 transition">
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-4 flex-1 text-left min-w-0"
+        >
+          <div className="w-10 h-10 rounded-lg bg-lilac/10 text-lilac flex items-center justify-center shrink-0 font-bold">
+            #{c.cycleNumber}
           </div>
-          <p className="text-xs text-gray-500 mt-1">{OI_INDICATION_LABELS[c.indication]}</p>
-        </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium text-gray-800">{formatDate(c.cycleStartDate)}</span>
+              <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                {OI_PROTOCOL_LABELS[c.protocol]}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">{OI_INDICATION_LABELS[c.indication]}</p>
+          </div>
+        </button>
         <AlertBadges alerts={alerts} />
-        {expanded ? (
-          <ChevronUp className="w-5 h-5 text-gray-400" />
-        ) : (
-          <ChevronDown className="w-5 h-5 text-gray-400" />
-        )}
-      </button>
+        <button
+          onClick={onEdit}
+          className="p-2 text-gray-400 hover:text-lilac hover:bg-lilac/5 rounded transition"
+          title="Editar"
+        >
+          <Pencil className="w-4 h-4" />
+        </button>
+        <button
+          onClick={onToggle}
+          className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
+        >
+          {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+        </button>
+      </div>
       {expanded && (
         <div className="px-4 pb-4 pt-2 border-t bg-gray-50/50 space-y-3">
           <DataGrid
@@ -192,7 +224,13 @@ function OICard({
 
 // ── IIU ──
 
-function IuiList({ patientId }: { patientId: string }) {
+function IuiList({
+  patientId,
+  onEdit,
+}: {
+  patientId: string;
+  onEdit: (cycle: IuiCycle) => void;
+}) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ['iui-cycles', patientId],
@@ -212,6 +250,7 @@ function IuiList({ patientId }: { patientId: string }) {
           item={c}
           expanded={expandedId === c.id}
           onToggle={() => setExpandedId(expandedId === c.id ? null : c.id)}
+          onEdit={() => onEdit(c)}
         />
       ))}
     </div>
@@ -222,37 +261,49 @@ function IuiCard({
   item: c,
   expanded,
   onToggle,
+  onEdit,
 }: {
   item: IuiCycle;
   expanded: boolean;
   onToggle: () => void;
+  onEdit: () => void;
 }) {
   const alerts = c.alerts ?? [];
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden hover:border-lilac/50 transition">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition text-left"
-      >
-        <div className="w-10 h-10 rounded-lg bg-lilac/10 text-lilac flex items-center justify-center shrink-0 font-bold">
-          #{c.cycleNumber}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-gray-800">{formatDate(c.iuiDate)}</span>
-            <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
-              {SPERM_SOURCE_LABELS[c.spermSource]}
-            </span>
+      <div className="flex items-center gap-2 p-4 hover:bg-gray-50 transition">
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-4 flex-1 text-left min-w-0"
+        >
+          <div className="w-10 h-10 rounded-lg bg-lilac/10 text-lilac flex items-center justify-center shrink-0 font-bold">
+            #{c.cycleNumber}
           </div>
-          <p className="text-xs text-gray-500 mt-1">{IUI_INDICATION_LABELS[c.indication]}</p>
-        </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium text-gray-800">{formatDate(c.iuiDate)}</span>
+              <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                {SPERM_SOURCE_LABELS[c.spermSource]}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">{IUI_INDICATION_LABELS[c.indication]}</p>
+          </div>
+        </button>
         <AlertBadges alerts={alerts} />
-        {expanded ? (
-          <ChevronUp className="w-5 h-5 text-gray-400" />
-        ) : (
-          <ChevronDown className="w-5 h-5 text-gray-400" />
-        )}
-      </button>
+        <button
+          onClick={onEdit}
+          className="p-2 text-gray-400 hover:text-lilac hover:bg-lilac/5 rounded transition"
+          title="Editar"
+        >
+          <Pencil className="w-4 h-4" />
+        </button>
+        <button
+          onClick={onToggle}
+          className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
+        >
+          {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+        </button>
+      </div>
       {expanded && (
         <div className="px-4 pb-4 pt-2 border-t bg-gray-50/50 space-y-3">
           <DataGrid
@@ -279,7 +330,13 @@ function IuiCard({
 
 // ── FIV ──
 
-function IvfList({ patientId }: { patientId: string }) {
+function IvfList({
+  patientId,
+  onEdit,
+}: {
+  patientId: string;
+  onEdit: (cycle: IvfCycle) => void;
+}) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ['ivf-cycles', patientId],
@@ -299,6 +356,7 @@ function IvfList({ patientId }: { patientId: string }) {
           item={c}
           expanded={expandedId === c.id}
           onToggle={() => setExpandedId(expandedId === c.id ? null : c.id)}
+          onEdit={() => onEdit(c)}
         />
       ))}
     </div>
@@ -309,68 +367,80 @@ function IvfCard({
   item: c,
   expanded,
   onToggle,
+  onEdit,
 }: {
   item: IvfCycle;
   expanded: boolean;
   onToggle: () => void;
+  onEdit: () => void;
 }) {
   const alerts = c.alerts ?? [];
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden hover:border-lilac/50 transition">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition text-left"
-      >
-        <div className="w-10 h-10 rounded-lg bg-lilac/10 text-lilac flex items-center justify-center shrink-0 font-bold">
-          #{c.cycleNumber}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-medium text-gray-800">{IVF_TYPE_LABELS[c.cycleType]}</span>
-            <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
-              {STIM_PROTOCOL_LABELS[c.stimulationProtocol]}
-            </span>
+      <div className="flex items-center gap-2 p-4 hover:bg-gray-50 transition">
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-4 flex-1 text-left min-w-0"
+        >
+          <div className="w-10 h-10 rounded-lg bg-lilac/10 text-lilac flex items-center justify-center shrink-0 font-bold">
+            #{c.cycleNumber}
           </div>
-          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            {c.totalOocytesRetrieved !== null && (
-              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-purple-50 text-purple-700 rounded">
-                {c.totalOocytesRetrieved} oócitos
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-medium text-gray-800">{IVF_TYPE_LABELS[c.cycleType]}</span>
+              <span className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded">
+                {STIM_PROTOCOL_LABELS[c.stimulationProtocol]}
               </span>
-            )}
-            {c.fertilized2PN !== null && (
-              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 rounded">
-                {c.fertilized2PN} 2PN
-              </span>
-            )}
-            {c.fertilizationRate !== null && (
-              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 rounded">
-                Fert {Number(c.fertilizationRate).toFixed(0)}%
-              </span>
-            )}
-            {c.blastocysts !== null && (
-              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-pink-50 text-pink-700 rounded">
-                {c.blastocysts} blastos
-              </span>
-            )}
-            {c.clinicalPregnancy === true && (
-              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-100 text-emerald-700 rounded">
-                Gestação clínica
-              </span>
-            )}
-            {c.liveBirth === true && (
-              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-200 text-emerald-800 rounded">
-                Nascido vivo
-              </span>
-            )}
+            </div>
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              {c.totalOocytesRetrieved !== null && (
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-purple-50 text-purple-700 rounded">
+                  {c.totalOocytesRetrieved} oócitos
+                </span>
+              )}
+              {c.fertilized2PN !== null && (
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-blue-50 text-blue-700 rounded">
+                  {c.fertilized2PN} 2PN
+                </span>
+              )}
+              {c.fertilizationRate !== null && (
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 rounded">
+                  Fert {Number(c.fertilizationRate).toFixed(0)}%
+                </span>
+              )}
+              {c.blastocysts !== null && (
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-pink-50 text-pink-700 rounded">
+                  {c.blastocysts} blastos
+                </span>
+              )}
+              {c.clinicalPregnancy === true && (
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-100 text-emerald-700 rounded">
+                  Gestação clínica
+                </span>
+              )}
+              {c.liveBirth === true && (
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-200 text-emerald-800 rounded">
+                  Nascido vivo
+                </span>
+              )}
+            </div>
           </div>
-        </div>
+        </button>
         <AlertBadges alerts={alerts} />
-        {expanded ? (
-          <ChevronUp className="w-5 h-5 text-gray-400" />
-        ) : (
-          <ChevronDown className="w-5 h-5 text-gray-400" />
-        )}
-      </button>
+        <button
+          onClick={onEdit}
+          className="p-2 text-gray-400 hover:text-lilac hover:bg-lilac/5 rounded transition"
+          title="Editar"
+        >
+          <Pencil className="w-4 h-4" />
+        </button>
+        <button
+          onClick={onToggle}
+          className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
+        >
+          {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+        </button>
+      </div>
       {expanded && (
         <div className="px-4 pb-4 pt-2 border-t bg-gray-50/50 space-y-3">
           <DataGrid

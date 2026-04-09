@@ -3,10 +3,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2 } from 'lucide-react';
 import {
   createIuiCycle,
+  updateIuiCycle,
   IUI_INDICATION_LABELS,
   SPERM_PREP_LABELS,
   SPERM_SOURCE_LABELS,
   type CreateIuiCycleDto,
+  type IuiCycle,
   type IUIIndication,
   type SpermPrep,
   type SpermSource,
@@ -32,22 +34,41 @@ interface FormData {
 
 export default function NewIuiCycleModal({
   patientId,
+  cycle,
   onClose,
 }: {
   patientId: string;
+  cycle?: IuiCycle;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
+  const isEdit = !!cycle;
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
-    defaultValues: {
-      cycleNumber: '1',
-      iuiDate: new Date().toISOString().split('T')[0],
-      indication: 'unexplained',
-      spermPreparationMethod: 'density_gradient',
-      spermSource: 'partner',
-      luteralSupport: false,
-      clinicalPregnancy: false,
-    },
+    defaultValues: cycle
+      ? {
+          cycleNumber: cycle.cycleNumber.toString(),
+          iuiDate: cycle.iuiDate,
+          indication: cycle.indication,
+          spermPreparationMethod: cycle.spermPreparationMethod,
+          spermSource: cycle.spermSource,
+          postWashConcentration: cycle.postWashConcentration?.toString() ?? '',
+          postWashTotalMotile: cycle.postWashTotalMotile?.toString() ?? '',
+          postWashProgressiveMotility: cycle.postWashProgressiveMotility?.toString() ?? '',
+          technicalDifficulty: cycle.technicalDifficulty ?? '',
+          luteralSupport: cycle.luteralSupport,
+          betaHcgValue: cycle.betaHcgValue?.toString() ?? '',
+          clinicalPregnancy: !!cycle.clinicalPregnancy,
+          notes: cycle.notes ?? '',
+        }
+      : {
+          cycleNumber: '1',
+          iuiDate: new Date().toISOString().split('T')[0],
+          indication: 'unexplained',
+          spermPreparationMethod: 'density_gradient',
+          spermSource: 'partner',
+          luteralSupport: false,
+          clinicalPregnancy: false,
+        },
   });
 
   const mutation = useMutation({
@@ -68,6 +89,9 @@ export default function NewIuiCycleModal({
       if (data.betaHcgValue) dto.betaHcgValue = Number(data.betaHcgValue);
       dto.clinicalPregnancy = data.clinicalPregnancy;
       if (data.notes) dto.notes = data.notes;
+      if (isEdit && cycle) {
+        return updateIuiCycle(patientId, cycle.id, dto);
+      }
       return createIuiCycle(patientId, dto);
     },
     onSuccess: () => {
@@ -86,7 +110,9 @@ export default function NewIuiCycleModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-semibold text-navy">Novo ciclo de IIU</h2>
+          <h2 className="text-lg font-semibold text-navy">
+            {isEdit ? 'Editar ciclo de IIU' : 'Novo ciclo de IIU'}
+          </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
@@ -225,7 +251,7 @@ export default function NewIuiCycleModal({
               {(isSubmitting || mutation.isPending) && (
                 <Loader2 className="w-4 h-4 animate-spin" />
               )}
-              Salvar ciclo
+              {isEdit ? 'Atualizar ciclo' : 'Salvar ciclo'}
             </button>
           </div>
         </form>

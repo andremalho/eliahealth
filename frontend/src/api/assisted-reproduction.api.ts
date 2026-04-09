@@ -247,6 +247,24 @@ export async function createOICycle(
   return data;
 }
 
+export type UpdateOvulationInductionCycleDto = Partial<CreateOvulationInductionCycleDto>;
+
+export async function updateOICycle(
+  patientId: string,
+  id: string,
+  dto: UpdateOvulationInductionCycleDto,
+): Promise<OvulationInductionCycle> {
+  const { data } = await api.patch(
+    `/patients/${patientId}/ovulation-induction-cycles/${id}`,
+    dto,
+  );
+  return data;
+}
+
+export async function deleteOICycle(patientId: string, id: string): Promise<void> {
+  await api.delete(`/patients/${patientId}/ovulation-induction-cycles/${id}`);
+}
+
 export async function fetchIuiCycles(patientId: string): Promise<IuiCycle[]> {
   const { data } = await api.get(`/patients/${patientId}/iui-cycles`);
   return data;
@@ -260,6 +278,21 @@ export async function createIuiCycle(
   return data;
 }
 
+export type UpdateIuiCycleDto = Partial<CreateIuiCycleDto>;
+
+export async function updateIuiCycle(
+  patientId: string,
+  id: string,
+  dto: UpdateIuiCycleDto,
+): Promise<IuiCycle> {
+  const { data } = await api.patch(`/patients/${patientId}/iui-cycles/${id}`, dto);
+  return data;
+}
+
+export async function deleteIuiCycle(patientId: string, id: string): Promise<void> {
+  await api.delete(`/patients/${patientId}/iui-cycles/${id}`);
+}
+
 export async function fetchIvfCycles(patientId: string): Promise<IvfCycle[]> {
   const { data } = await api.get(`/patients/${patientId}/ivf-cycles`);
   return data;
@@ -271,6 +304,21 @@ export async function createIvfCycle(
 ): Promise<IvfCycle> {
   const { data } = await api.post(`/patients/${patientId}/ivf-cycles`, dto);
   return data;
+}
+
+export type UpdateIvfCycleDto = Partial<CreateIvfCycleDto>;
+
+export async function updateIvfCycle(
+  patientId: string,
+  id: string,
+  dto: UpdateIvfCycleDto,
+): Promise<IvfCycle> {
+  const { data } = await api.patch(`/patients/${patientId}/ivf-cycles/${id}`, dto);
+  return data;
+}
+
+export async function deleteIvfCycle(patientId: string, id: string): Promise<void> {
+  await api.delete(`/patients/${patientId}/ivf-cycles/${id}`);
 }
 
 // ── Labels ──

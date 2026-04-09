@@ -3,12 +3,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2 } from 'lucide-react';
 import {
   createOICycle,
+  updateOICycle,
   OI_INDICATION_LABELS,
   OI_PROTOCOL_LABELS,
   OI_OUTCOME_LABELS,
   OHSS_LABELS,
   TRIGGER_LABELS,
   type CreateOvulationInductionCycleDto,
+  type OvulationInductionCycle,
   type OIIndication,
   type OIProtocol,
   type OICycleOutcome,
@@ -39,23 +41,46 @@ interface FormData {
 
 export default function NewOICycleModal({
   patientId,
+  cycle,
   onClose,
 }: {
   patientId: string;
+  cycle?: OvulationInductionCycle;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
+  const isEdit = !!cycle;
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
-    defaultValues: {
-      cycleNumber: '1',
-      cycleStartDate: new Date().toISOString().split('T')[0],
-      indication: 'anovulation_who_ii',
-      protocol: 'letrozole',
-      startingDose: '2.5',
-      startingDoseUnit: 'mg',
-      ovarianHyperstimulationSyndrome: false,
-      clinicalPregnancy: false,
-    },
+    defaultValues: cycle
+      ? {
+          cycleNumber: cycle.cycleNumber.toString(),
+          cycleStartDate: cycle.cycleStartDate,
+          indication: cycle.indication,
+          protocol: cycle.protocol,
+          startingDose: cycle.startingDose.toString(),
+          startingDoseUnit: cycle.startingDoseUnit,
+          triggerType: cycle.triggerType ?? '',
+          triggerDate: cycle.triggerDate ?? '',
+          outcomeType: cycle.outcomeType ?? '',
+          folliclesAtTrigger: cycle.folliclesAtTrigger?.toString() ?? '',
+          endometrialThicknessAtTrigger: cycle.endometrialThicknessAtTrigger?.toString() ?? '',
+          estradiolAtTrigger: cycle.estradiolAtTrigger?.toString() ?? '',
+          ovarianHyperstimulationSyndrome: cycle.ovarianHyperstimulationSyndrome,
+          ohssGrade: cycle.ohssGrade ?? '',
+          betaHcgValue: cycle.betaHcgValue?.toString() ?? '',
+          clinicalPregnancy: !!cycle.clinicalPregnancy,
+          notes: cycle.notes ?? '',
+        }
+      : {
+          cycleNumber: '1',
+          cycleStartDate: new Date().toISOString().split('T')[0],
+          indication: 'anovulation_who_ii',
+          protocol: 'letrozole',
+          startingDose: '2.5',
+          startingDoseUnit: 'mg',
+          ovarianHyperstimulationSyndrome: false,
+          clinicalPregnancy: false,
+        },
   });
 
   const mutation = useMutation({
@@ -80,6 +105,9 @@ export default function NewOICycleModal({
       if (data.betaHcgValue) dto.betaHcgValue = Number(data.betaHcgValue);
       dto.clinicalPregnancy = data.clinicalPregnancy;
       if (data.notes) dto.notes = data.notes;
+      if (isEdit && cycle) {
+        return updateOICycle(patientId, cycle.id, dto);
+      }
       return createOICycle(patientId, dto);
     },
     onSuccess: () => {
@@ -89,7 +117,7 @@ export default function NewOICycleModal({
   });
 
   return (
-    <Modal title="Novo ciclo de indução" onClose={onClose}>
+    <Modal title={isEdit ? 'Editar ciclo de indução' : 'Novo ciclo de indução'} onClose={onClose}>
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="p-6 space-y-6">
         {mutation.error && <ErrorBanner />}
 

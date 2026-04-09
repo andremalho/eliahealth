@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2 } from 'lucide-react';
 import {
   createIvfCycle,
+  updateIvfCycle,
   IVF_TYPE_LABELS,
   STIM_PROTOCOL_LABELS,
   FERT_METHOD_LABELS,
@@ -11,6 +12,7 @@ import {
   PGT_LABELS,
   OHSS_LABELS,
   type CreateIvfCycleDto,
+  type IvfCycle,
   type IVFCycleType,
   type StimulationProtocol,
   type FertilizationMethod,
@@ -60,23 +62,58 @@ interface FormData {
 
 export default function NewIvfCycleModal({
   patientId,
+  cycle,
   onClose,
 }: {
   patientId: string;
+  cycle?: IvfCycle;
   onClose: () => void;
 }) {
   const qc = useQueryClient();
+  const isEdit = !!cycle;
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
-    defaultValues: {
-      cycleNumber: '1',
-      cycleType: 'icsi',
-      stimulationProtocol: 'antagonist',
-      fertilizationMethod: 'icsi',
-      pgtPerformed: false,
-      ovarianHyperstimulationSyndrome: false,
-      clinicalPregnancy: false,
-      liveBirth: false,
-    },
+    defaultValues: cycle
+      ? {
+          cycleNumber: cycle.cycleNumber.toString(),
+          cycleType: cycle.cycleType,
+          stimulationProtocol: cycle.stimulationProtocol,
+          fertilizationMethod: cycle.fertilizationMethod,
+          stimulationStartDate: cycle.stimulationStartDate ?? '',
+          totalFSHDose: cycle.totalFSHDose?.toString() ?? '',
+          stimulationDays: cycle.stimulationDays?.toString() ?? '',
+          peakEstradiol: cycle.peakEstradiol?.toString() ?? '',
+          triggerType: cycle.triggerType ?? '',
+          triggerDate: cycle.triggerDate ?? '',
+          oocyteRetrievalDate: cycle.oocyteRetrievalDate ?? '',
+          totalOocytesRetrieved: cycle.totalOocytesRetrieved?.toString() ?? '',
+          miiOocytes: cycle.miiOocytes?.toString() ?? '',
+          fertilized2PN: cycle.fertilized2PN?.toString() ?? '',
+          blastocysts: cycle.blastocysts?.toString() ?? '',
+          pgtPerformed: cycle.pgtPerformed,
+          pgtType: cycle.pgtType ?? '',
+          euploidEmbryos: cycle.euploidEmbryos?.toString() ?? '',
+          cryopreservedEmbryos: cycle.cryopreservedEmbryos?.toString() ?? '',
+          transferDate: cycle.transferDate ?? '',
+          embryosTransferred: cycle.embryosTransferred?.toString() ?? '',
+          transferType: cycle.transferType ?? '',
+          endometrialThicknessAtTransfer: cycle.endometrialThicknessAtTransfer?.toString() ?? '',
+          ovarianHyperstimulationSyndrome: cycle.ovarianHyperstimulationSyndrome,
+          ohssGrade: cycle.ohssGrade ?? '',
+          betaHcgValue: cycle.betaHcgValue?.toString() ?? '',
+          clinicalPregnancy: !!cycle.clinicalPregnancy,
+          liveBirth: !!cycle.liveBirth,
+          notes: cycle.notes ?? '',
+        }
+      : {
+          cycleNumber: '1',
+          cycleType: 'icsi',
+          stimulationProtocol: 'antagonist',
+          fertilizationMethod: 'icsi',
+          pgtPerformed: false,
+          ovarianHyperstimulationSyndrome: false,
+          clinicalPregnancy: false,
+          liveBirth: false,
+        },
   });
 
   const pgtChecked = watch('pgtPerformed');
@@ -124,6 +161,9 @@ export default function NewIvfCycleModal({
       dto.clinicalPregnancy = data.clinicalPregnancy;
       dto.liveBirth = data.liveBirth;
       if (data.notes) dto.notes = data.notes;
+      if (isEdit && cycle) {
+        return updateIvfCycle(patientId, cycle.id, dto);
+      }
       return createIvfCycle(patientId, dto);
     },
     onSuccess: () => {
@@ -142,7 +182,9 @@ export default function NewIvfCycleModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-semibold text-navy">Novo ciclo de FIV / ICSI</h2>
+          <h2 className="text-lg font-semibold text-navy">
+            {isEdit ? 'Editar ciclo de FIV / ICSI' : 'Novo ciclo de FIV / ICSI'}
+          </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
@@ -416,7 +458,7 @@ export default function NewIvfCycleModal({
               {(isSubmitting || mutation.isPending) && (
                 <Loader2 className="w-4 h-4 animate-spin" />
               )}
-              Salvar ciclo
+              {isEdit ? 'Atualizar ciclo' : 'Salvar ciclo'}
             </button>
           </div>
         </form>

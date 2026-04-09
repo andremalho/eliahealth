@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, ChevronRight, Users, UserPlus } from 'lucide-react';
+import { Search, ChevronRight, Users, Plus } from 'lucide-react';
 import { fetchPatients, searchPatients, type Patient } from '../../api/patients.api';
 import { cn } from '../../utils/cn';
 import { toTitleCase, formatCPF, formatDate } from '../../utils/formatters';
+import NewPatientStandaloneModal from './NewPatientStandaloneModal';
 
 function calcAge(dob: string | null): number | null {
   if (!dob) return null;
@@ -23,6 +24,7 @@ function Skeleton({ className = '' }: { className?: string }) {
 export default function PatientsListPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['patients', 'list', search],
@@ -44,6 +46,13 @@ export default function PatientsListPage() {
             {total > 0 ? `${total} ${total === 1 ? 'paciente' : 'pacientes'}` : 'Prontuário de saúde da mulher'}
           </p>
         </div>
+        <button
+          onClick={() => setModalOpen(true)}
+          className="flex items-center gap-2 px-5 py-2.5 bg-lilac text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition"
+        >
+          <Plus className="w-4 h-4" />
+          Nova paciente
+        </button>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
@@ -78,9 +87,12 @@ export default function PatientsListPage() {
                 {search ? 'Nenhuma paciente encontrada' : 'Nenhuma paciente cadastrada'}
               </p>
               {!search && (
-                <p className="text-sm mt-1">
-                  Cadastre uma gestante no Dashboard ou crie via API.
-                </p>
+                <button
+                  onClick={() => setModalOpen(true)}
+                  className="mt-4 px-4 py-2 bg-lilac text-white text-sm rounded-lg hover:bg-primary-dark transition"
+                >
+                  Cadastrar primeira paciente
+                </button>
               )}
             </div>
           ) : (
@@ -95,10 +107,13 @@ export default function PatientsListPage() {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center gap-2 text-xs text-gray-400">
-        <UserPlus className="w-4 h-4" />
-        Para cadastrar uma nova paciente, utilize o fluxo de "Nova Gestante" no Dashboard.
+      <div className="mt-6 text-xs text-gray-400">
+        Para cadastrar uma <strong>gestante</strong>, utilize "Nova Gestante" no
+        Dashboard — o fluxo já cria a paciente, a gestação e abre o prontuário de
+        pré-natal.
       </div>
+
+      {modalOpen && <NewPatientStandaloneModal onClose={() => setModalOpen(false)} />}
     </div>
   );
 }

@@ -143,6 +143,15 @@ export class MenopauseAssessment {
   @Column({ name: 'dexa_date', type: 'date', nullable: true })
   dexaDate: string | null;
 
+  @Column({ name: 'dexa_attachment_url', type: 'text', nullable: true })
+  dexaAttachmentUrl: string | null;
+
+  @Column({ name: 'dexa_attachment_name', type: 'text', nullable: true })
+  dexaAttachmentName: string | null;
+
+  @Column({ name: 'dexa_attachment_mime_type', type: 'text', nullable: true })
+  dexaAttachmentMimeType: string | null;
+
   @Column({
     name: 'osteoporosis_classification',
     type: 'enum',

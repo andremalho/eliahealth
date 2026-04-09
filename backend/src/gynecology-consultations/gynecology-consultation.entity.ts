@@ -77,11 +77,29 @@ export class GynecologyConsultation {
   @Column({ name: 'last_pap_smear_result', type: 'varchar', nullable: true })
   lastPapSmearResult: string | null;
 
+  @Column({ name: 'pap_smear_attachment_url', type: 'text', nullable: true })
+  papSmearAttachmentUrl: string | null;
+
+  @Column({ name: 'pap_smear_attachment_name', type: 'text', nullable: true })
+  papSmearAttachmentName: string | null;
+
+  @Column({ name: 'pap_smear_attachment_mime_type', type: 'text', nullable: true })
+  papSmearAttachmentMimeType: string | null;
+
   @Column({ name: 'last_mammography', type: 'date', nullable: true })
   lastMammography: string | null;
 
   @Column({ name: 'last_mammography_result', type: 'varchar', nullable: true })
   lastMammographyResult: string | null;
+
+  @Column({ name: 'mammography_attachment_url', type: 'text', nullable: true })
+  mammographyAttachmentUrl: string | null;
+
+  @Column({ name: 'mammography_attachment_name', type: 'text', nullable: true })
+  mammographyAttachmentName: string | null;
+
+  @Column({ name: 'mammography_attachment_mime_type', type: 'text', nullable: true })
+  mammographyAttachmentMimeType: string | null;
 
   @Column({ name: 'contraceptive_method', type: 'varchar', nullable: true })
   contraceptiveMethod: string | null;

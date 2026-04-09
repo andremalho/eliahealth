@@ -1,4 +1,4 @@
-import { forwardRef, useEffect } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2, Sparkles } from 'lucide-react';
@@ -36,6 +36,7 @@ import {
   type MenstrualPattern,
 } from '../../../api/menopause-assessments.api';
 import { InfoTooltip } from '../../../components/forms/InfoTooltip';
+import { AttachmentField, type AttachmentValue } from '../../../components/forms/AttachmentField';
 import { cn } from '../../../utils/cn';
 
 interface FormData {
@@ -166,6 +167,13 @@ export default function NewMenopauseAssessmentModal({
 }) {
   const qc = useQueryClient();
   const isEdit = !!assessment;
+
+  // Anexo DEXA (coluna dedicada no backend)
+  const [dexaAttachment, setDexaAttachment] = useState<AttachmentValue>({
+    url: assessment?.dexaAttachmentUrl ?? null,
+    name: assessment?.dexaAttachmentName ?? null,
+    mimeType: assessment?.dexaAttachmentMimeType ?? null,
+  });
 
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     defaultValues: assessment
@@ -312,6 +320,9 @@ export default function NewMenopauseAssessmentModal({
       if (data.dexaFemoralNeckTScore) dto.dexaFemoralNeckTScore = Number(data.dexaFemoralNeckTScore);
       if (data.dexaTotalHipTScore) dto.dexaTotalHipTScore = Number(data.dexaTotalHipTScore);
       if (data.dexaDate) dto.dexaDate = data.dexaDate;
+      dto.dexaAttachmentUrl = dexaAttachment.url;
+      dto.dexaAttachmentName = dexaAttachment.name;
+      dto.dexaAttachmentMimeType = dexaAttachment.mimeType;
       if (data.fraxScore10yrMajor) dto.fraxScore10yrMajor = Number(data.fraxScore10yrMajor);
       if (data.fraxScore10yrHip) dto.fraxScore10yrHip = Number(data.fraxScore10yrHip);
 
@@ -593,6 +604,11 @@ export default function NewMenopauseAssessmentModal({
             <Field label="Data DEXA">
               <input {...register('dexaDate')} type="date" className={inputCn(false)} />
             </Field>
+            <AttachmentField
+              label="Anexar laudo DEXA"
+              value={dexaAttachment}
+              onChange={setDexaAttachment}
+            />
             <div className="grid grid-cols-3 gap-4">
               <Field label="T-score lombar">
                 <input

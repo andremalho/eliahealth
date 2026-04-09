@@ -49,7 +49,13 @@ export interface GynecologyConsultation {
   cycleVolume: MenstrualVolume | null;
   dysmenorrhea: DysmenorrheaGrade | null;
   lastPapSmear: string | null;
+  papSmearAttachmentUrl: string | null;
+  papSmearAttachmentName: string | null;
+  papSmearAttachmentMimeType: string | null;
   lastMammography: string | null;
+  mammographyAttachmentUrl: string | null;
+  mammographyAttachmentName: string | null;
+  mammographyAttachmentMimeType: string | null;
   contraceptiveMethod: string | null;
   smokingStatus: SmokingStatus | null;
   alcoholUse: boolean | null;
@@ -107,7 +113,13 @@ export interface CreateGynecologyConsultationDto {
   cycleVolume?: MenstrualVolume;
   dysmenorrhea?: DysmenorrheaGrade;
   lastPapSmear?: string;
+  papSmearAttachmentUrl?: string | null;
+  papSmearAttachmentName?: string | null;
+  papSmearAttachmentMimeType?: string | null;
   lastMammography?: string;
+  mammographyAttachmentUrl?: string | null;
+  mammographyAttachmentName?: string | null;
+  mammographyAttachmentMimeType?: string | null;
   contraceptiveMethod?: string;
   smokingStatus?: SmokingStatus;
   alcoholUse?: boolean;

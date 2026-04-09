@@ -46,8 +46,14 @@ export class CreateGynecologyConsultationDto {
   @IsOptional() @IsEnum(DysmenorrheaGrade) dysmenorrhea?: DysmenorrheaGrade;
   @IsOptional() @IsDateString() lastPapSmear?: string;
   @IsOptional() @IsString() lastPapSmearResult?: string;
+  @IsOptional() @IsString() papSmearAttachmentUrl?: string;
+  @IsOptional() @IsString() papSmearAttachmentName?: string;
+  @IsOptional() @IsString() papSmearAttachmentMimeType?: string;
   @IsOptional() @IsDateString() lastMammography?: string;
   @IsOptional() @IsString() lastMammographyResult?: string;
+  @IsOptional() @IsString() mammographyAttachmentUrl?: string;
+  @IsOptional() @IsString() mammographyAttachmentName?: string;
+  @IsOptional() @IsString() mammographyAttachmentMimeType?: string;
   @IsOptional() @IsString() contraceptiveMethod?: string;
   @IsOptional() @IsBoolean() sexuallyActive?: boolean;
   @IsOptional() @IsInt() @Min(0) numberOfSexualPartners?: number;

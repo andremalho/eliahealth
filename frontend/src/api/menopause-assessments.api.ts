@@ -95,6 +95,9 @@ export interface MenopauseAssessment {
   dexaFemoralNeckTScore: number | null;
   dexaTotalHipTScore: number | null;
   dexaDate: string | null;
+  dexaAttachmentUrl: string | null;
+  dexaAttachmentName: string | null;
+  dexaAttachmentMimeType: string | null;
   osteoporosisClassification: OsteoporosisClassification | null;
   fraxScore10yrMajor: number | null;
   fraxScore10yrHip: number | null;
@@ -169,6 +172,9 @@ export interface CreateMenopauseAssessmentDto {
   dexaFemoralNeckTScore?: number;
   dexaTotalHipTScore?: number;
   dexaDate?: string;
+  dexaAttachmentUrl?: string | null;
+  dexaAttachmentName?: string | null;
+  dexaAttachmentMimeType?: string | null;
   fraxScore10yrMajor?: number;
   fraxScore10yrHip?: number;
 

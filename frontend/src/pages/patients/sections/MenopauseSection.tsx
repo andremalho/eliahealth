@@ -10,7 +10,10 @@ import {
   ChevronDown,
   ChevronUp,
   Pencil,
+  Paperclip,
+  FileText,
 } from 'lucide-react';
+import { isPdf, resolveUploadUrl } from '../../../api/uploads.api';
 import {
   fetchMenopauseAssessments,
   deleteMenopauseAssessment,
@@ -245,6 +248,24 @@ function Card({
                 : null,
             ]}
           />
+
+          {c.dexaAttachmentUrl && (
+            <a
+              href={resolveUploadUrl(c.dexaAttachmentUrl)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-2 py-1 bg-lilac/10 text-lilac rounded hover:bg-lilac/20 transition text-xs"
+              title={c.dexaAttachmentName ?? undefined}
+            >
+              {isPdf(c.dexaAttachmentMimeType) ? (
+                <FileText className="w-3 h-3" />
+              ) : (
+                <Paperclip className="w-3 h-3" />
+              )}
+              Laudo DEXA
+              {c.dexaDate && ` · ${formatDate(c.dexaDate)}`}
+            </a>
+          )}
 
           {c.hrtScheme && c.hrtScheme !== 'none' && (
             <Block label="Terapia hormonal">

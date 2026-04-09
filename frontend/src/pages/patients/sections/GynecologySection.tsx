@@ -10,7 +10,10 @@ import {
   ChevronDown,
   ChevronUp,
   Pencil,
+  Paperclip,
+  FileText,
 } from 'lucide-react';
+import { isPdf, resolveUploadUrl } from '../../../api/uploads.api';
 import {
   fetchGynecologyConsultations,
   deleteGynecologyConsultation,
@@ -213,6 +216,33 @@ function ConsultationCard({
             ]}
           />
 
+          {/* Anexos de rastreios */}
+          {(c.papSmearAttachmentUrl || c.mammographyAttachmentUrl) && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                Laudos anexados
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {c.papSmearAttachmentUrl && (
+                  <AttachmentLink
+                    label={`Citopatológico${c.lastPapSmear ? ` · ${formatDate(c.lastPapSmear)}` : ''}`}
+                    url={c.papSmearAttachmentUrl}
+                    name={c.papSmearAttachmentName}
+                    mimeType={c.papSmearAttachmentMimeType}
+                  />
+                )}
+                {c.mammographyAttachmentUrl && (
+                  <AttachmentLink
+                    label={`Mamografia${c.lastMammography ? ` · ${formatDate(c.lastMammography)}` : ''}`}
+                    url={c.mammographyAttachmentUrl}
+                    name={c.mammographyAttachmentName}
+                    mimeType={c.mammographyAttachmentMimeType}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
           {c.diagnosis && (
             <Block label="Diagnóstico">{c.diagnosis}</Block>
           )}
@@ -273,5 +303,30 @@ function AlertItem({ alert }: { alert: GynecologyAlert }) {
       <s.Icon className="w-4 h-4 mt-0.5 shrink-0" />
       <span>{alert.message}</span>
     </div>
+  );
+}
+
+function AttachmentLink({
+  label,
+  url,
+  name,
+  mimeType,
+}: {
+  label: string;
+  url: string;
+  name: string | null;
+  mimeType: string | null;
+}) {
+  return (
+    <a
+      href={resolveUploadUrl(url)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 px-2 py-1 bg-lilac/10 text-lilac rounded hover:bg-lilac/20 transition text-xs"
+      title={name ?? undefined}
+    >
+      {isPdf(mimeType) ? <FileText className="w-3 h-3" /> : <Paperclip className="w-3 h-3" />}
+      <span>{label}</span>
+    </a>
   );
 }

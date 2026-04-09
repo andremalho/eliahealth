@@ -64,6 +64,9 @@ export class CreateMenopauseAssessmentDto {
   @IsOptional() @IsNumber() dexaFemoralNeckTScore?: number;
   @IsOptional() @IsNumber() dexaTotalHipTScore?: number;
   @IsOptional() @IsDateString() dexaDate?: string;
+  @IsOptional() @IsString() dexaAttachmentUrl?: string;
+  @IsOptional() @IsString() dexaAttachmentName?: string;
+  @IsOptional() @IsString() dexaAttachmentMimeType?: string;
   @IsOptional() @IsEnum(OsteoporosisClassification) osteoporosisClassification?: OsteoporosisClassification;
   @IsOptional() @IsNumber() fraxScore10yrMajor?: number;
   @IsOptional() @IsNumber() fraxScore10yrHip?: number;

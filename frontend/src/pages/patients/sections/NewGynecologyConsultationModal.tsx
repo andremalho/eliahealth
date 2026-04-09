@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2 } from 'lucide-react';
@@ -21,6 +22,7 @@ import {
   type MenstrualVolume,
   type BiRads,
 } from '../../../api/gynecology-consultations.api';
+import { AttachmentField, type AttachmentValue } from '../../../components/forms/AttachmentField';
 import { cn } from '../../../utils/cn';
 
 interface FormData {
@@ -159,6 +161,18 @@ export default function NewGynecologyConsultationModal({
   const qc = useQueryClient();
   const isEdit = !!consultation;
 
+  // Anexos: pap smear + mamografia (colunas dedicadas no backend)
+  const [papSmearAttachment, setPapSmearAttachment] = useState<AttachmentValue>({
+    url: consultation?.papSmearAttachmentUrl ?? null,
+    name: consultation?.papSmearAttachmentName ?? null,
+    mimeType: consultation?.papSmearAttachmentMimeType ?? null,
+  });
+  const [mammographyAttachment, setMammographyAttachment] = useState<AttachmentValue>({
+    url: consultation?.mammographyAttachmentUrl ?? null,
+    name: consultation?.mammographyAttachmentName ?? null,
+    mimeType: consultation?.mammographyAttachmentMimeType ?? null,
+  });
+
   // Pré-extração: o método contraceptivo no entity é texto livre,
   // não dá pra mapear de volta direto pro select. Tentamos extrair "marca"
   // separada se vier no formato "Label — Marca"
@@ -270,7 +284,13 @@ export default function NewGynecologyConsultationModal({
       if (data.cycleVolume) dto.cycleVolume = data.cycleVolume;
       if (data.dysmenorrhea) dto.dysmenorrhea = data.dysmenorrhea;
       if (data.lastPapSmear) dto.lastPapSmear = data.lastPapSmear;
+      dto.papSmearAttachmentUrl = papSmearAttachment.url;
+      dto.papSmearAttachmentName = papSmearAttachment.name;
+      dto.papSmearAttachmentMimeType = papSmearAttachment.mimeType;
       if (data.lastMammography) dto.lastMammography = data.lastMammography;
+      dto.mammographyAttachmentUrl = mammographyAttachment.url;
+      dto.mammographyAttachmentName = mammographyAttachment.name;
+      dto.mammographyAttachmentMimeType = mammographyAttachment.mimeType;
 
       // Contracepção: compõe label legível para o campo de texto livre
       if (data.contraceptiveMethodKey && data.contraceptiveMethodKey !== 'none') {
@@ -482,12 +502,26 @@ export default function NewGynecologyConsultationModal({
           {/* Rastreios prévios */}
           <Section title="Rastreios prévios">
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Último citopatológico">
-                <input {...register('lastPapSmear')} type="date" className={inputCn(false)} />
-              </Field>
-              <Field label="Última mamografia">
-                <input {...register('lastMammography')} type="date" className={inputCn(false)} />
-              </Field>
+              <div className="space-y-2">
+                <Field label="Último citopatológico">
+                  <input {...register('lastPapSmear')} type="date" className={inputCn(false)} />
+                </Field>
+                <AttachmentField
+                  label="Anexar laudo do citopatológico"
+                  value={papSmearAttachment}
+                  onChange={setPapSmearAttachment}
+                />
+              </div>
+              <div className="space-y-2">
+                <Field label="Última mamografia">
+                  <input {...register('lastMammography')} type="date" className={inputCn(false)} />
+                </Field>
+                <AttachmentField
+                  label="Anexar laudo da mamografia"
+                  value={mammographyAttachment}
+                  onChange={setMammographyAttachment}
+                />
+              </div>
             </div>
           </Section>
 

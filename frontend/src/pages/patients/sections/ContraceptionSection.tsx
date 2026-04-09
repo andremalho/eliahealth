@@ -18,6 +18,8 @@ import {
   deleteContraceptionRecord,
   METHOD_LABELS,
   DESIRE_LABELS,
+  WHOMEC_LABELS,
+  WHOMEC_BADGE_COLORS,
   type ContraceptionRecord,
   type ContraceptionAlert,
 } from '../../../api/contraception-records.api';
@@ -83,7 +85,7 @@ export default function ContraceptionSection({ patientId }: { patientId: string 
           className="flex items-center gap-2 px-4 py-2 bg-lilac text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition"
         >
           <Plus className="w-4 h-4" />
-          Nova consulta
+          Novo registro
         </button>
       </div>
 
@@ -117,8 +119,8 @@ export default function ContraceptionSection({ patientId }: { patientId: string 
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center py-12 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
           <Pill className="w-10 h-10 mb-3" />
-          <p className="font-medium">Nenhuma consulta de contracepção</p>
-          <p className="text-sm mt-1">Clique em "Nova consulta" para registrar a primeira</p>
+          <p className="font-medium">Nenhum registro de contracepção</p>
+          <p className="text-sm mt-1">Clique em "Novo registro" para começar</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -206,19 +208,21 @@ function Card({
           <button
             onClick={onEdit}
             className="p-2 text-gray-400 hover:text-lilac hover:bg-lilac/5 rounded transition"
-            title="Editar"
+            aria-label="Editar registro"
           >
             <Pencil className="w-4 h-4" />
           </button>
           <DeleteButton
             onConfirm={onDelete}
             isPending={isDeleting}
-            label="Excluir consulta"
-            confirmLabel="Excluir esta consulta?"
+            label="Excluir registro"
+            confirmLabel="Excluir este registro?"
           />
           <button
             onClick={onToggle}
             className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
+            aria-expanded={expanded}
+            aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'}
           >
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
@@ -230,14 +234,14 @@ function Card({
           {(c.iudInsertionDate || c.implantInsertionDate) && (
             <div className="grid grid-cols-2 gap-3">
               {c.iudInsertionDate && (
-                <Info_Card
+                <InfoCard
                   label="DIU inserido em"
                   value={formatDate(c.iudInsertionDate)}
                   sub={c.iudExpirationDate ? `Vence ${formatDate(c.iudExpirationDate)}` : undefined}
                 />
               )}
               {c.implantInsertionDate && (
-                <Info_Card
+                <InfoCard
                   label="Implante inserido em"
                   value={formatDate(c.implantInsertionDate)}
                   sub={
@@ -250,9 +254,50 @@ function Card({
             </div>
           )}
 
+          {/* WHO MEC */}
+          {c.whomecCategory && (
+            <div className={cn('px-3 py-2 rounded-lg border text-sm', WHOMEC_BADGE_COLORS[c.whomecCategory])}>
+              {WHOMEC_LABELS[c.whomecCategory]}
+            </div>
+          )}
+
+          {/* Fatores de risco */}
+          {(() => {
+            const risks: string[] = [];
+            if (c.smokingAge35Plus) risks.push('Tabagista ≥35 anos');
+            if (c.historyOfVTE) risks.push('História de TEV');
+            if (c.thrombophilia) risks.push(`Trombofilia${c.thrombophiliaDetails ? `: ${c.thrombophiliaDetails}` : ''}`);
+            if (c.migraineWithAura) risks.push('Enxaqueca com aura');
+            if (c.uncontrolledHypertension) risks.push('HAS não controlada');
+            if (c.diabetesWith15yearsPlus) risks.push('DM ≥15 anos');
+            if (c.breastCancerHistory) risks.push('Câncer de mama');
+            if (c.liverDisease) risks.push('Doença hepática');
+            if (c.cardiovascularDisease) risks.push('Doença cardiovascular');
+            if (c.stroke) risks.push('AVC');
+            return risks.length > 0 ? (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Fatores de risco</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {risks.map((r) => (
+                    <span key={r} className="px-2 py-0.5 text-xs bg-red-50 text-red-700 rounded">{r}</span>
+                  ))}
+                </div>
+              </div>
+            ) : null;
+          })()}
+
+          {/* PAE */}
+          {c.emergencyContraceptionUsed && (
+            <Block label="Contracepção de emergência">
+              {c.emergencyContraceptionMethod ?? 'Utilizada'}
+              {c.emergencyContraceptionDate && ` · ${formatDate(c.emergencyContraceptionDate)}`}
+            </Block>
+          )}
+
           {c.methodPrescribedDetails && (
             <Block label="Detalhes do método">{c.methodPrescribedDetails}</Block>
           )}
+          {c.returnDate && <Block label="Retorno">{formatDate(c.returnDate)}</Block>}
           {c.notes && <Block label="Observações">{c.notes}</Block>}
 
           {alerts.length > 0 && (
@@ -273,7 +318,7 @@ function Card({
   );
 }
 
-function Info_Card({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function InfoCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="bg-white rounded p-2.5 border border-gray-100">
       <p className="text-[10px] font-semibold text-gray-400 uppercase">{label}</p>

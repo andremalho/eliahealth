@@ -22,9 +22,13 @@ import {
   OI_OUTCOME_LABELS,
   IUI_INDICATION_LABELS,
   SPERM_SOURCE_LABELS,
+  SPERM_PREP_LABELS,
   IVF_TYPE_LABELS,
   STIM_PROTOCOL_LABELS,
   OHSS_LABELS,
+  PGT_LABELS,
+  TRANSFER_TYPE_LABELS,
+  FERT_METHOD_LABELS,
   type OvulationInductionCycle,
   type IuiCycle,
   type IvfCycle,
@@ -204,7 +208,7 @@ function OICard({
         <button
           onClick={onEdit}
           className="p-2 text-gray-400 hover:text-lilac hover:bg-lilac/5 rounded transition"
-          title="Editar"
+          aria-label="Editar ciclo"
         >
           <Pencil className="w-4 h-4" />
         </button>
@@ -217,6 +221,8 @@ function OICard({
         <button
           onClick={onToggle}
           className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
+          aria-expanded={expanded}
+          aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'}
         >
           {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
         </button>
@@ -335,7 +341,7 @@ function IuiCard({
         <button
           onClick={onEdit}
           className="p-2 text-gray-400 hover:text-lilac hover:bg-lilac/5 rounded transition"
-          title="Editar"
+          aria-label="Editar ciclo"
         >
           <Pencil className="w-4 h-4" />
         </button>
@@ -348,6 +354,8 @@ function IuiCard({
         <button
           onClick={onToggle}
           className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
+          aria-expanded={expanded}
+          aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'}
         >
           {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
         </button>
@@ -357,7 +365,7 @@ function IuiCard({
           <DataGrid
             items={[
               c.postWashTotalMotile !== null
-                ? { label: 'TMSC pós-lavagem', value: `${c.postWashTotalMotile} M` }
+                ? { label: 'TMSC', title: 'Total de Espermatozoides Móveis', value: `${c.postWashTotalMotile} M` }
                 : null,
               c.postWashConcentration !== null
                 ? { label: 'Concentração', value: `${c.postWashConcentration} M/mL` }
@@ -365,9 +373,17 @@ function IuiCard({
               c.postWashProgressiveMotility !== null
                 ? { label: 'Mot progressiva', value: `${c.postWashProgressiveMotility}%` }
                 : null,
+              c.spermPreparationMethod
+                ? { label: 'Preparo', value: SPERM_PREP_LABELS[c.spermPreparationMethod] }
+                : null,
               c.betaHcgValue !== null ? { label: 'β-hCG', value: String(c.betaHcgValue) } : null,
             ]}
           />
+          {c.clinicalPregnancy === true && (
+            <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-700 rounded">
+              Gestação clínica confirmada
+            </span>
+          )}
           {c.notes && <Block label="Observações">{c.notes}</Block>}
           <AlertList alerts={alerts} />
         </div>
@@ -494,7 +510,7 @@ function IvfCard({
         <button
           onClick={onEdit}
           className="p-2 text-gray-400 hover:text-lilac hover:bg-lilac/5 rounded transition"
-          title="Editar"
+          aria-label="Editar ciclo"
         >
           <Pencil className="w-4 h-4" />
         </button>
@@ -507,6 +523,8 @@ function IvfCard({
         <button
           onClick={onToggle}
           className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
+          aria-expanded={expanded}
+          aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'}
         >
           {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
         </button>
@@ -530,9 +548,37 @@ function IvfCard({
               c.cryopreservedEmbryos !== null
                 ? { label: 'Crio', value: String(c.cryopreservedEmbryos) }
                 : null,
-              c.ohssGrade ? { label: 'OHSS', value: OHSS_LABELS[c.ohssGrade] } : null,
+              c.ohssGrade ? { label: 'OHSS', title: 'Síndrome de Hiperestimulação Ovariana', value: OHSS_LABELS[c.ohssGrade] } : null,
             ]}
           />
+          {/* PGT */}
+          {c.pgtPerformed && (
+            <div className="flex flex-wrap gap-1.5">
+              {c.pgtType && (
+                <span className="px-2 py-0.5 text-xs font-semibold bg-blue-50 text-blue-700 rounded">
+                  {PGT_LABELS[c.pgtType]}
+                </span>
+              )}
+              {c.euploidEmbryos !== null && (
+                <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-700 rounded">
+                  {c.euploidEmbryos} euploides
+                </span>
+              )}
+            </div>
+          )}
+          {/* Transferência */}
+          {c.transferDate && (
+            <DataGrid
+              items={[
+                { label: 'Transferência', value: formatDate(c.transferDate) },
+                c.transferType ? { label: 'Tipo TX', value: TRANSFER_TYPE_LABELS[c.transferType] } : null,
+                { label: 'Fertilização', value: FERT_METHOD_LABELS[c.fertilizationMethod] },
+              ]}
+            />
+          )}
+          {c.betaHcgValue !== null && (
+            <DataGrid items={[{ label: 'β-hCG', value: `${c.betaHcgValue} mUI/mL` }]} />
+          )}
           {c.notes && <Block label="Observações">{c.notes}</Block>}
           <AlertList alerts={alerts} />
         </div>

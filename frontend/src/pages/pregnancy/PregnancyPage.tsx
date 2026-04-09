@@ -16,9 +16,12 @@ import NewConsultationModal from './sections/NewConsultationModal';
 import InitialAssessmentModal from './sections/InitialAssessmentModal';
 import ShareModal from './sections/ShareModal';
 import TimelineSection from './sections/TimelineSection';
+import PostpartumSection from './sections/PostpartumSection';
+import EditPatientDataModal from './sections/EditPatientDataModal';
 import {
   VaccinesCard, VaginalSwabsCard, BiologicalFatherCard,
   UltrasoundsCard, LabResultsCard, PrescriptionsCard, FilesCard,
+  PatientExamsReviewCard,
 } from './sections/SidebarCards';
 
 function gaString(days: number) { return `${Math.floor(days / 7)}s ${days % 7}d`; }
@@ -81,6 +84,7 @@ export default function PregnancyPage() {
   const [initialAssessmentModal, setInitialAssessmentModal] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [pdfDownloading, setPdfDownloading] = useState(false);
+  const [editPatientOpen, setEditPatientOpen] = useState(false);
   const qc = useQueryClient();
   const deleteCons = useMutation({
     mutationFn: (id: string) => deleteConsultation(id),
@@ -143,9 +147,14 @@ export default function PregnancyPage() {
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-semibold text-navy">{patientName}</h1>
               {pregnancy?.isHighRisk && <span className="px-2 py-0.5 bg-red-50 text-red-600 text-xs font-medium rounded-full">Alto Risco</span>}
-              <button className="text-gray-400 hover:text-lilac"><Edit3 className="w-4 h-4" /></button>
+              <button onClick={() => setEditPatientOpen(true)} className="text-gray-400 hover:text-lilac" title="Editar dados da paciente">
+                <Edit3 className="w-4 h-4" />
+              </button>
             </div>
             <p className="text-sm text-gray-500 mt-1">
+              {(patient as any)?.cpf && (
+                <><span className="font-mono">CPF {String((patient as any).cpf).replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}</span>{(patient?.email || patient?.phone) && ' · '}</>
+              )}
               {patient?.email}{patient?.email && patient?.phone && ' · '}{patient?.phone}
             </p>
             <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1"><Bell className="w-3.5 h-3.5" /> 0 contatos de emergência</p>
@@ -470,6 +479,7 @@ export default function PregnancyPage() {
             )}
           </div>
 
+          {pregnancyId && <PostpartumSection pregnancyId={pregnancyId} />}
           {pregnancyId && <TimelineSection pregnancyId={pregnancyId} />}
         </div>
 
@@ -487,6 +497,7 @@ export default function PregnancyPage() {
             <LabResultsCard pregnancyId={pregnancyId} />
             <UltrasoundsCard pregnancyId={pregnancyId} />
             <VaginalSwabsCard pregnancyId={pregnancyId} />
+            <PatientExamsReviewCard pregnancyId={pregnancyId} />
             <PrescriptionsCard pregnancyId={pregnancyId} />
             <FilesCard pregnancyId={pregnancyId} />
           </div>
@@ -506,6 +517,13 @@ export default function PregnancyPage() {
           pregnancyId={pregnancyId}
           patientName={patientName}
           onClose={() => setShareModalOpen(false)}
+        />
+      )}
+      {editPatientOpen && pregnancy?.patientId && (
+        <EditPatientDataModal
+          patientId={pregnancy.patientId}
+          initial={patient}
+          onClose={() => setEditPatientOpen(false)}
         />
       )}
       {initialAssessmentModal && pregnancyId && pregnancy?.patientId && (

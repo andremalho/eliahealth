@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Syringe, FlaskConical, UserCircle, FileText, Pill, FolderOpen, Stethoscope, Plus, Pencil, Trash2 } from 'lucide-react';
+import { Syringe, FlaskConical, UserCircle, FileText, Pill, FolderOpen, Stethoscope, Plus, Pencil, Trash2, Upload, Check, X } from 'lucide-react';
 import {
   fetchVaccines, fetchVaginalSwabs, fetchBiologicalFather, fetchFiles, fetchPrescriptions, fetchLabResults, fetchUltrasounds,
   deleteVaccine, deleteVaginalSwab, deleteBiologicalFather, deleteFile, deletePrescription, deleteLabResult, deleteUltrasound,
+  fetchPendingPatientExams, reviewPatientExam,
 } from '../../../api/pregnancy.api';
 import { cn } from '../../../utils/cn';
 import AddVaccineModal from './AddVaccineModal';
@@ -420,5 +421,88 @@ export function FilesCard({ pregnancyId }: { pregnancyId: string }) {
         />
       )}
     </>
+  );
+}
+
+export function PatientExamsReviewCard({ pregnancyId }: { pregnancyId: string }) {
+  const qc = useQueryClient();
+  const { data } = useQuery({
+    queryKey: ['patient-exams-review', pregnancyId],
+    queryFn: () => fetchPendingPatientExams(pregnancyId),
+  });
+  const items = Array.isArray(data) ? data : [];
+  const pending = items.filter((e: any) => e.review_status === 'pending_review');
+
+  const review = useMutation({
+    mutationFn: ({ id, status, notes }: { id: string; status: 'confirmed' | 'rejected'; notes?: string }) =>
+      reviewPatientExam(id, status, notes),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['patient-exams-review', pregnancyId] });
+      qc.invalidateQueries({ queryKey: ['lab-results', pregnancyId] });
+    },
+  });
+
+  if (items.length === 0) return null;
+
+  return (
+    <SideCard
+      title="Exames da Paciente"
+      icon={Upload}
+      count={pending.length > 0 ? pending.length : items.length}
+    >
+      {items.length === 0 ? (
+        <p className="text-xs text-gray-400">Nenhum exame enviado</p>
+      ) : (
+        <div className="space-y-3">
+          {items.slice(0, 8).map((e: any) => (
+            <div key={e.id} className="border-b border-gray-100 pb-2 last:border-0">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-700 font-medium truncate">{e.exam_name}</p>
+                  <p className="text-[10px] text-gray-400">
+                    {e.exam_date ? new Date(e.exam_date + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
+                    {e.value != null && <> · {e.value}{e.unit ? ` ${e.unit}` : ''}</>}
+                  </p>
+                  {e.lab_name && <p className="text-[10px] text-gray-400">{e.lab_name}</p>}
+                </div>
+                {e.review_status === 'pending_review' ? (
+                  <div className="flex items-center gap-1 shrink-0 ml-2">
+                    <button
+                      onClick={() => review.mutate({ id: e.id, status: 'confirmed' })}
+                      className="p-1 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                      title="Confirmar"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const notes = window.prompt('Motivo da rejeicao (opcional):');
+                        review.mutate({ id: e.id, status: 'rejected', notes: notes ?? undefined });
+                      }}
+                      className="p-1 rounded bg-red-50 text-red-500 hover:bg-red-100"
+                      title="Rejeitar"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <span className={cn(
+                    'px-2 py-0.5 text-[10px] font-medium rounded-full shrink-0 ml-2',
+                    e.review_status === 'confirmed' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700',
+                  )}>
+                    {e.review_status === 'confirmed' ? 'Confirmado' : 'Rejeitado'}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+          {pending.length > 0 && (
+            <p className="text-[10px] text-amber-600 font-medium">
+              {pending.length} exame{pending.length > 1 ? 's' : ''} aguardando revisao
+            </p>
+          )}
+        </div>
+      )}
+    </SideCard>
   );
 }

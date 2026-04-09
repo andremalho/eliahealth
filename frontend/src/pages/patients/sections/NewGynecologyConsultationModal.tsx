@@ -173,24 +173,40 @@ export default function NewGynecologyConsultationModal({
     mimeType: consultation?.mammographyAttachmentMimeType ?? null,
   });
 
-  // Pré-extração: o método contraceptivo no entity é texto livre,
-  // não dá pra mapear de volta direto pro select. Tentamos extrair "marca"
-  // separada se vier no formato "Label — Marca"
+  // Pré-extração: o método contraceptivo no entity é texto livre
+  // no formato "Label — Marca". Mapeamos de volta pro select.
   let initialContraceptiveKey = '';
   let initialContraceptiveBrand = '';
   if (consultation?.contraceptiveMethod) {
     const m = consultation.contraceptiveMethod;
-    const sepIdx = m.indexOf(' — ');
-    if (sepIdx >= 0) {
-      initialContraceptiveBrand = m.slice(sepIdx + 3);
+    if (m === 'Sem método') {
+      initialContraceptiveKey = 'none';
+    } else {
+      const sepIdx = m.indexOf(' — ');
+      const label = sepIdx >= 0 ? m.slice(0, sepIdx) : m;
+      if (sepIdx >= 0) initialContraceptiveBrand = m.slice(sepIdx + 3);
+      const found = CONTRACEPTIVE_METHOD_OPTIONS.find((o) => o.label === label);
+      if (found) initialContraceptiveKey = found.value;
     }
-    // Mantém o select vazio (médico re-seleciona se quiser auditar)
-    void initialContraceptiveKey;
   }
 
   // Achados mamários: o backend grava como string concatenada "Label: desc; Label: desc".
-  // Pré-popular checkboxes a partir disso é error-prone — deixamos vazio em edição
-  // (médico pode re-marcar se quiser).
+  // Parseamos de volta para checkboxes + descrições.
+  let initialBreastFindings: string[] = [];
+  const initialBreastDescs: Record<string, string> = {};
+  if (consultation?.breastExamFindings) {
+    const parts = consultation.breastExamFindings.split('; ');
+    for (const part of parts) {
+      const colonIdx = part.indexOf(': ');
+      const label = colonIdx >= 0 ? part.slice(0, colonIdx) : part;
+      const desc = colonIdx >= 0 ? part.slice(colonIdx + 2) : '';
+      const opt = BREAST_FINDING_OPTIONS.find((o) => o.label === label);
+      if (opt) {
+        initialBreastFindings.push(opt.value);
+        if (desc) initialBreastDescs[opt.value] = desc;
+      }
+    }
+  }
 
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     defaultValues: consultation
@@ -206,7 +222,7 @@ export default function NewGynecologyConsultationModal({
           dysmenorrhea: consultation.dysmenorrhea ?? '',
           lastPapSmear: consultation.lastPapSmear ?? '',
           lastMammography: consultation.lastMammography ?? '',
-          contraceptiveMethodKey: initialContraceptiveKey as any,
+          contraceptiveMethodKey: initialContraceptiveKey,
           contraceptiveBrand: initialContraceptiveBrand,
           smokingStatus: consultation.smokingStatus ?? '',
           alcoholUsePattern: consultation.alcoholUsePattern ?? '',
@@ -218,12 +234,12 @@ export default function NewGynecologyConsultationModal({
           bloodPressureDiastolic: consultation.bloodPressureDiastolic?.toString() ?? '',
           heartRate: consultation.heartRate?.toString() ?? '',
           breastExamPerformed: !!consultation.breastExamPerformed,
-          breastFindings: [],
-          breastFindingDescNodulo: '',
-          breastFindingDescRetracao: '',
-          breastFindingDescAlteracaoPele: '',
-          breastFindingDescDescargaPapilar: '',
-          breastFindingDescOutros: consultation.breastExamFindings ?? '',
+          breastFindings: initialBreastFindings,
+          breastFindingDescNodulo: initialBreastDescs['nodulo'] ?? '',
+          breastFindingDescRetracao: initialBreastDescs['retracao'] ?? '',
+          breastFindingDescAlteracaoPele: initialBreastDescs['alteracao_pele'] ?? '',
+          breastFindingDescDescargaPapilar: initialBreastDescs['descarga_papilar'] ?? '',
+          breastFindingDescOutros: initialBreastDescs['outros'] ?? '',
           biradsClassification: consultation.biradsClassification ?? '',
           pelvicExamPerformed: !!consultation.pelvicExamPerformed,
           cervixAppearance: consultation.cervixAppearance ?? '',
@@ -739,8 +755,19 @@ export default function NewGynecologyConsultationModal({
             <Field label="Encaminhamentos">
               <textarea {...register('referrals')} rows={2} className={inputCn(false)} />
             </Field>
-            <Field label="Data de retorno">
-              <input {...register('returnDate')} type="date" className={inputCn(false)} />
+            <Field label="Data de retorno" error={errors.returnDate?.message}>
+              <input
+                {...register('returnDate', {
+                  validate: (v) => {
+                    if (!v) return true;
+                    const consDate = watch('consultationDate');
+                    if (consDate && v < consDate) return 'Retorno não pode ser antes da consulta';
+                    return true;
+                  },
+                })}
+                type="date"
+                className={inputCn(!!errors.returnDate)}
+              />
             </Field>
             <Field label="Observações">
               <textarea {...register('notes')} rows={3} className={inputCn(false)} />

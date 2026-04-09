@@ -93,7 +93,7 @@ export default function MenstrualCycleSection({ patientId }: { patientId: string
         <div className="flex flex-col items-center py-12 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
           <Activity className="w-10 h-10 mb-3" />
           <p className="font-medium">Nenhuma avaliação registrada</p>
-          <p className="text-sm mt-1">Clique em "Nova avaliação" para registrar a primeira</p>
+          <p className="text-sm mt-1">Clique em "Nova avaliação" para começar</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -211,7 +211,7 @@ function Card({
           <button
             onClick={onEdit}
             className="p-2 text-gray-400 hover:text-lilac hover:bg-lilac/5 rounded transition"
-            title="Editar"
+            aria-label="Editar avaliação"
           >
             <Pencil className="w-4 h-4" />
           </button>
@@ -224,6 +224,8 @@ function Card({
           <button
             onClick={onToggle}
             className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
+            aria-expanded={expanded}
+            aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'}
           >
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
@@ -241,13 +243,13 @@ function Card({
                 ? { label: 'Duração', value: `${c.cycleDurationDays} dias` }
                 : null,
               c.lastMenstrualPeriod
-                ? { label: 'DUM', value: formatDate(c.lastMenstrualPeriod) }
+                ? { label: 'DUM', title: 'Data da Última Menstruação', value: formatDate(c.lastMenstrualPeriod) }
                 : null,
               c.estimatedBloodVolumeMl
                 ? { label: 'Volume', value: `${c.estimatedBloodVolumeMl} mL` }
                 : null,
               c.pictorialBloodChart
-                ? { label: 'PBAC', value: String(c.pictorialBloodChart) }
+                ? { label: 'PBAC', title: 'Pictorial Blood Assessment Chart', value: String(c.pictorialBloodChart) }
                 : null,
               c.numberOfPadsPerDay
                 ? { label: 'Absorventes/dia', value: String(c.numberOfPadsPerDay) }
@@ -335,14 +337,14 @@ function Card({
   );
 }
 
-function DataGrid({ items }: { items: ({ label: string; value: string } | null)[] }) {
-  const filtered = items.filter((i): i is { label: string; value: string } => i !== null);
+function DataGrid({ items }: { items: ({ label: string; title?: string; value: string } | null)[] }) {
+  const filtered = items.filter((i): i is { label: string; title?: string; value: string } => i !== null);
   if (filtered.length === 0) return null;
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
       {filtered.map((item) => (
         <div key={item.label} className="bg-white rounded p-2.5 border border-gray-100">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase">{item.label}</p>
+          <p className="text-[10px] font-semibold text-gray-400 uppercase" title={item.title}>{item.label}</p>
           <p className="text-sm font-medium text-gray-800 mt-0.5">{item.value}</p>
         </div>
       ))}

@@ -177,12 +177,12 @@ function Card({
                 </span>
               )}
               {c.gsmDiagnosis && (
-                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-pink-50 text-pink-700 rounded">
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-pink-50 text-pink-700 rounded" title="Síndrome Geniturinária da Menopausa">
                   GSM
                 </span>
               )}
               {c.hrtScheme && c.hrtScheme !== 'none' && (
-                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 rounded">
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-emerald-50 text-emerald-700 rounded" title="Terapia Hormonal da Menopausa">
                   THM
                 </span>
               )}
@@ -205,7 +205,7 @@ function Card({
           <button
             onClick={onEdit}
             className="p-2 text-gray-400 hover:text-lilac hover:bg-lilac/5 rounded transition"
-            title="Editar"
+            aria-label="Editar avaliação"
           >
             <Pencil className="w-4 h-4" />
           </button>
@@ -218,6 +218,8 @@ function Card({
           <button
             onClick={onToggle}
             className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
+            aria-expanded={expanded}
+            aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'}
           >
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
@@ -235,16 +237,16 @@ function Card({
                 ? { label: 'Fogachos/dia', value: String(c.hotFlashesPerDay) }
                 : null,
               c.dexaLumbarTScore !== null
-                ? { label: 'DEXA lombar T', value: Number(c.dexaLumbarTScore).toFixed(1) }
+                ? { label: 'DEXA lombar T', title: 'Densitometria óssea — T-score lombar', value: Number(c.dexaLumbarTScore).toFixed(1) }
                 : null,
               c.dexaFemoralNeckTScore !== null
-                ? { label: 'DEXA fêmur T', value: Number(c.dexaFemoralNeckTScore).toFixed(1) }
+                ? { label: 'DEXA fêmur T', title: 'Densitometria óssea — T-score colo do fêmur', value: Number(c.dexaFemoralNeckTScore).toFixed(1) }
                 : null,
               c.fraxScore10yrMajor !== null
-                ? { label: 'FRAX major', value: `${c.fraxScore10yrMajor}%` }
+                ? { label: 'FRAX major', title: 'Risco de fratura osteoporótica major em 10 anos', value: `${c.fraxScore10yrMajor}%` }
                 : null,
               c.vitaminDLevel !== null
-                ? { label: 'Vit D', value: `${c.vitaminDLevel} ng/mL` }
+                ? { label: 'Vit D', title: 'Vitamina D (25-OH)', value: `${c.vitaminDLevel} ng/mL` }
                 : null,
             ]}
           />
@@ -299,14 +301,14 @@ function Card({
   );
 }
 
-function DataGrid({ items }: { items: ({ label: string; value: string } | null)[] }) {
-  const filtered = items.filter((i): i is { label: string; value: string } => i !== null);
+function DataGrid({ items }: { items: ({ label: string; title?: string; value: string } | null)[] }) {
+  const filtered = items.filter((i): i is { label: string; title?: string; value: string } => i !== null);
   if (filtered.length === 0) return null;
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
       {filtered.map((item) => (
         <div key={item.label} className="bg-white rounded p-2.5 border border-gray-100">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase">{item.label}</p>
+          <p className="text-[10px] font-semibold text-gray-400 uppercase" title={item.title}>{item.label}</p>
           <p className="text-sm font-medium text-gray-800 mt-0.5">{item.value}</p>
         </div>
       ))}

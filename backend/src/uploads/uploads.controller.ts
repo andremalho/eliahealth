@@ -68,7 +68,7 @@ const ULTRASOUND_PROMPT = `Você é um assistente médico especializado em obste
 Se o documento não for um laudo de ultrassonografia, retorne {"examType":"other","finalReport":""}.`;
 
 @Controller('uploads')
-@Roles(UserRole.PHYSICIAN, UserRole.NURSE, UserRole.ADMIN)
+@Roles(UserRole.PHYSICIAN, UserRole.NURSE, UserRole.ADMIN, UserRole.PATIENT)
 export class UploadsController {
   private readonly logger = new Logger(UploadsController.name);
   private client: Anthropic | null = null;

@@ -18,6 +18,11 @@ import {
   fetchGynecologyConsultations,
   deleteGynecologyConsultation,
   CONSULTATION_TYPE_LABELS,
+  SMOKING_LABELS,
+  ALCOHOL_USE_LABELS,
+  DYSMENORRHEA_LABELS,
+  MENSTRUAL_VOLUME_LABELS,
+  BIRADS_LABELS,
   type GynecologyConsultation,
   type GynecologyAlert,
 } from '../../../api/gynecology-consultations.api';
@@ -69,9 +74,7 @@ export default function GynecologySection({ patientId }: { patientId: string }) 
         <div>
           <h2 className="text-lg font-semibold text-navy">Consultas Ginecológicas</h2>
           <p className="text-xs text-gray-500 mt-0.5">
-            {consultations.length === 0
-              ? 'Nenhuma consulta registrada'
-              : `${consultations.length} consulta${consultations.length !== 1 ? 's' : ''} registrada${consultations.length !== 1 ? 's' : ''}`}
+            Anamnese, exame físico e rastreios (FEBRASGO)
           </p>
         </div>
         <button
@@ -93,7 +96,7 @@ export default function GynecologySection({ patientId }: { patientId: string }) 
         <div className="flex flex-col items-center py-12 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
           <Stethoscope className="w-10 h-10 mb-3" />
           <p className="font-medium">Nenhuma consulta ginecológica</p>
-          <p className="text-sm mt-1">Clique em "Nova consulta" para registrar a primeira</p>
+          <p className="text-sm mt-1">Clique em "Nova consulta" para começar</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -179,7 +182,7 @@ function ConsultationCard({
           <button
             onClick={onEdit}
             className="p-2 text-gray-400 hover:text-lilac hover:bg-lilac/5 rounded transition"
-            title="Editar"
+            aria-label="Editar consulta"
           >
             <Pencil className="w-4 h-4" />
           </button>
@@ -192,6 +195,8 @@ function ConsultationCard({
           <button
             onClick={onToggle}
             className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
+            aria-expanded={expanded}
+            aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'}
           >
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
@@ -204,17 +209,83 @@ function ConsultationCard({
           <DataGrid
             items={[
               c.bloodPressureSystolic && c.bloodPressureDiastolic
-                ? { label: 'PA', value: `${c.bloodPressureSystolic}/${c.bloodPressureDiastolic} mmHg` }
+                ? { label: 'PA', title: 'Pressão Arterial', value: `${c.bloodPressureSystolic}/${c.bloodPressureDiastolic} mmHg` }
                 : null,
-              c.heartRate ? { label: 'FC', value: `${c.heartRate} bpm` } : null,
+              c.heartRate ? { label: 'FC', title: 'Frequência Cardíaca', value: `${c.heartRate} bpm` } : null,
               c.weight ? { label: 'Peso', value: `${c.weight} kg` } : null,
               c.height ? { label: 'Altura', value: `${c.height} cm` } : null,
-              c.bmi ? { label: 'IMC', value: Number(c.bmi).toFixed(1) } : null,
+              c.bmi ? { label: 'IMC', title: 'Índice de Massa Corporal', value: Number(c.bmi).toFixed(1) } : null,
               c.lastMenstrualPeriod
-                ? { label: 'DUM', value: formatDate(c.lastMenstrualPeriod) }
+                ? { label: 'DUM', title: 'Data da Última Menstruação', value: formatDate(c.lastMenstrualPeriod) }
                 : null,
             ]}
           />
+
+          {/* Ciclo menstrual */}
+          {(c.cycleInterval || c.cycleDuration || c.cycleVolume || c.dysmenorrhea) && (
+            <DataGrid
+              items={[
+                c.cycleInterval ? { label: 'Intervalo', value: `${c.cycleInterval} dias` } : null,
+                c.cycleDuration ? { label: 'Duração', value: `${c.cycleDuration} dias` } : null,
+                c.cycleVolume ? { label: 'Volume', value: MENSTRUAL_VOLUME_LABELS[c.cycleVolume] } : null,
+                c.dysmenorrhea ? { label: 'Dismenorreia', value: DYSMENORRHEA_LABELS[c.dysmenorrhea] } : null,
+              ]}
+            />
+          )}
+
+          {/* Contracepção e hábitos */}
+          {c.contraceptiveMethod && (
+            <Block label="Contracepção">{c.contraceptiveMethod}</Block>
+          )}
+          {(c.smokingStatus || c.alcoholUsePattern || c.drugUse) && (
+            <div className="flex flex-wrap gap-2">
+              {c.smokingStatus && (
+                <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                  {SMOKING_LABELS[c.smokingStatus]}
+                </span>
+              )}
+              {c.alcoholUsePattern && c.alcoholUsePattern !== 'none' && (
+                <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                  Etilismo: {ALCOHOL_USE_LABELS[c.alcoholUsePattern]}
+                </span>
+              )}
+              {c.drugUse && (
+                <span className="px-2 py-1 text-xs bg-amber-50 text-amber-700 rounded">
+                  Uso de drogas{c.drugUseDetails ? `: ${c.drugUseDetails}` : ''}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Exame mamário */}
+          {c.breastExamPerformed && (c.breastExamFindings || c.biradsClassification) && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Exame mamário</p>
+              {c.breastExamFindings && (
+                <p className="text-sm text-gray-700">{c.breastExamFindings}</p>
+              )}
+              {c.biradsClassification && (
+                <span className="inline-block mt-1 px-2 py-0.5 text-xs font-semibold bg-purple-50 text-purple-700 rounded">
+                  {BIRADS_LABELS[c.biradsClassification]}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Exame pélvico */}
+          {c.pelvicExamPerformed && (c.cervixAppearance || c.papSmearCollected) && (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Exame pélvico</p>
+              {c.cervixAppearance && (
+                <p className="text-sm text-gray-700">{c.cervixAppearance}</p>
+              )}
+              {c.papSmearCollected && (
+                <span className="inline-block mt-1 px-2 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-700 rounded">
+                  Citopatológico coletado
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Anexos de rastreios */}
           {(c.papSmearAttachmentUrl || c.mammographyAttachmentUrl) && (
@@ -243,9 +314,14 @@ function ConsultationCard({
             </div>
           )}
 
+          {c.currentIllnessHistory && (
+            <Block label="História da doença atual">{c.currentIllnessHistory}</Block>
+          )}
           {c.diagnosis && (
             <Block label="Diagnóstico">{c.diagnosis}</Block>
           )}
+          {c.referrals && <Block label="Encaminhamentos">{c.referrals}</Block>}
+          {c.returnDate && <Block label="Retorno">{formatDate(c.returnDate)}</Block>}
           {c.notes && <Block label="Observações">{c.notes}</Block>}
 
           {/* Alertas do copiloto */}
@@ -267,14 +343,14 @@ function ConsultationCard({
   );
 }
 
-function DataGrid({ items }: { items: ({ label: string; value: string } | null)[] }) {
-  const filtered = items.filter((i): i is { label: string; value: string } => i !== null);
+function DataGrid({ items }: { items: ({ label: string; title?: string; value: string } | null)[] }) {
+  const filtered = items.filter((i): i is { label: string; title?: string; value: string } => i !== null);
   if (filtered.length === 0) return null;
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
       {filtered.map((item) => (
         <div key={item.label} className="bg-white rounded p-2.5 border border-gray-100">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase">{item.label}</p>
+          <p className="text-[10px] font-semibold text-gray-400 uppercase" title={item.title}>{item.label}</p>
           <p className="text-sm font-medium text-gray-800 mt-0.5">{item.value}</p>
         </div>
       ))}

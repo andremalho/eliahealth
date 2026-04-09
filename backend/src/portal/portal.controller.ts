@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Delete, Patch, Body, Query, Param, Req } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { PortalService } from './portal.service.js';
 import { PortalDataService } from './portal-data.service.js';
 import { UpdatePortalProfileDto } from './dto/update-portal-profile.dto.js';
@@ -18,6 +19,22 @@ export class PortalController {
     private readonly portalService: PortalService,
     private readonly dataService: PortalDataService,
   ) {}
+
+  // ── Auth OTP ──
+
+  @Public()
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  @Post('auth/request-otp')
+  requestOtp(@Body() body: { cpf: string }) {
+    return this.portalService.requestOtp(body.cpf);
+  }
+
+  @Public()
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  @Post('auth/verify-otp')
+  verifyOtp(@Body() body: { cpf: string; code: string }) {
+    return this.portalService.verifyOtp(body.cpf, body.code);
+  }
 
   // ── Auth / Onboarding ──
 
@@ -168,6 +185,15 @@ export class PortalController {
     return this.dataService.createPublicShare(patientId, dto.expiresAt);
   }
 
+  @Post('share/public/by-pregnancy/:pregnancyId')
+  @Roles(UserRole.PHYSICIAN, UserRole.NURSE, UserRole.ADMIN)
+  createPublicShareForPregnancy(
+    @Param('pregnancyId') pregnancyId: string,
+    @Body() body: { expiresAt?: string },
+  ) {
+    return this.dataService.createPublicShareForPregnancy(pregnancyId, body?.expiresAt);
+  }
+
   @Public()
   @Get('share/public/:shareToken')
   getPublicShareData(@Param('shareToken') shareToken: string, @Req() req: any) {
@@ -233,5 +259,22 @@ export class PortalController {
   @Roles(UserRole.PATIENT)
   deletePatientExam(@CurrentUser('patientId') patientId: string, @Param('id') id: string) {
     return this.dataService.deletePatientExam(patientId, id);
+  }
+
+  // ── Doctor Exam Review ──
+
+  @Get('patient-exams/pending/:pregnancyId')
+  @Roles(UserRole.PHYSICIAN, UserRole.NURSE, UserRole.ADMIN)
+  listPendingPatientExams(@Param('pregnancyId') pregnancyId: string) {
+    return this.dataService.listPendingPatientExams(pregnancyId);
+  }
+
+  @Patch('patient-exams/:id/review')
+  @Roles(UserRole.PHYSICIAN, UserRole.NURSE, UserRole.ADMIN)
+  reviewPatientExam(
+    @Param('id') id: string,
+    @Body() body: { status: 'confirmed' | 'rejected'; notes?: string },
+  ) {
+    return this.dataService.reviewPatientExam(id, body.status, body.notes);
   }
 }

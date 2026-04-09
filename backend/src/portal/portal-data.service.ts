@@ -90,7 +90,12 @@ export class PortalDataService {
     this.audit(patientId, 'dashboard', pregnancy.id);
 
     return {
-      patient: { name: patient.fullName, email: patient.email, phone: patient.phone },
+      patient: {
+        name: patient.fullName,
+        email: patient.email,
+        phone: patient.phone,
+        profileCompletedAt: patient.profileCompletedAt ?? null,
+      },
       pregnancy: {
         id: pregnancy.id,
         gestationalAge: { weeks: ga.weeks, days: ga.days },
@@ -414,25 +419,36 @@ export class PortalDataService {
 
   async createPublicShare(patientId: string, expiresAt: string) {
     const pregnancy = await this.getActivePregnancy(patientId);
+    return this.persistShare(pregnancy.id, patientId, expiresAt);
+  }
 
+  async createPublicShareForPregnancy(pregnancyId: string, expiresAt?: string) {
+    const pregnancy = await this.pregnancyRepo.findOneBy({ id: pregnancyId });
+    if (!pregnancy) throw new NotFoundException('Gestacao nao encontrada');
+    return this.persistShare(pregnancyId, pregnancy.patientId, expiresAt);
+  }
+
+  private async persistShare(pregnancyId: string, patientId: string, expiresAt?: string) {
     const maxDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    const expDate = new Date(expiresAt);
+    const defaultExp = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const expDate = expiresAt ? new Date(expiresAt) : defaultExp;
     if (expDate > maxDate) {
       throw new BadRequestException('Expiracao maxima: 30 dias');
     }
 
     const share = this.shareRepo.create({
-      pregnancyId: pregnancy.id,
+      pregnancyId,
       patientId,
       shareToken: randomUUID(),
       expiresAt: expDate,
     });
     const saved = await this.shareRepo.save(share);
 
+    const baseUrl = process.env.PUBLIC_APP_URL ?? 'http://localhost:5173';
     return {
       shareToken: saved.shareToken,
-      shareUrl: `https://app.eliahealth.com/cartao?token=${saved.shareToken}`,
-      qrCodeData: `https://app.eliahealth.com/cartao?token=${saved.shareToken}`,
+      shareUrl: `${baseUrl}/cartao?token=${saved.shareToken}`,
+      qrCodeData: `${baseUrl}/cartao?token=${saved.shareToken}`,
       expiresAt: saved.expiresAt,
     };
   }
@@ -538,7 +554,8 @@ export class PortalDataService {
       ipAddress: 'portal', responseStatus: 201,
     }).catch(() => {});
 
-    return { ...saved, accessUrl: `https://app.eliahealth.com/convidado?token=${saved.accessToken}` };
+    const baseUrl = process.env.PUBLIC_APP_URL ?? 'http://localhost:5173';
+    return { ...saved, accessUrl: `${baseUrl}/convidado?token=${saved.accessToken}` };
   }
 
   async listGuests(patientId: string) {
@@ -654,5 +671,33 @@ export class PortalDataService {
     if (exam.review_status === 'confirmed') throw new BadRequestException('Exame ja confirmado pelo medico');
     await this.pregnancyRepo.query(`DELETE FROM lab_results WHERE id = $1`, [examId]);
     return { deleted: true };
+  }
+
+  // ── DOCTOR EXAM REVIEW ──
+
+  async listPendingPatientExams(pregnancyId: string) {
+    return this.pregnancyRepo.query(
+      `SELECT id, exam_name, requested_at AS exam_date, value, unit, reference_text,
+              lab_name, attachment_url, review_status, source, created_at
+       FROM lab_results
+       WHERE pregnancy_id = $1 AND source = 'patient_upload'
+       ORDER BY created_at DESC`,
+      [pregnancyId],
+    );
+  }
+
+  async reviewPatientExam(examId: string, status: 'confirmed' | 'rejected', notes?: string) {
+    const [exam] = await this.pregnancyRepo.query(
+      `SELECT id, review_status FROM lab_results WHERE id = $1 AND source = 'patient_upload'`,
+      [examId],
+    );
+    if (!exam) throw new NotFoundException('Exame nao encontrado');
+
+    await this.pregnancyRepo.query(
+      `UPDATE lab_results SET review_status = $1, notes = COALESCE($2, notes), reviewed_at = NOW() WHERE id = $3`,
+      [status, notes ?? null, examId],
+    );
+
+    return { id: examId, reviewStatus: status };
   }
 }

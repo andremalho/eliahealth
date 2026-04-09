@@ -27,6 +27,13 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: eliahealth
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      PORTAL_MASTER_OTP: ${PORTAL_MASTER_OTP:-123456}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-EliaHealth <noreply@eliahealth.com>}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:5173}
     depends_on:
       - db
 

@@ -19,7 +19,10 @@ export default function ShareModal({ pregnancyId, patientName, onClose }: Props)
   const generate = () => mutation.mutate();
 
   const data = mutation.data;
-  const shareUrl = data ? `https://app.eliahealth.com/cartao?token=${data.accessToken}` : '';
+  const shareUrl = data?.shareUrl ?? '';
+  const qrSrc = shareUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(shareUrl)}`
+    : '';
 
   const copy = async () => {
     if (!shareUrl) return;
@@ -72,7 +75,7 @@ export default function ShareModal({ pregnancyId, patientName, onClose }: Props)
             <div className="space-y-4">
               <div className="flex justify-center">
                 <img
-                  src={data.qrcodeUrl}
+                  src={qrSrc}
                   alt="QR Code"
                   className="w-48 h-48 border border-gray-200 rounded-lg p-2"
                 />

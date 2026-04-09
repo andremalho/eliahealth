@@ -178,7 +178,7 @@ function Card({
                 </span>
               )}
               {c.referralToART && (
-                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-pink-50 text-pink-700 rounded">
+                <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-pink-50 text-pink-700 rounded" title="Encaminhada para Técnicas de Reprodução Assistida">
                   → TRA
                 </span>
               )}
@@ -201,7 +201,7 @@ function Card({
           <button
             onClick={onEdit}
             className="p-2 text-gray-400 hover:text-lilac hover:bg-lilac/5 rounded transition"
-            title="Editar"
+            aria-label="Editar investigação"
           >
             <Pencil className="w-4 h-4" />
           </button>
@@ -214,6 +214,8 @@ function Card({
           <button
             onClick={onToggle}
             className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
+            aria-expanded={expanded}
+            aria-label={expanded ? 'Recolher detalhes' : 'Expandir detalhes'}
           >
             {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
@@ -299,6 +301,7 @@ interface MetricItem {
   label: string;
   value: string;
   status?: 'normal' | 'low' | 'high' | 'borderline';
+  title?: string;
 }
 
 function MetricGrid({
@@ -328,7 +331,7 @@ function MetricGrid({
                 key={item.label}
                 className={cn('rounded p-2.5 border', colorCls)}
               >
-                <p className="text-[10px] font-semibold text-gray-400 uppercase">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase" title={item.title}>
                   {item.label}
                 </p>
                 <p className="text-sm font-medium text-gray-800 mt-0.5">{item.value}</p>
@@ -385,6 +388,7 @@ function OvarianReserveDisplay({ data }: { data: Record<string, unknown> }) {
       label: 'AMH',
       value: `${amh} ng/mL`,
       status: amh < 0.5 ? 'low' : amh < 1.1 ? 'borderline' : 'normal',
+      title: 'Hormônio Anti-Mülleriano',
     });
   }
   if (fsh !== null) {
@@ -392,6 +396,7 @@ function OvarianReserveDisplay({ data }: { data: Record<string, unknown> }) {
       label: 'FSH basal',
       value: `${fsh} mUI/mL`,
       status: fsh > 10 ? 'high' : 'normal',
+      title: 'Hormônio Folículo-Estimulante',
     });
   }
   if (afc !== null) {
@@ -399,6 +404,7 @@ function OvarianReserveDisplay({ data }: { data: Record<string, unknown> }) {
       label: 'CFA',
       value: `${afc} folículos`,
       status: afc < 5 ? 'low' : 'normal',
+      title: 'Contagem de Folículos Antrais',
     });
   }
   if (items.length === 0 && !attachment) return null;
@@ -461,6 +467,7 @@ function DnaFragmentationDisplay({ data }: { data: Record<string, unknown> }) {
                 label: 'DFI',
                 value: `${dfi}%`,
                 status: dfi > 30 ? 'high' : dfi > 15 ? 'borderline' : 'normal',
+                title: 'DNA Fragmentation Index',
               },
             ]
           : []

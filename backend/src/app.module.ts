@@ -62,6 +62,8 @@ import { InfertilityWorkupsModule } from './infertility-workups/infertility-work
 import { AssistedReproductionModule } from './assisted-reproduction/assisted-reproduction.module.js';
 import { MenopauseAssessmentsModule } from './menopause-assessments/menopause-assessments.module.js';
 import { UploadsModule } from './uploads/uploads.module.js';
+import { PostpartumModule } from './postpartum/postpartum.module.js';
+import { MailModule } from './mail/mail.module.js';
 
 @Module({
   imports: [
@@ -85,6 +87,7 @@ import { UploadsModule } from './uploads/uploads.module.js';
         migrations: ['dist/migrations/*{.ts,.js}'],
       }),
     }),
+    MailModule,
     SecurityModule,
     AuditModule,
     AuthModule,
@@ -124,6 +127,7 @@ import { UploadsModule } from './uploads/uploads.module.js';
     LgpdModule,
     AdminModule,
     UploadsModule,
+    PostpartumModule,
     LabIntegrationsModule,
     WhatsAppModule,
     FhirModule,

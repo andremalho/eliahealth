@@ -133,8 +133,20 @@ export const downloadPregnancyCard = async (pregnancyId: string, fileName: strin
 };
 
 export const generateShareQrCode = async (pregnancyId: string) => {
-  const { data } = await api.post(`/pregnancies/${pregnancyId}/share/qrcode`);
-  return data as { qrcodeUrl: string; accessToken: string; expiresAt: string };
+  const { data } = await api.post(`/portal/share/public/by-pregnancy/${pregnancyId}`, {});
+  return data as { shareToken: string; shareUrl: string; qrCodeData: string; expiresAt: string };
+};
+
+export const fetchPublicCard = async (token: string) => {
+  // Endpoint público — não usa o axios principal pra evitar redirect em 401
+  const baseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+  const res = await fetch(`${baseURL}/portal/share/public/${token}`);
+  if (!res.ok) {
+    const err: any = new Error('Falha');
+    err.response = { status: res.status, data: await res.json().catch(() => ({})) };
+    throw err;
+  }
+  return res.json();
 };
 
 // ── Timeline ──
@@ -168,6 +180,26 @@ export const deletePrescription = async (id: string) =>
 // ── Other Exams ──
 export const fetchOtherExams = async (pregnancyId: string) =>
   (await api.get(`/pregnancies/${pregnancyId}/other-exams`)).data;
+
+// ── Postpartum Consultations ──
+export const fetchPostpartumConsultations = async (pregnancyId: string) =>
+  (await api.get(`/pregnancies/${pregnancyId}/postpartum-consultations`)).data;
+
+export const createPostpartumConsultation = async (pregnancyId: string, dto: Record<string, unknown>) =>
+  (await api.post(`/pregnancies/${pregnancyId}/postpartum-consultations`, dto)).data;
+
+export const updatePostpartumConsultation = async (id: string, dto: Record<string, unknown>) =>
+  (await api.patch(`/postpartum-consultations/${id}`, dto)).data;
+
+export const deletePostpartumConsultation = async (id: string) =>
+  (await api.delete(`/postpartum-consultations/${id}`)).data;
+
+// ── Patient Exam Review (doctor side) ──
+export const fetchPendingPatientExams = async (pregnancyId: string) =>
+  (await api.get(`/portal/patient-exams/pending/${pregnancyId}`)).data;
+
+export const reviewPatientExam = async (examId: string, status: 'confirmed' | 'rejected', notes?: string) =>
+  (await api.patch(`/portal/patient-exams/${examId}/review`, { status, notes })).data;
 
 // ── Copilot ──
 export const analyzeCopilot = async (pregnancyId: string) =>

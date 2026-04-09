@@ -428,8 +428,20 @@ export default function NewMenopauseAssessmentModal({
               </Field>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Data da última menstruação (FMP)">
-                <input {...register('menopauseDate')} type="date" className={inputCn(false)} />
+              <Field label="Data da última menstruação (FMP)" error={errors.menopauseDate?.message}>
+                <input
+                  {...register('menopauseDate', {
+                    validate: (v) => {
+                      const tp = watch('menopauseType');
+                      if ((tp === 'surgical' || tp === 'induced') && !v && !watch('ageAtMenopause')) {
+                        return 'Informe a data ou idade na menopausa para tipo cirúrgica/induzida';
+                      }
+                      return true;
+                    },
+                  })}
+                  type="date"
+                  className={inputCn(!!errors.menopauseDate)}
+                />
               </Field>
               <Field label="Idade na menopausa">
                 <input

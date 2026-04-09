@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Sparkles,
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import {
   fetchInfertilityWorkups,
+  deleteInfertilityWorkup,
   DEFINITION_LABELS,
   DIAGNOSIS_LABELS,
   TREATMENT_LABELS,
@@ -22,20 +23,32 @@ import {
 import { cn } from '../../../utils/cn';
 import { formatDate } from '../../../utils/formatters';
 import NewInfertilityWorkupModal from './NewInfertilityWorkupModal';
+import { DeleteButton } from '../../../components/forms/DeleteButton';
 
 function Skeleton({ className = '' }: { className?: string }) {
   return <div className={cn('animate-pulse bg-gray-200 rounded', className)} />;
 }
 
 export default function InfertilitySection({ patientId }: { patientId: string }) {
+  const qc = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<InfertilityWorkup | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['infertility-workups', patientId],
     queryFn: () => fetchInfertilityWorkups(patientId),
     enabled: !!patientId,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteInfertilityWorkup(patientId, id),
+    onMutate: (id) => setDeletingId(id),
+    onSettled: () => {
+      setDeletingId(null);
+      qc.invalidateQueries({ queryKey: ['infertility-workups', patientId] });
+    },
   });
 
   const items = data?.data ?? [];
@@ -88,6 +101,8 @@ export default function InfertilitySection({ patientId }: { patientId: string })
               expanded={expandedId === it.id}
               onToggle={() => setExpandedId(expandedId === it.id ? null : it.id)}
               onEdit={() => openEdit(it)}
+              onDelete={() => deleteMutation.mutate(it.id)}
+              isDeleting={deletingId === it.id}
             />
           ))}
         </div>
@@ -109,11 +124,15 @@ function Card({
   expanded,
   onToggle,
   onEdit,
+  onDelete,
+  isDeleting,
 }: {
   item: InfertilityWorkup;
   expanded: boolean;
   onToggle: () => void;
   onEdit: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
 }) {
   const alerts = c.alerts ?? [];
   const urgentCount = alerts.filter((a) => a.severity === 'urgent').length;
@@ -183,6 +202,12 @@ function Card({
           >
             <Pencil className="w-4 h-4" />
           </button>
+          <DeleteButton
+            onConfirm={onDelete}
+            isPending={isDeleting}
+            label="Excluir investigação"
+            confirmLabel="Excluir esta investigação?"
+          />
           <button
             onClick={onToggle}
             className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Pill,
@@ -15,6 +15,7 @@ import {
 import {
   fetchContraceptionRecords,
   fetchCurrentContraception,
+  deleteContraceptionRecord,
   METHOD_LABELS,
   DESIRE_LABELS,
   type ContraceptionRecord,
@@ -23,15 +24,18 @@ import {
 import { cn } from '../../../utils/cn';
 import { formatDate } from '../../../utils/formatters';
 import NewContraceptionRecordModal from './NewContraceptionRecordModal';
+import { DeleteButton } from '../../../components/forms/DeleteButton';
 
 function Skeleton({ className = '' }: { className?: string }) {
   return <div className={cn('animate-pulse bg-gray-200 rounded', className)} />;
 }
 
 export default function ContraceptionSection({ patientId }: { patientId: string }) {
+  const qc = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ContraceptionRecord | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ['contraception-records', patientId],
@@ -43,6 +47,15 @@ export default function ContraceptionSection({ patientId }: { patientId: string 
     queryKey: ['contraception-records', patientId, 'current'],
     queryFn: () => fetchCurrentContraception(patientId),
     enabled: !!patientId,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteContraceptionRecord(patientId, id),
+    onMutate: (id) => setDeletingId(id),
+    onSettled: () => {
+      setDeletingId(null);
+      qc.invalidateQueries({ queryKey: ['contraception-records', patientId] });
+    },
   });
 
   const items = data?.data ?? [];
@@ -116,6 +129,8 @@ export default function ContraceptionSection({ patientId }: { patientId: string 
               expanded={expandedId === it.id}
               onToggle={() => setExpandedId(expandedId === it.id ? null : it.id)}
               onEdit={() => openEdit(it)}
+              onDelete={() => deleteMutation.mutate(it.id)}
+              isDeleting={deletingId === it.id}
             />
           ))}
         </div>
@@ -137,11 +152,15 @@ function Card({
   expanded,
   onToggle,
   onEdit,
+  onDelete,
+  isDeleting,
 }: {
   item: ContraceptionRecord;
   expanded: boolean;
   onToggle: () => void;
   onEdit: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
 }) {
   const alerts = c.alerts ?? [];
   const urgentCount = alerts.filter((a) => a.severity === 'urgent').length;
@@ -191,6 +210,12 @@ function Card({
           >
             <Pencil className="w-4 h-4" />
           </button>
+          <DeleteButton
+            onConfirm={onDelete}
+            isPending={isDeleting}
+            label="Excluir consulta"
+            confirmLabel="Excluir esta consulta?"
+          />
           <button
             onClick={onToggle}
             className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"

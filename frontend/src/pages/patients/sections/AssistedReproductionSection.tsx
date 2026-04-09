@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   Baby,
@@ -14,6 +14,9 @@ import {
   fetchOICycles,
   fetchIuiCycles,
   fetchIvfCycles,
+  deleteOICycle,
+  deleteIuiCycle,
+  deleteIvfCycle,
   OI_INDICATION_LABELS,
   OI_PROTOCOL_LABELS,
   OI_OUTCOME_LABELS,
@@ -32,6 +35,7 @@ import { formatDate } from '../../../utils/formatters';
 import NewOICycleModal from './NewOICycleModal';
 import NewIuiCycleModal from './NewIuiCycleModal';
 import NewIvfCycleModal from './NewIvfCycleModal';
+import { DeleteButton } from '../../../components/forms/DeleteButton';
 
 type SubTab = 'oi' | 'iui' | 'ivf';
 
@@ -122,11 +126,21 @@ function OIList({
   patientId: string;
   onEdit: (cycle: OvulationInductionCycle) => void;
 }) {
+  const qc = useQueryClient();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ['oi-cycles', patientId],
     queryFn: () => fetchOICycles(patientId),
     enabled: !!patientId,
+  });
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteOICycle(patientId, id),
+    onMutate: (id) => setDeletingId(id),
+    onSettled: () => {
+      setDeletingId(null);
+      qc.invalidateQueries({ queryKey: ['oi-cycles', patientId] });
+    },
   });
   const items = data ?? [];
 
@@ -142,6 +156,8 @@ function OIList({
           expanded={expandedId === c.id}
           onToggle={() => setExpandedId(expandedId === c.id ? null : c.id)}
           onEdit={() => onEdit(c)}
+          onDelete={() => deleteMutation.mutate(c.id)}
+          isDeleting={deletingId === c.id}
         />
       ))}
     </div>
@@ -153,11 +169,15 @@ function OICard({
   expanded,
   onToggle,
   onEdit,
+  onDelete,
+  isDeleting,
 }: {
   item: OvulationInductionCycle;
   expanded: boolean;
   onToggle: () => void;
   onEdit: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
 }) {
   const alerts = c.alerts ?? [];
   return (
@@ -188,6 +208,12 @@ function OICard({
         >
           <Pencil className="w-4 h-4" />
         </button>
+        <DeleteButton
+          onConfirm={onDelete}
+          isPending={isDeleting}
+          label="Excluir ciclo"
+          confirmLabel="Excluir este ciclo?"
+        />
         <button
           onClick={onToggle}
           className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
@@ -231,11 +257,21 @@ function IuiList({
   patientId: string;
   onEdit: (cycle: IuiCycle) => void;
 }) {
+  const qc = useQueryClient();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ['iui-cycles', patientId],
     queryFn: () => fetchIuiCycles(patientId),
     enabled: !!patientId,
+  });
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteIuiCycle(patientId, id),
+    onMutate: (id) => setDeletingId(id),
+    onSettled: () => {
+      setDeletingId(null);
+      qc.invalidateQueries({ queryKey: ['iui-cycles', patientId] });
+    },
   });
   const items = data ?? [];
 
@@ -251,6 +287,8 @@ function IuiList({
           expanded={expandedId === c.id}
           onToggle={() => setExpandedId(expandedId === c.id ? null : c.id)}
           onEdit={() => onEdit(c)}
+          onDelete={() => deleteMutation.mutate(c.id)}
+          isDeleting={deletingId === c.id}
         />
       ))}
     </div>
@@ -262,11 +300,15 @@ function IuiCard({
   expanded,
   onToggle,
   onEdit,
+  onDelete,
+  isDeleting,
 }: {
   item: IuiCycle;
   expanded: boolean;
   onToggle: () => void;
   onEdit: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
 }) {
   const alerts = c.alerts ?? [];
   return (
@@ -297,6 +339,12 @@ function IuiCard({
         >
           <Pencil className="w-4 h-4" />
         </button>
+        <DeleteButton
+          onConfirm={onDelete}
+          isPending={isDeleting}
+          label="Excluir ciclo"
+          confirmLabel="Excluir este ciclo?"
+        />
         <button
           onClick={onToggle}
           className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"
@@ -337,11 +385,21 @@ function IvfList({
   patientId: string;
   onEdit: (cycle: IvfCycle) => void;
 }) {
+  const qc = useQueryClient();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ['ivf-cycles', patientId],
     queryFn: () => fetchIvfCycles(patientId),
     enabled: !!patientId,
+  });
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteIvfCycle(patientId, id),
+    onMutate: (id) => setDeletingId(id),
+    onSettled: () => {
+      setDeletingId(null);
+      qc.invalidateQueries({ queryKey: ['ivf-cycles', patientId] });
+    },
   });
   const items = data ?? [];
 
@@ -357,6 +415,8 @@ function IvfList({
           expanded={expandedId === c.id}
           onToggle={() => setExpandedId(expandedId === c.id ? null : c.id)}
           onEdit={() => onEdit(c)}
+          onDelete={() => deleteMutation.mutate(c.id)}
+          isDeleting={deletingId === c.id}
         />
       ))}
     </div>
@@ -368,11 +428,15 @@ function IvfCard({
   expanded,
   onToggle,
   onEdit,
+  onDelete,
+  isDeleting,
 }: {
   item: IvfCycle;
   expanded: boolean;
   onToggle: () => void;
   onEdit: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
 }) {
   const alerts = c.alerts ?? [];
   return (
@@ -434,6 +498,12 @@ function IvfCard({
         >
           <Pencil className="w-4 h-4" />
         </button>
+        <DeleteButton
+          onConfirm={onDelete}
+          isPending={isDeleting}
+          label="Excluir ciclo"
+          confirmLabel="Excluir este ciclo?"
+        />
         <button
           onClick={onToggle}
           className="p-2 text-gray-400 hover:text-navy hover:bg-gray-100 rounded transition"

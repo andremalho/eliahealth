@@ -23,6 +23,7 @@ import {
   type ContraceptionRecord,
   type ContraceptionAlert,
 } from '../../../api/contraception-records.api';
+import { fetchPostpartumByPatient } from '../../../api/pregnancy.api';
 import { cn } from '../../../utils/cn';
 import { formatDate } from '../../../utils/formatters';
 import NewContraceptionRecordModal from './NewContraceptionRecordModal';
@@ -50,6 +51,19 @@ export default function ContraceptionSection({ patientId }: { patientId: string 
     queryFn: () => fetchCurrentContraception(patientId),
     enabled: !!patientId,
   });
+
+  const { data: ppData } = useQuery({
+    queryKey: ['postpartum-patient', patientId],
+    queryFn: () => fetchPostpartumByPatient(patientId),
+    enabled: !!patientId,
+  });
+  const recentPP = (ppData?.data ?? []).find((c: any) => {
+    const days = c.days_postpartum ?? c.daysPostpartum ?? 999;
+    return days <= 180; // últimos 6 meses
+  });
+  const ppBreastfeeding = recentPP && ['exclusive', 'predominant', 'complemented'].includes(
+    recentPP.breastfeeding_status ?? recentPP.breastfeedingStatus ?? '',
+  );
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteContraceptionRecord(patientId, id),
@@ -88,6 +102,28 @@ export default function ContraceptionSection({ patientId }: { patientId: string 
           Novo registro
         </button>
       </div>
+
+      {/* Cross-reference puerpério */}
+      {recentPP && (
+        <div className={cn(
+          'flex items-start gap-2 px-4 py-3 rounded-xl mb-4 border',
+          ppBreastfeeding ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-200',
+        )}>
+          <Info className={cn('w-4 h-4 shrink-0 mt-0.5', ppBreastfeeding ? 'text-amber-600' : 'text-blue-600')} />
+          <div className="text-xs">
+            <p className={cn('font-medium', ppBreastfeeding ? 'text-amber-700' : 'text-blue-700')}>
+              Puerpera — {recentPP.days_postpartum ?? recentPP.daysPostpartum}d pos-parto
+              {ppBreastfeeding && ' · Amamentando'}
+            </p>
+            {ppBreastfeeding && (
+              <p className="text-amber-600 mt-0.5">
+                Contraceptivos hormonais combinados (CHC) nao sao recomendados durante amamentacao (OMS MEC Cat 3-4).
+                Preferir metodos so de progestageno, DIU ou metodos de barreira.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Card de método atual em destaque */}
       {current && (

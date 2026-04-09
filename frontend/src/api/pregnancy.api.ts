@@ -185,6 +185,9 @@ export const fetchOtherExams = async (pregnancyId: string) =>
 export const fetchPostpartumConsultations = async (pregnancyId: string) =>
   (await api.get(`/pregnancies/${pregnancyId}/postpartum-consultations`)).data;
 
+export const fetchPostpartumByPatient = async (patientId: string) =>
+  (await api.get(`/patients/${patientId}/postpartum-consultations`)).data;
+
 export const createPostpartumConsultation = async (pregnancyId: string, dto: Record<string, unknown>) =>
   (await api.post(`/pregnancies/${pregnancyId}/postpartum-consultations`, dto)).data;
 

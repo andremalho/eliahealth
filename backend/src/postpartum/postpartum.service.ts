@@ -40,6 +40,20 @@ export class PostpartumService {
     return { data, total: data.length };
   }
 
+  async findAllByPatient(patientId: string) {
+    const data = await this.repo.query(
+      `SELECT pc.*, p.edd, p.lmp_date, po.delivery_date, po.delivery_type,
+              po.neonatal_data AS outcome_neonatal_data
+       FROM postpartum_consultations pc
+       JOIN pregnancies p ON p.id = pc.pregnancy_id
+       LEFT JOIN pregnancy_outcomes po ON po.pregnancy_id = p.id
+       WHERE p.patient_id = $1
+       ORDER BY pc.date DESC`,
+      [patientId],
+    );
+    return { data, total: data.length };
+  }
+
   async findOne(id: string): Promise<PostpartumConsultation> {
     const consultation = await this.repo.findOneBy({ id });
     if (!consultation) throw new NotFoundException('Consulta puerperal nao encontrada');

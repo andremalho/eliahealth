@@ -24,6 +24,12 @@ export class PostpartumController {
     return this.service.findAllByPregnancy(pregnancyId);
   }
 
+  @Get('patients/:patientId/postpartum-consultations')
+  @Roles(UserRole.PHYSICIAN, UserRole.NURSE, UserRole.ADMIN)
+  findAllByPatient(@Param('patientId') patientId: string) {
+    return this.service.findAllByPatient(patientId);
+  }
+
   @Get('postpartum-consultations/:id')
   @Roles(UserRole.PHYSICIAN, UserRole.NURSE, UserRole.ADMIN)
   findOne(@Param('id') id: string) {

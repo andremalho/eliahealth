@@ -5,7 +5,7 @@ import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../auth/auth.enums.js';
 
 @Controller('research')
-@Roles(UserRole.ADMIN, UserRole.RESEARCHER)
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.RESEARCHER)
 export class ResearchController {
   constructor(private readonly service: ResearchService) {}
 

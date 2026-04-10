@@ -11,7 +11,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { UserRole } from '../auth/auth.enums.js';
 
 @Controller('research')
-@Roles(UserRole.ADMIN, UserRole.RESEARCHER)
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.RESEARCHER)
 export class DashboardController {
   constructor(
     private readonly dashService: DashboardService,

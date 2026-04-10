@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  Home, Users, Calendar, Users2, Settings, HeartPulse,
+  Home, Users, Calendar, Users2, Settings, HeartPulse, Stethoscope,
   ChevronLeft, ChevronRight, LogOut, Menu,
 } from 'lucide-react';
 import Logo from '../Logo';
@@ -11,8 +11,8 @@ import { toTitleCase } from '../../utils/formatters';
 
 const navItems = [
   { to: '/dashboard', icon: Home, label: 'Início' },
+  { to: '/patients', icon: Stethoscope, label: 'Ginecologia' },
   { to: '/pregnancies', icon: Users, label: 'Gestações' },
-  { to: '/patients', icon: HeartPulse, label: 'Pacientes' },
   { to: '/birth-calendar', icon: Calendar, label: 'Calendário' },
   { to: '/teams', icon: Users2, label: 'Equipes' },
   { to: '/settings', icon: Settings, label: 'Configurações' },

@@ -10,7 +10,7 @@ import { cn } from '../../utils/cn';
 import Logo from '../../components/Logo';
 
 const isWhiteLabel = import.meta.env.VITE_WHITE_LABEL === 'true';
-const tagline = import.meta.env.VITE_APP_TAGLINE ?? 'Prontuário pré-natal inteligente';
+const tagline = import.meta.env.VITE_APP_TAGLINE ?? 'Prontuario exclusivo da mulher';
 
 const STATES = [
   'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA',

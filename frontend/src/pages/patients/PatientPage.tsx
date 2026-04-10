@@ -24,7 +24,6 @@ import PreventiveExamSection from './sections/PreventiveExamSection';
 import MenopauseSection from './sections/MenopauseSection';
 import InfertilitySection from './sections/InfertilitySection';
 import AssistedReproductionSection from './sections/AssistedReproductionSection';
-import PostpartumPatientSection from './sections/PostpartumPatientSection';
 
 type ModuleKey =
   | 'gynecology'
@@ -33,8 +32,7 @@ type ModuleKey =
   | 'infertility'
   | 'art'
   | 'menopause'
-  | 'preventive'
-  | 'postpartum';
+  | 'preventive';
 
 interface ModuleDef {
   key: ModuleKey;
@@ -51,7 +49,6 @@ const MODULES: ModuleDef[] = [
   { key: 'art', label: 'Reprodução Assistida', icon: Baby, available: true },
   { key: 'menopause', label: 'Menopausa', icon: Flower2, available: true },
   { key: 'preventive', label: 'Rastreios', icon: ClipboardCheck, available: true },
-  { key: 'postpartum', label: 'Puerpério', icon: Baby, available: true },
 ];
 
 const SECTION_COMPONENTS: Partial<
@@ -64,7 +61,6 @@ const SECTION_COMPONENTS: Partial<
   menopause: MenopauseSection,
   infertility: InfertilitySection,
   art: AssistedReproductionSection,
-  postpartum: PostpartumPatientSection,
 };
 
 function calcAge(dob: string | null): number | null {

@@ -241,21 +241,24 @@ export default function ReceptionDashboardPage() {
                   <Grid3X3 className="w-4 h-4" />
                 </button>
               </div>
-              {gestView === 'list' && <div className="flex gap-2 overflow-x-auto">
-                {TRIMESTER_FILTERS.map((f) => (
-                  <button key={f.value} onClick={() => setTriFilter(f.value)}
-                    className={cn('px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition',
-                      triFilter === f.value ? 'bg-lilac text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}>
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-              <div className="relative sm:ml-auto">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar gestante..."
-                  className="pl-10 pr-4 py-2 border rounded-lg text-sm w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-lilac/30 focus:border-lilac" />
-              </div>
-              </div>}
+              {gestView === 'list' && (
+                <>
+                  <div className="flex gap-2 overflow-x-auto">
+                    {TRIMESTER_FILTERS.map((f) => (
+                      <button key={f.value} onClick={() => setTriFilter(f.value)}
+                        className={cn('px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition',
+                          triFilter === f.value ? 'bg-lilac text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}>
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="relative sm:ml-auto">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar gestante..."
+                      className="pl-10 pr-4 py-2 border rounded-lg text-sm w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-lilac/30 focus:border-lilac" />
+                  </div>
+                </>
+              )}
             </div>
 
             {gestView === 'calendar' ? (

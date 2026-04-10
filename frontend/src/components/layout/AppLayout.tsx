@@ -14,8 +14,8 @@ const clinicalNavItems = [
   { to: '/gynecology', icon: Stethoscope, label: 'Ginecologia' },
   { to: '/pregnancies', icon: Users, label: 'Gestações' },
   { to: '/birth-calendar', icon: Calendar, label: 'Calendário' },
-  { to: '/analytics', icon: BarChart3, label: 'Pesquisa' },
   { to: '/teams', icon: Users2, label: 'Equipes' },
+  { to: '/analytics', icon: BarChart3, label: 'Pesquisa' },
   { to: '/settings', icon: Settings, label: 'Configurações' },
 ];
 

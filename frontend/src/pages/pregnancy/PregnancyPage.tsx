@@ -21,7 +21,7 @@ import EditPatientDataModal from './sections/EditPatientDataModal';
 import {
   VaccinesCard, VaginalSwabsCard, BiologicalFatherCard,
   UltrasoundsCard, LabResultsCard, PrescriptionsCard, FilesCard,
-  PatientExamsReviewCard,
+  PatientExamsReviewCard, GynecologyProfileCard,
 } from './sections/SidebarCards';
 
 function gaString(days: number) { return `${Math.floor(days / 7)}s ${days % 7}d`; }
@@ -492,6 +492,7 @@ export default function PregnancyPage() {
                 <p>Altura: {patient?.height ? `${patient.height} cm` : '—'}</p>
               </div>
             </Card>
+            {pregnancy?.patientId && <GynecologyProfileCard patientId={pregnancy.patientId} />}
             <BiologicalFatherCard pregnancyId={pregnancyId} />
             <VaccinesCard pregnancyId={pregnancyId} />
             <LabResultsCard pregnancyId={pregnancyId} />

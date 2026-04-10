@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Syringe, FlaskConical, UserCircle, FileText, Pill, FolderOpen, Stethoscope, Plus, Pencil, Trash2, Upload, Check, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Syringe, FlaskConical, UserCircle, FileText, Pill, FolderOpen, Stethoscope, Plus, Pencil, Trash2, Upload, Check, X, ExternalLink, Activity, ClipboardCheck } from 'lucide-react';
 import {
   fetchVaccines, fetchVaginalSwabs, fetchBiologicalFather, fetchFiles, fetchPrescriptions, fetchLabResults, fetchUltrasounds,
   deleteVaccine, deleteVaginalSwab, deleteBiologicalFather, deleteFile, deletePrescription, deleteLabResult, deleteUltrasound,
   fetchPendingPatientExams, reviewPatientExam,
 } from '../../../api/pregnancy.api';
+import { fetchGynecologyConsultations, CONSULTATION_TYPE_LABELS } from '../../../api/gynecology-consultations.api';
+import { fetchCurrentContraception, METHOD_LABELS } from '../../../api/contraception-records.api';
+import { fetchPreventiveSummary } from '../../../api/preventive-exam-schedules.api';
 import { cn } from '../../../utils/cn';
 import AddVaccineModal from './AddVaccineModal';
 import AddVaginalSwabModal from './AddVaginalSwabModal';
@@ -503,6 +507,100 @@ export function PatientExamsReviewCard({ pregnancyId }: { pregnancyId: string })
           )}
         </div>
       )}
+    </SideCard>
+  );
+}
+
+// ── Card integrado: Perfil Ginecológico ──
+
+export function GynecologyProfileCard({ patientId }: { patientId: string }) {
+  const navigate = useNavigate();
+
+  const { data: gynData } = useQuery({
+    queryKey: ['gynecology-consultations', patientId, 1, 3],
+    queryFn: () => fetchGynecologyConsultations(patientId, 1, 3),
+    enabled: !!patientId,
+  });
+
+  const { data: current } = useQuery({
+    queryKey: ['contraception-records', patientId, 'current'],
+    queryFn: () => fetchCurrentContraception(patientId),
+    enabled: !!patientId,
+  });
+
+  const { data: preventive } = useQuery({
+    queryKey: ['preventive-exam-schedules', patientId, 'summary'],
+    queryFn: () => fetchPreventiveSummary(patientId),
+    enabled: !!patientId,
+  });
+
+  const consultations = gynData?.data ?? [];
+  const totalGyn = gynData?.total ?? 0;
+
+  return (
+    <SideCard title="Perfil Ginecológico" icon={Stethoscope}>
+      <div className="space-y-3">
+        {/* Contracepção atual */}
+        {current && (
+          <div>
+            <p className="text-[10px] font-semibold text-gray-400 uppercase">Contracepção atual</p>
+            <p className="text-sm font-medium text-navy mt-0.5">{METHOD_LABELS[current.currentMethod]}</p>
+            {current.currentMethodDetails && (
+              <p className="text-xs text-gray-500">{current.currentMethodDetails}</p>
+            )}
+          </div>
+        )}
+
+        {/* Rastreios preventivos */}
+        {preventive?.hasSchedule && (
+          <div>
+            <p className="text-[10px] font-semibold text-gray-400 uppercase">Rastreios preventivos</p>
+            <div className="flex gap-2 mt-1">
+              <span className="px-2 py-0.5 text-[10px] font-medium bg-emerald-50 text-emerald-700 rounded-full">
+                {preventive.upToDate} em dia
+              </span>
+              {preventive.dueSoon > 0 && (
+                <span className="px-2 py-0.5 text-[10px] font-medium bg-amber-50 text-amber-700 rounded-full">
+                  {preventive.dueSoon} vencendo
+                </span>
+              )}
+              {preventive.overdue > 0 && (
+                <span className="px-2 py-0.5 text-[10px] font-medium bg-red-50 text-red-700 rounded-full">
+                  {preventive.overdue} atrasados
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Últimas consultas ginecológicas */}
+        {consultations.length > 0 && (
+          <div>
+            <p className="text-[10px] font-semibold text-gray-400 uppercase">
+              Últimas consultas ({totalGyn} total)
+            </p>
+            <div className="space-y-1.5 mt-1">
+              {consultations.map((c) => (
+                <div key={c.id} className="flex items-center justify-between text-xs">
+                  <span className="text-gray-700">{fmtDate(c.consultationDate)}</span>
+                  <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px]">
+                    {CONSULTATION_TYPE_LABELS[c.consultationType]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Link para perfil completo */}
+        <button
+          onClick={() => navigate(`/patients/${patientId}`)}
+          className="flex items-center gap-1.5 w-full justify-center py-2 text-xs text-lilac hover:text-primary-dark hover:bg-lilac/5 rounded-lg transition font-medium"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          Ver perfil ginecológico completo
+        </button>
+      </div>
     </SideCard>
   );
 }

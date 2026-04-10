@@ -35,6 +35,15 @@ export class ResearchRecord {
   @Column({ type: 'varchar', nullable: true })
   state: string | null;
 
+  @Column({ name: 'income_estimate', type: 'varchar', nullable: true })
+  incomeEstimate: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  neighborhood: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  zone: string | null;
+
   @Column({ name: 'blood_type', type: 'varchar', nullable: true })
   bloodType: string | null;
 

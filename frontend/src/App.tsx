@@ -19,6 +19,7 @@ import GynecologyPage from './pages/gynecology/GynecologyPage';
 import BirthCalendarPage from './pages/calendar/BirthCalendarPage';
 import TeamsPage from './pages/teams/TeamsPage';
 import SettingsPage from './pages/settings/SettingsPage';
+import AnalyticsDashboardPage from './pages/analytics/AnalyticsDashboardPage';
 import ReceptionDashboardPage from './pages/reception/ReceptionDashboardPage';
 import AgendaPage from './pages/reception/AgendaPage';
 import ReceptionPatientsPage from './pages/reception/ReceptionPatientsPage';
@@ -78,6 +79,7 @@ export default function App() {
             <Route path="/patients/:patientId" element={<PatientPage />} />
             <Route path="/birth-calendar" element={<BirthCalendarPage />} />
             <Route path="/teams" element={<TeamsPage />} />
+            <Route path="/analytics" element={<AnalyticsDashboardPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/reception" element={<ReceptionDashboardPage />} />
             <Route path="/reception/agenda" element={<AgendaPage />} />

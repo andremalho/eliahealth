@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { randomBytes, createHash } from 'crypto';
 import { ResearchRecord } from './research-record.entity.js';
 import { AgeGroup, CEP_REGION_MAP } from './research.enums.js';
+import { lookupCepIncome } from './cep-income.js';
 import { Pregnancy } from '../pregnancies/pregnancy.entity.js';
 import { Patient } from '../patients/patient.entity.js';
 import { GlucoseMonitoringConfig } from '../glucose-monitoring/glucose-config.entity.js';
@@ -41,10 +42,11 @@ export class ResearchService {
     const maternalAge = this.calculateAge(patient.dateOfBirth);
     const ageGroup = this.getAgeGroup(maternalAge);
 
-    // CEP parcial + região
+    // CEP parcial + região + renda
     const zipCode = (patient as any).zipCode as string | null;
     const zipCodePartial = zipCode ? zipCode.substring(0, 5) : null;
     const regionInfo = this.getRegionFromCep(zipCodePartial);
+    const cepData = lookupCepIncome(zipCodePartial);
 
     // Flags de condições
     const flags = pregnancy.highRiskFlags ?? [];
@@ -59,6 +61,9 @@ export class ResearchService {
       zipCodePartial,
       region: regionInfo?.region ?? null,
       state: regionInfo?.state ?? null,
+      incomeEstimate: cepData?.incomeEstimate ?? null,
+      neighborhood: cepData?.neighborhood ?? null,
+      zone: cepData?.zone ?? null,
       bloodType: patient.bloodType,
       gravida: pregnancy.gravida,
       para: pregnancy.para,

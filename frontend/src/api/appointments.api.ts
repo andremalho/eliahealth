@@ -107,6 +107,46 @@ export const CATEGORY_COLORS: Record<string, string> = {
   encaixe: 'bg-orange-100 text-orange-700',
 };
 
+export const fetchProceduresCalendar = async (month: number, year: number, doctorId?: string) => {
+  const params: Record<string, string | number> = { month, year };
+  if (doctorId) params.doctorId = doctorId;
+  const { data } = await api.get('/appointments/procedures', { params });
+  return data as { date: string; type: string; label: string; patient_name: string; patient_id: string; doctor_name: string | null }[];
+};
+
+export const PROCEDURE_LABELS: Record<string, string> = {
+  egg_retrieval: 'Coleta',
+  embryo_transfer: 'Transferencia',
+  iui: 'IIU',
+  trigger: 'Trigger',
+  beta_hcg: 'Beta HCG',
+  stimulation_start: 'Estimulacao',
+  gyn_procedure: 'Procedimento',
+  return: 'Retorno',
+};
+
+export const PROCEDURE_COLORS: Record<string, string> = {
+  egg_retrieval: 'bg-pink-100 text-pink-700',
+  embryo_transfer: 'bg-violet-100 text-violet-700',
+  iui: 'bg-blue-100 text-blue-700',
+  trigger: 'bg-amber-100 text-amber-700',
+  beta_hcg: 'bg-emerald-100 text-emerald-700',
+  stimulation_start: 'bg-cyan-100 text-cyan-700',
+  gyn_procedure: 'bg-red-100 text-red-700',
+  return: 'bg-gray-100 text-gray-600',
+};
+
+export const PROCEDURE_DOT_COLORS: Record<string, string> = {
+  egg_retrieval: 'bg-pink-500',
+  embryo_transfer: 'bg-violet-500',
+  iui: 'bg-blue-500',
+  trigger: 'bg-amber-500',
+  beta_hcg: 'bg-emerald-500',
+  stimulation_start: 'bg-cyan-500',
+  gyn_procedure: 'bg-red-500',
+  return: 'bg-gray-400',
+};
+
 export const CATEGORY_DOT_COLORS: Record<string, string> = {
   primeira_consulta: 'bg-blue-500',
   retorno: 'bg-emerald-500',

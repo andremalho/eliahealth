@@ -135,6 +135,75 @@ export class AppointmentsService {
     }
   }
 
+  // ── Procedures Calendar ──
+
+  async getProceduresCalendar(month: number, year: number, doctorId?: string) {
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endDate = `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
+    const doctorFilter = doctorId ? `AND doctor_id = '${doctorId}'` : '';
+
+    const queries = [
+      // IVF procedures
+      `SELECT 'egg_retrieval' AS type, 'Coleta de ovulos' AS label,
+              oocyte_retrieval_date AS date, p.full_name AS patient_name, iv.patient_id, u.name AS doctor_name
+       FROM ivf_cycles iv
+       JOIN patients p ON p.id = iv.patient_id
+       LEFT JOIN users u ON u.id = iv.doctor_id
+       WHERE oocyte_retrieval_date BETWEEN '${startDate}' AND '${endDate}' ${doctorFilter}`,
+
+      `SELECT 'embryo_transfer' AS type, 'Transferencia' AS label,
+              transfer_date AS date, p.full_name AS patient_name, iv.patient_id, u.name AS doctor_name
+       FROM ivf_cycles iv
+       JOIN patients p ON p.id = iv.patient_id
+       LEFT JOIN users u ON u.id = iv.doctor_id
+       WHERE transfer_date BETWEEN '${startDate}' AND '${endDate}' ${doctorFilter}`,
+
+      `SELECT 'trigger' AS type, 'Trigger (FIV)' AS label,
+              trigger_date AS date, p.full_name AS patient_name, iv.patient_id, u.name AS doctor_name
+       FROM ivf_cycles iv
+       JOIN patients p ON p.id = iv.patient_id
+       LEFT JOIN users u ON u.id = iv.doctor_id
+       WHERE trigger_date BETWEEN '${startDate}' AND '${endDate}' ${doctorFilter}`,
+
+      `SELECT 'beta_hcg' AS type, 'Beta HCG (FIV)' AS label,
+              beta_hcg_date AS date, p.full_name AS patient_name, iv.patient_id, u.name AS doctor_name
+       FROM ivf_cycles iv
+       JOIN patients p ON p.id = iv.patient_id
+       LEFT JOIN users u ON u.id = iv.doctor_id
+       WHERE beta_hcg_date BETWEEN '${startDate}' AND '${endDate}' ${doctorFilter}`,
+
+      `SELECT 'stimulation_start' AS type, 'Inicio estimulacao' AS label,
+              stimulation_start_date AS date, p.full_name AS patient_name, iv.patient_id, u.name AS doctor_name
+       FROM ivf_cycles iv
+       JOIN patients p ON p.id = iv.patient_id
+       LEFT JOIN users u ON u.id = iv.doctor_id
+       WHERE stimulation_start_date BETWEEN '${startDate}' AND '${endDate}' ${doctorFilter}`,
+
+      // IUI
+      `SELECT 'iui' AS type, 'IIU' AS label,
+              iui_date AS date, p.full_name AS patient_name, ic.patient_id, u.name AS doctor_name
+       FROM iui_cycles ic
+       JOIN patients p ON p.id = ic.patient_id
+       LEFT JOIN users u ON u.id = ic.doctor_id
+       WHERE iui_date BETWEEN '${startDate}' AND '${endDate}' ${doctorFilter}`,
+
+      // OI
+      `SELECT 'trigger' AS type, 'Trigger (IO)' AS label,
+              trigger_date AS date, p.full_name AS patient_name, oi.patient_id, u.name AS doctor_name
+       FROM ovulation_induction_cycles oi
+       JOIN patients p ON p.id = oi.patient_id
+       LEFT JOIN users u ON u.id = oi.doctor_id
+       WHERE trigger_date BETWEEN '${startDate}' AND '${endDate}' ${doctorFilter}`,
+    ];
+
+    const results = await Promise.all(
+      queries.map((q) => this.repo.query(q).catch(() => [])),
+    );
+
+    const all = results.flat().filter((r: any) => r.date);
+    return all.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }
+
   // ── Secretary Assignments ──
 
   async assignSecretary(secretaryId: string, doctorId: string, assignedBy: string) {

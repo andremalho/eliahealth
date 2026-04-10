@@ -11,6 +11,7 @@ import {
   fetchAppointments, fetchAppointmentSummary, updateAppointment,
   STATUS_LABELS, STATUS_COLORS, TYPE_LABELS,
   CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_DOT_COLORS,
+  fetchProceduresCalendar, PROCEDURE_LABELS, PROCEDURE_COLORS, PROCEDURE_DOT_COLORS,
 } from '../../api/appointments.api';
 import { fetchUpcomingBirths } from '../../api/pregnancies.api';
 import { fetchMyDoctors, fetchPregnanciesForDoctors, fetchGynecologyPatientsForDoctors } from '../../api/secretary.api';
@@ -44,6 +45,9 @@ export default function ReceptionDashboardPage() {
   const [gestView, setGestView] = useState<'list' | 'calendar'>('list');
   const [calMonth, setCalMonth] = useState(new Date().getMonth() + 1);
   const [calYear, setCalYear] = useState(new Date().getFullYear());
+  const [gynView, setGynView] = useState<'patients' | 'procedures'>('patients');
+  const [procMonth, setProcMonth] = useState(new Date().getMonth() + 1);
+  const [procYear, setProcYear] = useState(new Date().getFullYear());
 
   // Fetch assigned doctors
   const { data: myDoctors } = useQuery({
@@ -77,6 +81,13 @@ export default function ReceptionDashboardPage() {
     queryKey: ['upcoming-births-secretary'],
     queryFn: () => fetchUpcomingBirths(120),
     enabled: tab === 'gestantes' && gestView === 'calendar',
+  });
+
+  // Procedures calendar
+  const { data: procedures } = useQuery({
+    queryKey: ['procedures-calendar', procMonth, procYear],
+    queryFn: () => fetchProceduresCalendar(procMonth, procYear),
+    enabled: tab === 'ginecologia' && gynView === 'procedures',
   });
 
   // Gynecology patients
@@ -352,27 +363,118 @@ export default function ReceptionDashboardPage() {
         {/* Tab: Ginecologia */}
         {tab === 'ginecologia' && (
           <div>
-            {loadingGyn ? (
-              <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" /></div>
-            ) : !gynPatients || gynPatients.length === 0 ? (
-              <div className="flex flex-col items-center py-16 text-gray-400">
-                <Stethoscope className="w-12 h-12 mb-3" />
-                <p className="font-medium">Nenhuma paciente ginecologica</p>
+            <div className="flex items-center gap-3 p-4 border-b">
+              <div className="flex border rounded-lg overflow-hidden">
+                <button onClick={() => setGynView('patients')}
+                  className={cn('px-3 py-1.5 text-xs font-medium', gynView === 'patients' ? 'bg-lilac text-white' : 'text-gray-500 hover:bg-gray-50')}>
+                  Pacientes
+                </button>
+                <button onClick={() => setGynView('procedures')}
+                  className={cn('px-3 py-1.5 text-xs font-medium', gynView === 'procedures' ? 'bg-lilac text-white' : 'text-gray-500 hover:bg-gray-50')}>
+                  Procedimentos
+                </button>
               </div>
+            </div>
+
+            {gynView === 'patients' ? (
+              <>
+                {loadingGyn ? (
+                  <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" /></div>
+                ) : !gynPatients || gynPatients.length === 0 ? (
+                  <div className="flex flex-col items-center py-16 text-gray-400">
+                    <Stethoscope className="w-12 h-12 mb-3" />
+                    <p className="font-medium">Nenhuma paciente ginecologica</p>
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {gynPatients.map((p: any) => {
+                      const initials = (p.fullName ?? '').split(' ').slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join('');
+                      return (
+                        <div key={p.id} className="flex items-center gap-4 p-4 hover:bg-gray-50 group">
+                          <div className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center text-sm font-bold shrink-0">{initials}</div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-800 truncate">{toTitleCase(p.fullName)}</p>
+                            <p className="text-xs text-gray-400">{p.cpf}{p.phone ? ` · ${p.phone}` : ''}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="divide-y">
-                {gynPatients.map((p: any) => {
-                  const initials = (p.fullName ?? '').split(' ').slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join('');
+              /* Procedures calendar */
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <button onClick={() => { if (procMonth === 1) { setProcMonth(12); setProcYear(procYear - 1); } else setProcMonth(procMonth - 1); }}
+                    className="p-1.5 hover:bg-gray-100 rounded"><ChevronLeft className="w-4 h-4 text-gray-600" /></button>
+                  <p className="text-sm font-semibold text-navy">
+                    {['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][procMonth - 1]} {procYear}
+                  </p>
+                  <button onClick={() => { if (procMonth === 12) { setProcMonth(1); setProcYear(procYear + 1); } else setProcMonth(procMonth + 1); }}
+                    className="p-1.5 hover:bg-gray-100 rounded"><ChevronRight className="w-4 h-4 text-gray-600" /></button>
+                </div>
+
+                {/* Procedure legend */}
+                <div className="flex gap-3 mb-3 flex-wrap">
+                  {Object.entries(PROCEDURE_LABELS).filter(([k]) => k !== 'return').map(([key, label]) => (
+                    <div key={key} className="flex items-center gap-1.5 text-[10px] text-gray-600">
+                      <div className={cn('w-2 h-2 rounded-full', PROCEDURE_DOT_COLORS[key])} />
+                      {label}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Grid */}
+                <div className="grid grid-cols-7 gap-1 mb-1">
+                  {['D','S','T','Q','Q','S','S'].map((d, i) => (
+                    <div key={i} className="text-center text-[10px] font-semibold text-gray-400 py-1">{d}</div>
+                  ))}
+                </div>
+                {(() => {
+                  const fd = new Date(procYear, procMonth - 1, 1).getDay();
+                  const dim = new Date(procYear, procMonth, 0).getDate();
+                  const c: (number | null)[] = [];
+                  for (let i = 0; i < fd; i++) c.push(null);
+                  for (let d = 1; d <= dim; d++) c.push(d);
+
+                  const procs = procedures ?? [];
+                  const procsByDay = new Map<number, any[]>();
+                  for (const p of procs) {
+                    const pd = new Date(p.date + 'T12:00:00');
+                    if (pd.getMonth() + 1 === procMonth && pd.getFullYear() === procYear) {
+                      const day = pd.getDate();
+                      if (!procsByDay.has(day)) procsByDay.set(day, []);
+                      procsByDay.get(day)!.push(p);
+                    }
+                  }
+                  const td = new Date();
+                  const isCurMonth = procMonth === td.getMonth() + 1 && procYear === td.getFullYear();
+
                   return (
-                    <div key={p.id} className="flex items-center gap-4 p-4 hover:bg-gray-50 group">
-                      <div className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center text-sm font-bold shrink-0">{initials}</div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-800 truncate">{toTitleCase(p.fullName)}</p>
-                        <p className="text-xs text-gray-400">{p.cpf}{p.phone ? ` · ${p.phone}` : ''}</p>
-                      </div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {c.map((day, i) => {
+                        if (day === null) return <div key={i} />;
+                        const evts = procsByDay.get(day) ?? [];
+                        const isT = isCurMonth && day === td.getDate();
+                        return (
+                          <div key={i} className={cn('min-h-[70px] p-1 rounded-lg border text-xs',
+                            isT ? 'border-lilac bg-lilac/5' : 'border-gray-100',
+                            evts.length > 0 && 'bg-gray-50/50')}>
+                            <span className={cn('inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-medium',
+                              isT ? 'bg-lilac text-white' : 'text-gray-600')}>{day}</span>
+                            {evts.slice(0, 3).map((e: any, j: number) => (
+                              <div key={j} className={cn('mt-0.5 px-1 py-0.5 text-[9px] font-medium rounded truncate', PROCEDURE_COLORS[e.type] ?? 'bg-gray-100 text-gray-600')}>
+                                {e.label?.split(' ')[0]} · {e.patient_name?.split(' ')[0]}
+                              </div>
+                            ))}
+                            {evts.length > 3 && <span className="text-[9px] text-gray-400">+{evts.length - 3}</span>}
+                          </div>
+                        );
+                      })}
                     </div>
                   );
-                })}
+                })()}
               </div>
             )}
           </div>

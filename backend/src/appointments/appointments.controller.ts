@@ -57,6 +57,21 @@ export class AppointmentsController {
     return this.service.cancel(id, body?.reason);
   }
 
+  // ── Procedures Calendar ──
+
+  @Get('procedures')
+  getProcedures(
+    @Query('month') month: string,
+    @Query('year') year: string,
+    @Query('doctorId') doctorId?: string,
+  ) {
+    return this.service.getProceduresCalendar(
+      parseInt(month ?? String(new Date().getMonth() + 1)),
+      parseInt(year ?? String(new Date().getFullYear())),
+      doctorId,
+    );
+  }
+
   // ── Secretary Assignments ──
 
   @Post('assign-secretary')

@@ -21,6 +21,11 @@ export default function AiQueryPanel() {
   const mutation = useMutation({
     mutationFn: (q: string) => queryResearch(q),
     onSuccess: (data) => setResult(data),
+    onError: (err: any) => {
+      setResult({
+        error: err?.response?.data?.message ?? err?.message ?? 'Erro ao processar pergunta. Verifique se a ANTHROPIC_API_KEY esta configurada.',
+      });
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {

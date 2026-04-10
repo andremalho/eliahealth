@@ -16,6 +16,8 @@ export interface PregnancyListFilters {
   ownership?: string;
   search?: string;
   userId?: string;
+  role?: string;
+  doctorIds?: string[];
 }
 
 const STATUS_ALIASES: Record<string, PregnancyStatus> = {
@@ -434,6 +436,19 @@ export class PregnanciesService {
           { userId: filters.userId },
         );
       }
+    }
+
+    // Filtro por médicos (para secretária)
+    if (filters.doctorIds && filters.doctorIds.length > 0) {
+      qb.andWhere(
+        `p.id IN (
+          SELECT DISTINCT c.pregnancy_id FROM consultations c WHERE c.pregnancy_id IS NOT NULL
+          UNION
+          SELECT DISTINCT a.id FROM pregnancies a
+          WHERE a.id IN (SELECT ps3.pregnancy_id FROM pregnancy_shares ps3 WHERE ps3.shared_with IN (:...doctorIds))
+        )`,
+        { doctorIds: filters.doctorIds },
+      );
     }
 
     this.applySorting(qb, filters.sort ?? 'ga_desc');

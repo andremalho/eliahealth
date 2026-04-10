@@ -56,4 +56,33 @@ export class AppointmentsController {
   cancel(@Param('id') id: string, @Body() body: { reason?: string }) {
     return this.service.cancel(id, body?.reason);
   }
+
+  // ── Secretary Assignments ──
+
+  @Post('assign-secretary')
+  @Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
+  assignSecretary(
+    @Body() body: { secretaryId: string; doctorId: string },
+    @CurrentUser('userId') userId: string,
+  ) {
+    return this.service.assignSecretary(body.secretaryId, body.doctorId, userId);
+  }
+
+  @Delete('assign-secretary/:id')
+  @Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
+  removeAssignment(@Param('id') id: string) {
+    return this.service.removeAssignment(id);
+  }
+
+  @Get('my-doctors')
+  @Roles(UserRole.RECEPTIONIST)
+  getMyDoctors(@CurrentUser('userId') userId: string) {
+    return this.service.getAssignedDoctors(userId);
+  }
+
+  @Get('my-secretaries')
+  @Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
+  getMySecretaries(@CurrentUser('userId') userId: string) {
+    return this.service.getAssignedSecretaries(userId);
+  }
 }

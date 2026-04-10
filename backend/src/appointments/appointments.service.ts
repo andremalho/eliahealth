@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, Not, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Appointment } from './appointment.entity.js';
+import { SecretaryAssignment } from './secretary-assignment.entity.js';
 import { AppointmentStatus } from './appointment.enums.js';
 import { CreateAppointmentDto } from './dto/create-appointment.dto.js';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto.js';
@@ -11,6 +12,8 @@ export class AppointmentsService {
   constructor(
     @InjectRepository(Appointment)
     private readonly repo: Repository<Appointment>,
+    @InjectRepository(SecretaryAssignment)
+    private readonly assignmentRepo: Repository<SecretaryAssignment>,
   ) {}
 
   async create(dto: CreateAppointmentDto, userId: string, tenantId?: string): Promise<Appointment> {
@@ -130,6 +133,62 @@ export class AppointmentsService {
     if (overlap > 0) {
       throw new ConflictException('Horario ja ocupado para este medico');
     }
+  }
+
+  // ── Secretary Assignments ──
+
+  async assignSecretary(secretaryId: string, doctorId: string, assignedBy: string) {
+    const existing = await this.assignmentRepo.findOneBy({ secretaryId, doctorId });
+    if (existing) {
+      if (existing.isActive) throw new ConflictException('Secretaria ja vinculada a este medico');
+      existing.isActive = true;
+      existing.assignedBy = assignedBy;
+      return this.assignmentRepo.save(existing);
+    }
+    const assignment = this.assignmentRepo.create({ secretaryId, doctorId, assignedBy });
+    return this.assignmentRepo.save(assignment);
+  }
+
+  async removeAssignment(id: string) {
+    const assignment = await this.assignmentRepo.findOneBy({ id });
+    if (!assignment) throw new NotFoundException('Vinculo nao encontrado');
+    assignment.isActive = false;
+    return this.assignmentRepo.save(assignment);
+  }
+
+  async getAssignedDoctors(secretaryId: string) {
+    const assignments = await this.assignmentRepo.find({
+      where: { secretaryId, isActive: true },
+      relations: ['doctor'],
+    });
+    return assignments.map((a) => ({
+      id: a.id,
+      doctorId: a.doctorId,
+      doctorName: a.doctor?.name ?? null,
+      doctorEmail: a.doctor?.email ?? null,
+      specialty: (a.doctor as any)?.specialty ?? null,
+    }));
+  }
+
+  async getAssignedSecretaries(doctorId: string) {
+    const assignments = await this.assignmentRepo.find({
+      where: { doctorId, isActive: true },
+      relations: ['secretary'],
+    });
+    return assignments.map((a) => ({
+      id: a.id,
+      secretaryId: a.secretaryId,
+      secretaryName: a.secretary?.name ?? null,
+      secretaryEmail: a.secretary?.email ?? null,
+    }));
+  }
+
+  async getDoctorIdsForSecretary(secretaryId: string): Promise<string[]> {
+    const assignments = await this.assignmentRepo.find({
+      where: { secretaryId, isActive: true },
+      select: ['doctorId'],
+    });
+    return assignments.map((a) => a.doctorId);
   }
 
   private toResponse(a: Appointment) {

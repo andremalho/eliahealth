@@ -17,7 +17,7 @@ import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../auth/auth.enums.js';
 
 @Controller()
-@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE)
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.NURSE, UserRole.RECEPTIONIST)
 export class PregnanciesController {
   constructor(private readonly pregnanciesService: PregnanciesService) {}
 
@@ -51,10 +51,12 @@ export class PregnanciesController {
   @Get('pregnancies/list')
   list(
     @CurrentUser('userId') userId: string,
+    @CurrentUser('role') role: string,
     @Query('status') status?: string,
     @Query('sort') sort?: string,
     @Query('ownership') ownership?: string,
     @Query('search') search?: string,
+    @Query('doctorIds') doctorIds?: string,
   ) {
     return this.pregnanciesService.list({
       status,
@@ -62,6 +64,8 @@ export class PregnanciesController {
       ownership,
       search,
       userId,
+      role,
+      doctorIds: doctorIds ? doctorIds.split(',') : undefined,
     });
   }
 

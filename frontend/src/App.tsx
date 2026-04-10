@@ -15,6 +15,7 @@ import PregnancyPage from './pages/pregnancy/PregnancyPage';
 import PregnanciesListPage from './pages/pregnancies/PregnanciesListPage';
 import PatientsListPage from './pages/patients/PatientsListPage';
 import PatientPage from './pages/patients/PatientPage';
+import GynecologyPage from './pages/gynecology/GynecologyPage';
 import BirthCalendarPage from './pages/calendar/BirthCalendarPage';
 import TeamsPage from './pages/teams/TeamsPage';
 import SettingsPage from './pages/settings/SettingsPage';
@@ -64,6 +65,7 @@ export default function App() {
             }
           >
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/gynecology" element={<GynecologyPage />} />
             <Route path="/pregnancies" element={<PregnanciesListPage />} />
             <Route path="/pregnancies/:pregnancyId" element={<PregnancyPage />} />
             <Route path="/patients" element={<PatientsListPage />} />

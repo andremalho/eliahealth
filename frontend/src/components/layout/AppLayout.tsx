@@ -11,7 +11,7 @@ import { toTitleCase } from '../../utils/formatters';
 
 const navItems = [
   { to: '/dashboard', icon: Home, label: 'Início' },
-  { to: '/patients', icon: Stethoscope, label: 'Ginecologia' },
+  { to: '/gynecology', icon: Stethoscope, label: 'Ginecologia' },
   { to: '/pregnancies', icon: Users, label: 'Gestações' },
   { to: '/birth-calendar', icon: Calendar, label: 'Calendário' },
   { to: '/teams', icon: Users2, label: 'Equipes' },

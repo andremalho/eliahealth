@@ -63,6 +63,7 @@ import { AssistedReproductionModule } from './assisted-reproduction/assisted-rep
 import { MenopauseAssessmentsModule } from './menopause-assessments/menopause-assessments.module.js';
 import { UploadsModule } from './uploads/uploads.module.js';
 import { PostpartumModule } from './postpartum/postpartum.module.js';
+import { AppointmentsModule } from './appointments/appointments.module.js';
 import { MailModule } from './mail/mail.module.js';
 
 @Module({
@@ -128,6 +129,7 @@ import { MailModule } from './mail/mail.module.js';
     AdminModule,
     UploadsModule,
     PostpartumModule,
+    AppointmentsModule,
     LabIntegrationsModule,
     WhatsAppModule,
     FhirModule,

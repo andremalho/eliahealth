@@ -9,7 +9,7 @@ import { useAuthStore } from '../../store/auth.store';
 import { cn } from '../../utils/cn';
 import { toTitleCase } from '../../utils/formatters';
 
-const navItems = [
+const clinicalNavItems = [
   { to: '/dashboard', icon: Home, label: 'Início' },
   { to: '/gynecology', icon: Stethoscope, label: 'Ginecologia' },
   { to: '/pregnancies', icon: Users, label: 'Gestações' },
@@ -18,10 +18,18 @@ const navItems = [
   { to: '/settings', icon: Settings, label: 'Configurações' },
 ];
 
+const receptionNavItems = [
+  { to: '/reception', icon: Home, label: 'Recepção' },
+  { to: '/reception/agenda', icon: Calendar, label: 'Agenda' },
+  { to: '/reception/patients', icon: HeartPulse, label: 'Pacientes' },
+  { to: '/settings', icon: Settings, label: 'Configurações' },
+];
+
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, logout } = useAuthStore();
+  const navItems = user?.role === 'receptionist' ? receptionNavItems : clinicalNavItems;
   const navigate = useNavigate();
 
   const handleLogout = () => {

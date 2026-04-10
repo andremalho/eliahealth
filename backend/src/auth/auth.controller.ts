@@ -77,6 +77,13 @@ export class AuthController {
     return this.authService.loginByPhone(body.phone);
   }
 
+  // ── Doctors list ──
+
+  @Get('doctors')
+  doctors(@CurrentUser('tenantId') tenantId: string) {
+    return this.authService.listDoctors(tenantId);
+  }
+
   // ── Google OAuth ──
 
   @Public()

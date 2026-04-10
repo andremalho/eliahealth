@@ -232,6 +232,19 @@ export class AuthService {
     return this.generateTokens(user, 'google-oauth', null);
   }
 
+  // ── Doctors list ──
+
+  async listDoctors(tenantId?: string) {
+    const where: Record<string, unknown> = { role: UserRole.PHYSICIAN };
+    if (tenantId) where.tenantId = tenantId;
+    const doctors = await this.userRepo.find({
+      where,
+      select: ['id', 'name', 'email', 'specialty'],
+      order: { name: 'ASC' },
+    });
+    return doctors;
+  }
+
   // ── Password validation ──
 
   private validatePasswordStrength(password: string): void {

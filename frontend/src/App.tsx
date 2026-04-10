@@ -19,6 +19,9 @@ import GynecologyPage from './pages/gynecology/GynecologyPage';
 import BirthCalendarPage from './pages/calendar/BirthCalendarPage';
 import TeamsPage from './pages/teams/TeamsPage';
 import SettingsPage from './pages/settings/SettingsPage';
+import ReceptionDashboardPage from './pages/reception/ReceptionDashboardPage';
+import AgendaPage from './pages/reception/AgendaPage';
+import ReceptionPatientsPage from './pages/reception/ReceptionPatientsPage';
 import { useAuthStore } from './store/auth.store';
 
 const queryClient = new QueryClient({
@@ -33,6 +36,7 @@ function PortalProtected({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -41,7 +45,9 @@ export default function App() {
         <Routes>
           <Route
             path="/"
-            element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />}
+            element={isAuthenticated
+              ? <Navigate to={user?.role === 'receptionist' ? '/reception' : '/dashboard'} replace />
+              : <Navigate to="/login" replace />}
           />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -73,6 +79,9 @@ export default function App() {
             <Route path="/birth-calendar" element={<BirthCalendarPage />} />
             <Route path="/teams" element={<TeamsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/reception" element={<ReceptionDashboardPage />} />
+            <Route path="/reception/agenda" element={<AgendaPage />} />
+            <Route path="/reception/patients" element={<ReceptionPatientsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

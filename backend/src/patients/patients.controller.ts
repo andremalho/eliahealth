@@ -16,7 +16,7 @@ import { UserRole } from '../auth/auth.enums.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 
 @Controller('patients')
-@Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
+@Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.RECEPTIONIST)
 export class PatientsController {
   constructor(private readonly patientsService: PatientsService) {}
 

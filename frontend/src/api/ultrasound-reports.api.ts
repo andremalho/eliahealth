@@ -52,6 +52,28 @@ export const sendReport = async (id: string, via: string, to: string) =>
 export const deleteReport = async (id: string) =>
   (await api.delete(`/ultrasound-reports/${id}`)).data;
 
+export const uploadReportImage = async (id: string, file: File) => {
+  const form = new FormData();
+  form.append('file', file);
+  const { data } = await api.post(`/ultrasound-reports/${id}/images`, form, {
+    headers: { 'Content-Type': undefined as any },
+  });
+  return data;
+};
+
+export const downloadReportPdf = async (id: string, filename: string) => {
+  const response = await api.get(`/ultrasound-reports/${id}/pdf`, { responseType: 'blob' });
+  const blob = new Blob([response.data], { type: 'application/pdf' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+};
+
 export const STATUS_LABELS: Record<string, string> = {
   draft: 'Rascunho',
   pending_signature: 'Aguardando assinatura',

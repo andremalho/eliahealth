@@ -1,8 +1,20 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
+import {
+  Controller, Get, Post, Patch, Delete, Body, Param, Query, Res,
+  UploadedFile, UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { mkdirSync, existsSync } from 'fs';
+import { randomUUID } from 'crypto';
+import type { Response } from 'express';
 import { UltrasoundReportsService } from './ultrasound-reports.service.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 import { UserRole } from '../auth/auth.enums.js';
 import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
+
+const IMG_DIR = join(process.cwd(), 'uploads', 'us-images');
+if (!existsSync(IMG_DIR)) mkdirSync(IMG_DIR, { recursive: true });
 
 @Controller('ultrasound-reports')
 @Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
@@ -67,5 +79,49 @@ export class UltrasoundReportsController {
   @Delete(':id')
   delete(@Param('id') id: string) {
     return this.service.delete(id);
+  }
+
+  // ── Image Upload ──
+
+  @Post(':id/images')
+  @UseInterceptors(FileInterceptor('file', {
+    storage: diskStorage({
+      destination: IMG_DIR,
+      filename: (_req, file, cb) => {
+        const name = `${randomUUID()}${extname(file.originalname)}`;
+        cb(null, name);
+      },
+    }),
+    fileFilter: (_req, file, cb) => {
+      const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+      cb(null, allowed.includes(file.mimetype));
+    },
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  }))
+  async uploadImage(
+    @Param('id') id: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const report = await this.service.findOne(id);
+    const images = report.images ?? [];
+    images.push({
+      url: `/uploads/us-images/${file.filename}`,
+      filename: file.originalname,
+      order: images.length,
+    });
+    return this.service.update(id, { images } as any);
+  }
+
+  // ── PDF Export ──
+
+  @Get(':id/pdf')
+  async exportPdf(@Param('id') id: string, @Res() res: Response) {
+    const buffer = await this.service.generatePdf(id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="laudo_${id.slice(0, 8)}.pdf"`,
+      'Content-Length': buffer.length,
+    });
+    res.end(buffer);
   }
 }

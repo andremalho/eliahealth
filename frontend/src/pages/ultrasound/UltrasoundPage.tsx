@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { templatesByCategory, reportTemplates, type ReportTemplate } from '../../data/report-templates';
 import {
   fetchReportsByPatient, createReport, signReport, deleteReport,
+  downloadReportPdf, sendReport as sendReportApi,
   STATUS_LABELS, STATUS_COLORS, type UltrasoundReportItem,
 } from '../../api/ultrasound-reports.api';
 import api from '../../api/client';
@@ -253,10 +254,26 @@ export default function UltrasoundPage() {
                               )}
                               {(r.status === 'signed' || r.status === 'exported') && (
                                 <>
-                                  <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg">
+                                  <button onClick={async () => {
+                                    try {
+                                      await downloadReportPdf(r.id, `laudo_${r.id.slice(0, 8)}.pdf`);
+                                      toast.success('PDF exportado');
+                                    } catch { toast.error('Erro ao exportar PDF'); }
+                                  }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg">
                                     <Download className="w-3.5 h-3.5" /> Exportar PDF
                                   </button>
-                                  <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-violet-700 bg-violet-50 hover:bg-violet-100 rounded-lg">
+                                  <button onClick={async () => {
+                                    const to = window.prompt('Email ou telefone da paciente:');
+                                    if (!to) return;
+                                    const via = to.includes('@') ? 'email' : 'whatsapp';
+                                    try {
+                                      await sendReportApi(r.id, via, to);
+                                      qc.invalidateQueries({ queryKey: ['us-reports'] });
+                                      toast.success(`Laudo enviado por ${via}`);
+                                    } catch { toast.error('Erro ao enviar'); }
+                                  }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-violet-700 bg-violet-50 hover:bg-violet-100 rounded-lg">
                                     <Send className="w-3.5 h-3.5" /> Enviar
                                   </button>
                                 </>

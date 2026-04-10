@@ -15,3 +15,12 @@ export enum AppointmentType {
   PROCEDURE = 'procedure',
   OTHER = 'other',
 }
+
+export enum AppointmentCategory {
+  PRIMEIRA_CONSULTA = 'primeira_consulta',
+  RETORNO = 'retorno',
+  PARTICULAR = 'particular',
+  CONVENIO = 'convenio',
+  URGENCIA = 'urgencia',
+  ENCAIXE = 'encaixe',
+}

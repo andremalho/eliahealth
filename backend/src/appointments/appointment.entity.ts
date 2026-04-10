@@ -4,7 +4,7 @@ import {
 } from 'typeorm';
 import { Patient } from '../patients/patient.entity.js';
 import { User } from '../auth/user.entity.js';
-import { AppointmentStatus, AppointmentType } from './appointment.enums.js';
+import { AppointmentStatus, AppointmentType, AppointmentCategory } from './appointment.enums.js';
 
 @Entity('appointments')
 export class Appointment {
@@ -49,6 +49,9 @@ export class Appointment {
 
   @Column({ type: 'enum', enum: AppointmentStatus, default: AppointmentStatus.SCHEDULED })
   status: AppointmentStatus;
+
+  @Column({ type: 'enum', enum: AppointmentCategory, nullable: true })
+  category: AppointmentCategory | null;
 
   @Column({ type: 'text', nullable: true })
   notes: string | null;

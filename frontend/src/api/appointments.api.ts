@@ -1,5 +1,7 @@
 import api from './client';
 
+export type AppointmentCategory = 'primeira_consulta' | 'retorno' | 'particular' | 'convenio' | 'urgencia' | 'encaixe';
+
 export interface AppointmentItem {
   id: string;
   date: string;
@@ -7,6 +9,7 @@ export interface AppointmentItem {
   endTime: string;
   type: string;
   status: string;
+  category: AppointmentCategory | null;
   notes: string | null;
   cancellationReason: string | null;
   patientId: string;
@@ -84,4 +87,31 @@ export const TYPE_LABELS: Record<string, string> = {
   exam: 'Exame',
   procedure: 'Procedimento',
   other: 'Outro',
+};
+
+export const CATEGORY_LABELS: Record<string, string> = {
+  primeira_consulta: '1a consulta',
+  retorno: 'Retorno',
+  particular: 'Particular',
+  convenio: 'Convenio',
+  urgencia: 'Urgencia',
+  encaixe: 'Encaixe',
+};
+
+export const CATEGORY_COLORS: Record<string, string> = {
+  primeira_consulta: 'bg-blue-100 text-blue-700',
+  retorno: 'bg-emerald-100 text-emerald-700',
+  particular: 'bg-amber-100 text-amber-800',
+  convenio: 'bg-violet-100 text-violet-700',
+  urgencia: 'bg-red-100 text-red-700',
+  encaixe: 'bg-orange-100 text-orange-700',
+};
+
+export const CATEGORY_DOT_COLORS: Record<string, string> = {
+  primeira_consulta: 'bg-blue-500',
+  retorno: 'bg-emerald-500',
+  particular: 'bg-amber-500',
+  convenio: 'bg-violet-500',
+  urgencia: 'bg-red-500',
+  encaixe: 'bg-orange-500',
 };

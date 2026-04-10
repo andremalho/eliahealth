@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { X, Loader2, Search } from 'lucide-react';
 import { toast } from 'sonner';
-import { createAppointment, fetchDoctors, TYPE_LABELS } from '../../api/appointments.api';
+import { createAppointment, fetchDoctors, TYPE_LABELS, CATEGORY_LABELS } from '../../api/appointments.api';
 import api from '../../api/client';
 import { toTitleCase } from '../../utils/formatters';
 import { cn } from '../../utils/cn';
@@ -45,6 +45,7 @@ export default function NewAppointmentModal({ preSelectedPatient, onClose }: Pro
       endTime: '08:30',
       doctorId: '',
       type: 'consultation',
+      category: '',
       notes: '',
     },
   });
@@ -57,6 +58,7 @@ export default function NewAppointmentModal({ preSelectedPatient, onClose }: Pro
       startTime: data.startTime,
       endTime: data.endTime,
       type: data.type,
+      category: data.category || undefined,
       notes: data.notes || undefined,
     }),
     onSuccess: () => {
@@ -141,12 +143,21 @@ export default function NewAppointmentModal({ preSelectedPatient, onClose }: Pro
             </div>
           </div>
 
-          {/* Type */}
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
-            <select {...register('type')} className={iCn}>
-              {Object.entries(TYPE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-            </select>
+          {/* Type + Category */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+              <select {...register('type')} className={iCn}>
+                {Object.entries(TYPE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Categoria</label>
+              <select {...register('category')} className={iCn}>
+                <option value="">—</option>
+                {Object.entries(CATEGORY_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+            </div>
           </div>
 
           {/* Notes */}

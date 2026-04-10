@@ -4,12 +4,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Calendar, Clock, Users, CheckCircle, XCircle, Plus, Loader2,
   Baby, Stethoscope, Search, AlertTriangle, ChevronRight,
+  List, Grid3X3, ChevronLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   fetchAppointments, fetchAppointmentSummary, updateAppointment,
   STATUS_LABELS, STATUS_COLORS, TYPE_LABELS,
+  CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_DOT_COLORS,
 } from '../../api/appointments.api';
+import { fetchUpcomingBirths } from '../../api/pregnancies.api';
 import { fetchMyDoctors, fetchPregnanciesForDoctors, fetchGynecologyPatientsForDoctors } from '../../api/secretary.api';
 import { useAuthStore } from '../../store/auth.store';
 import { toTitleCase } from '../../utils/formatters';
@@ -38,6 +41,9 @@ export default function ReceptionDashboardPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [triFilter, setTriFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [gestView, setGestView] = useState<'list' | 'calendar'>('list');
+  const [calMonth, setCalMonth] = useState(new Date().getMonth() + 1);
+  const [calYear, setCalYear] = useState(new Date().getFullYear());
 
   // Fetch assigned doctors
   const { data: myDoctors } = useQuery({
@@ -64,6 +70,13 @@ export default function ReceptionDashboardPage() {
     queryKey: ['secretary-pregnancies', doctorIds, search],
     queryFn: () => fetchPregnanciesForDoctors(doctorIds, 'active', search || undefined),
     enabled: tab === 'gestantes' && hasAssignment,
+  });
+
+  // Upcoming births for calendar
+  const { data: upcomingBirths } = useQuery({
+    queryKey: ['upcoming-births-secretary'],
+    queryFn: () => fetchUpcomingBirths(120),
+    enabled: tab === 'gestantes' && gestView === 'calendar',
   });
 
   // Gynecology patients
@@ -164,16 +177,22 @@ export default function ReceptionDashboardPage() {
             ) : (
               <div className="divide-y">
                 {appointments.map((a) => (
-                  <div key={a.id} className="flex items-center gap-4 p-4 hover:bg-gray-50 group">
-                    <div className="text-center shrink-0 w-16">
-                      <p className="text-lg font-bold text-navy">{a.startTime?.slice(0, 5)}</p>
+                  <div key={a.id} className="flex items-center gap-3 p-4 hover:bg-gray-50 group">
+                    <div className={cn('w-1 h-12 rounded-full shrink-0', a.category ? CATEGORY_DOT_COLORS[a.category] : 'bg-gray-200')} />
+                    <div className="text-center shrink-0 w-14">
+                      <p className="text-base font-bold text-navy">{a.startTime?.slice(0, 5)}</p>
                       <p className="text-[10px] text-gray-400">{a.endTime?.slice(0, 5)}</p>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-800 truncate">{a.patientName ? toTitleCase(a.patientName) : '—'}</p>
                       <p className="text-xs text-gray-500">{a.doctorName ?? '—'} · {TYPE_LABELS[a.type] ?? a.type}</p>
                     </div>
-                    <span className={cn('px-2.5 py-1 text-xs font-medium rounded-full shrink-0', STATUS_COLORS[a.status])}>
+                    {a.category && (
+                      <span className={cn('px-2 py-0.5 text-[10px] font-medium rounded-full shrink-0', CATEGORY_COLORS[a.category])}>
+                        {CATEGORY_LABELS[a.category]}
+                      </span>
+                    )}
+                    <span className={cn('px-2 py-0.5 text-[10px] font-medium rounded-full shrink-0', STATUS_COLORS[a.status])}>
                       {STATUS_LABELS[a.status] ?? a.status}
                     </span>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition shrink-0">
@@ -201,7 +220,17 @@ export default function ReceptionDashboardPage() {
         {tab === 'gestantes' && (
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 border-b">
-              <div className="flex gap-2 overflow-x-auto">
+              <div className="flex border rounded-lg overflow-hidden mr-2">
+                <button onClick={() => setGestView('list')}
+                  className={cn('p-1.5', gestView === 'list' ? 'bg-lilac text-white' : 'text-gray-400')}>
+                  <List className="w-4 h-4" />
+                </button>
+                <button onClick={() => setGestView('calendar')}
+                  className={cn('p-1.5', gestView === 'calendar' ? 'bg-lilac text-white' : 'text-gray-400')}>
+                  <Grid3X3 className="w-4 h-4" />
+                </button>
+              </div>
+              {gestView === 'list' && <div className="flex gap-2 overflow-x-auto">
                 {TRIMESTER_FILTERS.map((f) => (
                   <button key={f.value} onClick={() => setTriFilter(f.value)}
                     className={cn('px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition',
@@ -215,9 +244,71 @@ export default function ReceptionDashboardPage() {
                 <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar gestante..."
                   className="pl-10 pr-4 py-2 border rounded-lg text-sm w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-lilac/30 focus:border-lilac" />
               </div>
+              </div>}
             </div>
 
-            {loadingPreg ? (
+            {gestView === 'calendar' ? (
+              /* Birth calendar grid */
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <button onClick={() => { if (calMonth === 1) { setCalMonth(12); setCalYear(calYear - 1); } else setCalMonth(calMonth - 1); }}
+                    className="p-1.5 hover:bg-gray-100 rounded"><ChevronLeft className="w-4 h-4 text-gray-600" /></button>
+                  <p className="text-sm font-semibold text-navy">{['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][calMonth - 1]} {calYear}</p>
+                  <button onClick={() => { if (calMonth === 12) { setCalMonth(1); setCalYear(calYear + 1); } else setCalMonth(calMonth + 1); }}
+                    className="p-1.5 hover:bg-gray-100 rounded"><ChevronRight className="w-4 h-4 text-gray-600" /></button>
+                </div>
+                <div className="grid grid-cols-7 gap-1 mb-1">
+                  {['D','S','T','Q','Q','S','S'].map((d, i) => (
+                    <div key={i} className="text-center text-[10px] font-semibold text-gray-400 py-1">{d}</div>
+                  ))}
+                </div>
+                {(() => {
+                  const fd = new Date(calYear, calMonth - 1, 1).getDay();
+                  const dim = new Date(calYear, calMonth, 0).getDate();
+                  const c: (number | null)[] = [];
+                  for (let i = 0; i < fd; i++) c.push(null);
+                  for (let d = 1; d <= dim; d++) c.push(d);
+
+                  const births = (Array.isArray(upcomingBirths) ? upcomingBirths : []) as any[];
+                  const birthsByDay = new Map<number, any[]>();
+                  for (const b of births) {
+                    const bd = new Date(b.edd + 'T12:00:00');
+                    if (bd.getMonth() + 1 === calMonth && bd.getFullYear() === calYear) {
+                      const day = bd.getDate();
+                      if (!birthsByDay.has(day)) birthsByDay.set(day, []);
+                      birthsByDay.get(day)!.push(b);
+                    }
+                  }
+                  const td = new Date();
+                  const isCurMonth = calMonth === td.getMonth() + 1 && calYear === td.getFullYear();
+
+                  return (
+                    <div className="grid grid-cols-7 gap-1">
+                      {c.map((day, i) => {
+                        if (day === null) return <div key={i} />;
+                        const evts = birthsByDay.get(day) ?? [];
+                        const isT = isCurMonth && day === td.getDate();
+                        return (
+                          <div key={i} className={cn('min-h-[64px] p-1 rounded-lg border text-xs',
+                            isT ? 'border-lilac bg-lilac/5' : 'border-gray-100',
+                            evts.length > 0 && 'bg-pink-50/50')}>
+                            <span className={cn('inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-medium',
+                              isT ? 'bg-lilac text-white' : 'text-gray-600')}>{day}</span>
+                            {evts.slice(0, 2).map((b: any, j: number) => (
+                              <div key={j} onClick={() => navigate(`/pregnancies/${b.pregnancyId}`)}
+                                className="mt-0.5 px-1 py-0.5 bg-pink-100 text-pink-700 text-[9px] font-medium rounded truncate cursor-pointer hover:bg-pink-200">
+                                {b.patientName?.split(' ')[0]} · {b.gaWeeks}s
+                              </div>
+                            ))}
+                            {evts.length > 2 && <span className="text-[9px] text-gray-400">+{evts.length - 2}</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            ) : loadingPreg ? (
               <div className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" /></div>
             ) : filteredPregnancies.length === 0 ? (
               <div className="flex flex-col items-center py-16 text-gray-400">

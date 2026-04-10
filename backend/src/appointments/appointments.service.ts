@@ -199,6 +199,7 @@ export class AppointmentsService {
       endTime: a.endTime,
       type: a.type,
       status: a.status,
+      category: a.category,
       notes: a.notes,
       cancellationReason: a.cancellationReason,
       patientId: a.patientId,

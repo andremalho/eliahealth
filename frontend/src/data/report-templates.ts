@@ -371,27 +371,140 @@ export const dopplerObstetrico: ReportTemplate = {
 export const morfologicoPrimeiroTrimestre: ReportTemplate = {
   id: 'morfologico_1t',
   name: 'Morfologico 1o Trimestre (11-14 semanas)',
-  version: '2.0',
+  version: '3.0',
   reviewed_at: '2025-04',
   category: 'obstetrica',
-  guideline_refs: ['ISUOG 11-14 week 2023'],
+  guideline_refs: [
+    'ISUOG 11-14 week scan 2023 (UOG 61:127-143)',
+    'FMF Combined Test Protocol',
+    'FMF Pre-eclampsia Screening Algorithm (Akolekar 2013)',
+    'ISUOG cervical length assessment 2022',
+  ],
   sections: [
     secCabecalho,
-    secDadosGestacao([txt('ig_1t', 'IG pelo CCN'), field('dpp_1t', 'DPP', 'date')]),
+    secDadosGestacao([
+      txt('ig_1t', 'IG pelo CCN'),
+      field('dpp_1t', 'DPP', 'date'),
+    ]),
     secGestacaoMultipla,
-    { id: 'rastr_a', title: 'Feto A — Rastreamento', fields: [
-      num('feto_a_ccn_morf', 'CCN', 'mm', { required: true }),
-      num('feto_a_tn_morf', 'TN', 'mm', { required: true }),
-      txt('feto_a_tn_mom', 'TN — MoM'),
-      select('feto_a_osso_nasal', 'Osso Nasal', ['Presente', 'Hipoplasico', 'Ausente'], { required: true }),
-      num('feto_a_dv_ip_morf', 'IP Ducto Venoso'),
-      select('feto_a_tr_regurg', 'Regurgitacao Tricuspide', ['Ausente', 'Presente']),
-      txt('feto_a_risco_t21', 'Risco Combinado T21'),
+    // ── Dados maternos para calculo de risco ──
+    { id: 'dados_maternos_1t', title: 'Dados Maternos (para calculo de risco)', fields: [
+      num('idade_materna', 'Idade Materna', 'anos', { required: true, guideline: 'FMF — risco a priori baseado na idade' }),
+      num('peso_materno', 'Peso', 'kg', { required: true, guideline: 'FMF — correcao de MoM por peso' }),
+      num('altura_materna', 'Altura', 'cm'),
+      select('etnia', 'Etnia', ['Caucasiana', 'Afrodescendente', 'Asiatica', 'Mista', 'Outra'], { guideline: 'FMF — ajuste de risco por etnia' }),
+      select('concepcao', 'Tipo de Concepcao', ['Espontanea', 'FIV/ICSI', 'Inducao de ovulacao', 'Doacao de ovulos']),
+      select('tabagismo', 'Tabagismo', ['Nao fumante', 'Fumante atual', 'Ex-fumante']),
+      bool('dm_pregestacional', 'Diabetes Mellitus Pre-gestacional'),
+      bool('has_cronico', 'Hipertensao Arterial Cronica'),
+      bool('les', 'LES / Sindrome Antifosfolipide'),
+      select('hx_pe', 'Historia Previa de Pre-eclampsia', [
+        'Nenhuma', 'PE em gestacao anterior', 'PE precoce (< 34s) em gestacao anterior',
+        'Eclampsia / HELLP previa',
+      ], { guideline: 'FMF — principal fator de risco para PE' }),
+      select('paridade', 'Paridade', ['Nulipara', 'Multipara sem PE previa', 'Multipara com PE previa']),
+      bool('hx_familiar_pe', 'Historia Familiar de PE (mae/irma)'),
     ]},
-    { id: 'uta_1t', title: 'Rastreamento Pre-eclampsia', fields: [
-      num('uta_pi_d_1t', 'IP AUt D'), num('uta_pi_e_1t', 'IP AUt E'),
-      num('uta_pi_medio_1t', 'IP Medio'),
-      txt('risco_pe_1t', 'Risco Combinado PE'),
+    // ── Rastreamento de Aneuploidias (Feto A) ──
+    { id: 'rastr_a', title: 'Feto A — Rastreamento de Aneuploidias', fields: [
+      num('feto_a_ccn_morf', 'CCN', 'mm', { required: true, guideline: 'FMF — 45-84mm (11+0 a 13+6 semanas)' }),
+      txt('feto_a_ig_ccn', 'IG pelo CCN'),
+      num('feto_a_tn_morf', 'TN', 'mm', { required: true, guideline: 'ISUOG/FMF — calipers inner-to-inner, posicao neutra, 3 medidas' }),
+      num('feto_a_tn_mom', 'TN — MoM', undefined, { guideline: 'FMF — MoM ajustado por CCN' }),
+      select('feto_a_osso_nasal', 'Osso Nasal', [
+        'Presente e normal', 'Hipoplasico (< 2.5mm)', 'Ausente',
+      ], { required: true, guideline: 'FMF — ausente em ~60% T21, ~1% euploides' }),
+      num('feto_a_dv_ip_morf', 'IP Ducto Venoso', undefined, { guideline: 'FMF — > p95 = risco aumentado' }),
+      select('feto_a_dv_onda_a', 'Onda "a" Ducto Venoso', [
+        'Positiva (normal)', 'Ausente', 'Invertida',
+      ], { guideline: 'FMF — onda "a" invertida: LR 3.2 para T21' }),
+      select('feto_a_tr_regurg', 'Regurgitacao Tricuspide', [
+        'Ausente (normal)', 'Presente',
+      ], { guideline: 'FMF — presente em ~55% T21, ~1% euploides' }),
+      num('feto_a_fcf_1t', 'FCF', 'bpm', { min: 80, max: 220 }),
+      num('feto_a_afn', 'Angulo Frontonasal', 'graus', { guideline: 'FMF — > p95: LR 3.8 para T21' }),
+    ]},
+    // ── Bioquimica serica ──
+    { id: 'bioquimica_1t', title: 'Marcadores Bioquimicos Sericos', fields: [
+      grp('papp_a_grp', 'PAPP-A', [
+        num('papp_a_valor', 'PAPP-A', 'mUI/mL', { guideline: 'FMF — coleta ideal 9-11 semanas' }),
+        num('papp_a_mom', 'PAPP-A — MoM', undefined, { guideline: '< 0.4 MoM: risco aumentado T21/T18/T13 + PE + RCIU' }),
+      ]),
+      grp('beta_hcg_grp', 'Beta-hCG Livre', [
+        num('beta_hcg_valor', 'Beta-hCG Livre', 'mUI/mL'),
+        num('beta_hcg_mom', 'Beta-hCG — MoM', undefined, { guideline: 'FMF — > 2.0 MoM: risco aumentado T21' }),
+      ]),
+      grp('plgf_grp', 'PlGF (opcional)', [
+        num('plgf_valor', 'PlGF', 'pg/mL', { guideline: 'FMF — marcador adicional para PE precoce' }),
+        num('plgf_mom', 'PlGF — MoM'),
+      ]),
+    ]},
+    // ── Calculo de Risco de Trissomias ──
+    { id: 'risco_trissomias', title: 'Calculo de Risco — Trissomias (Teste Combinado FMF)', fields: [
+      grp('risco_t21_grp', 'Trissomia 21 (Sindrome de Down)', [
+        txt('risco_a_priori_t21', 'Risco a Priori (pela idade)', 'Ex.: 1:250'),
+        txt('risco_ajustado_t21', 'Risco Ajustado (teste combinado)', 'Ex.: 1:1500'),
+        select('risco_t21_class', 'Classificacao', [
+          'Baixo risco (> 1:1000)', 'Risco intermediario (1:101 a 1:1000)',
+          'Alto risco (<= 1:100)',
+        ], { required: true, guideline: 'FMF — alto risco: invasivo; intermediario: NIPT; baixo: rotina' }),
+      ]),
+      grp('risco_t18_grp', 'Trissomia 18 (Sindrome de Edwards)', [
+        txt('risco_ajustado_t18', 'Risco Ajustado', 'Ex.: 1:5000'),
+        select('risco_t18_class', 'Classificacao', [
+          'Baixo risco (> 1:100)', 'Alto risco (<= 1:100)',
+        ]),
+      ]),
+      grp('risco_t13_grp', 'Trissomia 13 (Sindrome de Patau)', [
+        txt('risco_ajustado_t13', 'Risco Ajustado', 'Ex.: 1:8000'),
+        select('risco_t13_class', 'Classificacao', [
+          'Baixo risco (> 1:100)', 'Alto risco (<= 1:100)',
+        ]),
+      ]),
+      select('conduta_trissomia', 'Conduta Recomendada', [
+        'Rastreamento de rotina — baixo risco',
+        'NIPT (cellfree DNA) recomendado — risco intermediario',
+        'Procedimento invasivo (BVC/amniocentese) oferecido — alto risco',
+        'Aconselhamento genetico recomendado',
+      ]),
+      area('obs_trissomia', 'Observacoes sobre rastreamento'),
+    ]},
+    // ── Rastreamento de Pre-eclampsia (FMF) ──
+    { id: 'rastr_pe_1t', title: 'Rastreamento de Pre-eclampsia (Algoritmo FMF)', fields: [
+      grp('pressao_arterial_1t', 'Pressao Arterial Materna', [
+        num('pa_sistolica_1t', 'PA Sistolica', 'mmHg', { required: true }),
+        num('pa_diastolica_1t', 'PA Diastolica', 'mmHg', { required: true }),
+        num('map_1t', 'MAP (Pressao Arterial Media)', 'mmHg', { guideline: 'MAP = (PAS + 2*PAD) / 3' }),
+        num('map_mom', 'MAP — MoM', undefined, { guideline: 'FMF — ajustado por IG, peso, etnia' }),
+      ]),
+      grp('doppler_uterinas_1t', 'Arterias Uterinas', [
+        num('uta_pi_d_1t', 'IP AUt Direita', undefined, { required: true }),
+        num('uta_pi_e_1t', 'IP AUt Esquerda', undefined, { required: true }),
+        num('uta_pi_medio_1t', 'IP Medio', undefined, { required: true, guideline: 'FMF — media aritmetica bilateral' }),
+        num('uta_pi_mom', 'IP Medio — MoM', undefined, { guideline: 'FMF — ajustado por IG' }),
+      ]),
+      grp('risco_pe_resultado', 'Resultado do Rastreamento', [
+        txt('risco_pe_precoce', 'Risco PE Precoce (< 34 semanas)', 'Ex.: 1:50'),
+        txt('risco_pe_preterme', 'Risco PE Pre-termo (< 37 semanas)', 'Ex.: 1:120'),
+        txt('risco_pe_termo', 'Risco PE a Termo', 'Ex.: 1:80'),
+        select('risco_pe_class', 'Classificacao', [
+          'Baixo risco (> 1:100 para PE precoce)',
+          'Alto risco (<= 1:100 para PE precoce)',
+        ], { required: true, guideline: 'FMF — alto risco: AAS 150mg/noite a partir de 12-16 semanas' }),
+        select('conduta_pe', 'Conduta', [
+          'Seguimento de rotina — baixo risco',
+          'AAS 150mg/noite (12-36 semanas) — alto risco',
+          'AAS + monitoramento pressao arterial intensificado',
+          'Avaliacao especializada',
+        ]),
+      ]),
+    ]},
+    // ── Arterias Uterinas (imagem) ──
+    { id: 'uta_1t', title: 'Arterias Uterinas — Imagens e Observacoes', fields: [
+      select('uta_notch_1t', 'Incisura Protodiastolica (Notch)', [
+        'Ausente bilateralmente', 'Unilateral', 'Bilateral',
+      ]),
+      area('uta_obs_1t', 'Observacoes sobre Arterias Uterinas'),
     ]},
     secConclusao,
   ],
@@ -413,6 +526,103 @@ export const morfologicoSegundoTrimestre: ReportTemplate = {
     ]},
     { id: 'cervix_2t_sec', title: 'Colo Uterino', fields: [
       num('cc_cervical_2t', 'Comprimento Cervical', 'mm'),
+    ]},
+    secConclusao,
+  ],
+};
+
+export const avaliacaoCervical: ReportTemplate = {
+  id: 'avaliacao_cervical',
+  name: 'Avaliacao do Colo Uterino (Cervicometria)',
+  version: '1.0',
+  reviewed_at: '2025-04',
+  category: 'obstetrica',
+  guideline_refs: [
+    'ISUOG Practice Guidelines: cervical assessment. UOG 2022',
+    'FIGO Good Practice: cervical length screening. IJGO 2019',
+    'Berghella V. Obstet Gynecol 2017 — cerclage meta-analysis',
+  ],
+  sections: [
+    secCabecalho,
+    secDadosGestacao([
+      txt('ig_cervix', 'IG'),
+      field('dpp_cervix', 'DPP', 'date'),
+    ]),
+    { id: 'indicacao_cervix', title: 'Indicacao e Historia', fields: [
+      multiselect('ind_cervix', 'Indicacao', [
+        'Rastreamento de rotina (19-24 semanas)', 'Historia de parto pretermino',
+        'Conizacao / LEEP previa', 'Cerclagem previa', 'Incompetencia istmo-cervical',
+        'Gestacao multipla', 'Encurtamento em exame anterior',
+        'Contracao / ameaca de parto pretermino', 'Seguimento apos progesterona',
+      ]),
+      select('hx_parto_pretermino', 'Historia de Parto Pretermino Espontaneo', [
+        'Nenhum', '1 parto < 37 semanas', '1 parto < 34 semanas',
+        '2+ partos pretermos', 'Perda de 2o trimestre (16-24 semanas)',
+      ], { guideline: 'ISUOG — principal fator de risco para colo curto' }),
+      select('cirurgia_cervical', 'Cirurgia Cervical Previa', [
+        'Nenhuma', 'Conizacao a frio', 'LEEP/CAF', 'Traquelectomia', 'Cerclagem previa',
+      ]),
+      select('uso_progesterona', 'Uso de Progesterona', [
+        'Nao', 'Progesterona vaginal (200mg/noite)',
+        'Progesterona vaginal (100mg)', 'Caproato de 17-OHP IM semanal',
+      ]),
+      bool('cerclagem_insitu', 'Cerclagem in situ'),
+    ]},
+    { id: 'medida_cervical', title: 'Medida Cervical (TVU)', fields: [
+      select('tecnica_cervix', 'Tecnica', [
+        'TVU — bexiga vazia, sem pressao, 3+ medidas, menor valor',
+        'Transabdominal (complementar)',
+        'TVU nao possivel — via transabdominal apenas',
+      ], { required: true, guideline: 'ISUOG — TVU padrao; bexiga vazia; imagem sagital; 3 min observacao' }),
+      num('cc_medida_1', 'Medida 1', 'mm', { required: true }),
+      num('cc_medida_2', 'Medida 2', 'mm'),
+      num('cc_medida_3', 'Medida 3', 'mm'),
+      num('cc_menor', 'Menor Medida (utilizada)', 'mm', { required: true, guideline: 'ISUOG — usar a menor das 3 medidas' }),
+      select('cc_classificacao', 'Classificacao do Comprimento', [
+        'Normal (>= 25mm)', 'Encurtado (15-24mm) — zona de alerta',
+        'Curto (< 15mm) — alto risco', 'Muito curto (< 10mm) — risco critico',
+        'Dilatado / sem canal — incompetencia cervical',
+      ], { required: true, guideline: 'ISUOG/FIGO — < 25mm: risco aumentado de parto pretermino' }),
+    ]},
+    { id: 'morfologia_cervical', title: 'Morfologia do Colo', fields: [
+      select('orificio_int_cervix', 'Orificio Cervical Interno (OCI)', [
+        'Fechado', 'Aberto (dilatacao <= 5mm)', 'Aberto (dilatacao > 5mm)', 'Indeterminado',
+      ], { required: true }),
+      select('funneling', 'Funneling / Afunilamento', [
+        'Ausente', 'Presente — em forma de Y', 'Presente — em forma de V',
+        'Presente — em forma de U (grave)', 'Herniacao de membranas',
+      ], { required: true, guideline: 'ISUOG — funneling: sinal de incompetencia; medir comprimento funcional' }),
+      num('funneling_comp', 'Comprimento do Funnel', 'mm'),
+      num('cc_funcional', 'Comprimento Cervical Funcional', 'mm', {
+        guideline: 'ISUOG — do OCI ao inicio do funnel (se presente)',
+      }),
+      select('sludge', 'Sludge no Canal Cervical', [
+        'Ausente', 'Presente — debris ecogenicos no canal',
+      ], { guideline: 'Sludge: associado a risco aumentado de PPT e corioamnionite' }),
+      select('dynamic_changes', 'Alteracoes Dinamicas (3 min observacao)', [
+        'Ausentes — colo estavel', 'Encurtamento transitorio com pressao fudica',
+        'Funneling intermitente', 'Encurtamento progressivo durante o exame',
+      ], { guideline: 'ISUOG — observar 3 min; pressao fudica opcional' }),
+    ]},
+    { id: 'risco_conduta_cervix', title: 'Avaliacao de Risco e Conduta', fields: [
+      select('risco_ppt', 'Risco de Parto Pretermino', [
+        'Baixo — CC >= 25mm, sem fatores de risco',
+        'Intermediario — CC 15-24mm ou fatores de risco isolados',
+        'Alto — CC < 15mm, ou CC < 25mm + historia de PPT',
+        'Muito alto — CC < 10mm ou funneling com historia',
+      ], { required: true }),
+      select('conduta_cervix', 'Conduta Recomendada', [
+        'Seguimento de rotina — rastreamento na morfo 2T',
+        'Repeticao em 2 semanas — monitoramento seriado',
+        'Iniciar progesterona vaginal (200mg/noite)',
+        'Progesterona + monitoramento seriado a cada 2 semanas',
+        'Avaliacao para cerclagem (< 24 semanas + historia)',
+        'Pessario cervical — avaliar indicacao',
+        'Internacao + corticoide (se viabilidade fetal)',
+        'Encaminhar para centro de referencia',
+      ], { guideline: 'FIGO 2019 — progesterona se < 25mm singleton; cerclagem se < 25mm + hx PPT' }),
+      num('retorno_semanas', 'Retorno para reavaliacao em', 'semanas'),
+      area('obs_cervix', 'Observacoes e plano individualizado'),
     ]},
     secConclusao,
   ],
@@ -765,6 +975,7 @@ export const reportTemplates: Record<string, ReportTemplate> = {
   [dopplerObstetrico.id]: dopplerObstetrico,
   [morfologicoPrimeiroTrimestre.id]: morfologicoPrimeiroTrimestre,
   [morfologicoSegundoTrimestre.id]: morfologicoSegundoTrimestre,
+  [avaliacaoCervical.id]: avaliacaoCervical,
   [ecocardiografiaFetal.id]: ecocardiografiaFetal,
   [neurossonografiaFetal.id]: neurossonografiaFetal,
   [perfilBiofisicoFetal.id]: perfilBiofisicoFetal,
@@ -781,7 +992,7 @@ export const reportTemplates: Record<string, ReportTemplate> = {
 export const templatesByCategory = {
   obstetrica: [
     obstetricoInicial, obstetrico, dopplerObstetrico, morfologicoPrimeiroTrimestre,
-    morfologicoSegundoTrimestre, ecocardiografiaFetal, neurossonografiaFetal, perfilBiofisicoFetal,
+    morfologicoSegundoTrimestre, avaliacaoCervical, ecocardiografiaFetal, neurossonografiaFetal, perfilBiofisicoFetal,
   ],
   ginecologica: [
     pelvicoTransvaginal, pelvicoEndometriose, abdomeInferior, abdomeTotal,

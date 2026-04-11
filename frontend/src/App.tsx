@@ -7,6 +7,7 @@ import PublicCardPage from './pages/public/PublicCardPage';
 import PortalLoginPage from './pages/portal/PortalLoginPage';
 import PortalHomePage from './pages/portal/PortalHomePage';
 import PortalOnboardingPage from './pages/portal/PortalOnboardingPage';
+import CheckinPage from './pages/checkin/CheckinPage';
 import { usePatientAuthStore } from './store/patientAuth.store';
 import PrivateRoute from './components/PrivateRoute';
 import AppLayout from './components/layout/AppLayout';
@@ -54,6 +55,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/cartao" element={<PublicCardPage />} />
+          <Route path="/checkin" element={<CheckinPage />} />
           <Route path="/portal/login" element={<PortalLoginPage />} />
           <Route
             path="/portal"

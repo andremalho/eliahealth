@@ -135,6 +135,18 @@ export class AppointmentsService {
     }
   }
 
+  // ── Check-in ──
+
+  async checkin(token: string): Promise<Appointment> {
+    const appointment = await this.repo.findOneBy({ checkinToken: token });
+    if (!appointment) throw new NotFoundException('Token de check-in invalido');
+    if (appointment.isCheckedIn) throw new ConflictException('Check-in ja realizado');
+    appointment.isCheckedIn = true;
+    appointment.checkedInAt = new Date();
+    appointment.status = AppointmentStatus.ARRIVED;
+    return this.repo.save(appointment);
+  }
+
   // ── Procedures Calendar ──
 
   async getProceduresCalendar(month: number, year: number, doctorId?: string) {

@@ -2,6 +2,8 @@ import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestj
 import { AppointmentsService } from './appointments.service.js';
 import { SlotGenerationService } from './slot-generation.service.js';
 import { AutoScheduleService } from './auto-schedule.service.js';
+import { AppointmentAlertService } from './appointment-alert.service.js';
+import { Public } from '../auth/decorators/public.decorator.js';
 import { CreateAppointmentDto } from './dto/create-appointment.dto.js';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
@@ -15,6 +17,7 @@ export class AppointmentsController {
     private readonly service: AppointmentsService,
     private readonly slotService: SlotGenerationService,
     private readonly autoScheduleService: AutoScheduleService,
+    private readonly alertService: AppointmentAlertService,
   ) {}
 
   @Post()
@@ -130,6 +133,39 @@ export class AppointmentsController {
   @Get('auto-schedule/:pregnancyId')
   getAutoScheduled(@Param('pregnancyId') pregnancyId: string) {
     return this.autoScheduleService.getAutoScheduled(pregnancyId);
+  }
+
+  // ── Appointment Alerts ──
+
+  @Post('alerts')
+  @Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
+  createAlert(
+    @CurrentUser('userId') userId: string,
+    @Body() body: {
+      patientId: string;
+      pregnancyId?: string;
+      appointmentType: string;
+      gaWindowMin?: number;
+      gaWindowMax?: number;
+      message?: string;
+    },
+  ) {
+    return this.alertService.create({ ...body, requestedBy: userId });
+  }
+
+  @Get('alerts/mine')
+  @Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
+  getMyAlerts(@CurrentUser('userId') userId: string) {
+    return this.alertService.getDoctorAlerts(userId);
+  }
+
+  // ── Check-in ──
+
+  @Public()
+  @Post('checkin/:token')
+  async checkin(@Param('token') token: string) {
+    const appointment = await this.service.checkin(token);
+    return { checkedIn: true, appointmentId: appointment.id };
   }
 
   // ── Procedures Calendar ──

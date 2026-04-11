@@ -673,6 +673,20 @@ export class PortalDataService {
     return { deleted: true };
   }
 
+  // ── PATIENT APPOINTMENT ALERTS ──
+
+  async getPatientAppointmentAlerts(patientId: string) {
+    return this.pregnancyRepo.query(
+      `SELECT aa.id, aa.appointment_type, aa.ga_window_min, aa.ga_window_max,
+              aa.message, aa.status, aa.created_at, u.name AS requester_name
+       FROM appointment_alerts aa
+       LEFT JOIN users u ON u.id = aa.requested_by
+       WHERE aa.patient_id = $1 AND aa.status = 'pending'
+       ORDER BY aa.created_at DESC`,
+      [patientId],
+    );
+  }
+
   // ── PATIENT SELF-BOOKING ──
 
   async getPatientAppointments(patientId: string) {
@@ -729,18 +743,38 @@ export class PortalDataService {
 
   async bookAppointment(patientId: string, dto: {
     doctorId: string; date: string; startTime: string; endTime: string; notes?: string;
+    insuranceType?: string; insuranceProvider?: string; insuranceMemberId?: string;
+    insurancePlan?: string; insuranceCardUrl?: string; examRequestUrl?: string;
+    patientCpf?: string; patientCep?: string; alertId?: string;
   }) {
-    // Validate slot is still available
     const slots = await this.getAvailableSlots(dto.doctorId, dto.date);
     const slotFree = slots.some((s) => s.startTime === dto.startTime && s.endTime === dto.endTime);
     if (!slotFree) throw new BadRequestException('Horario nao disponivel');
 
+    const checkinToken = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const hasDocuments = !!(dto.patientCpf && dto.patientCep);
+
     const [appt] = await this.pregnancyRepo.query(
-      `INSERT INTO appointments (patient_id, doctor_id, date, start_time, end_time, type, status, notes, booked_by_patient)
-       VALUES ($1, $2, $3, $4, $5, 'consultation', 'scheduled', $6, true) RETURNING *`,
-      [patientId, dto.doctorId, dto.date, dto.startTime, dto.endTime, dto.notes ?? null],
+      `INSERT INTO appointments (patient_id, doctor_id, date, start_time, end_time, type, status, notes,
+         booked_by_patient, insurance_type, insurance_provider, insurance_member_id, insurance_plan,
+         insurance_card_url, exam_request_url, patient_cpf, patient_cep, checkin_token, documents_confirmed)
+       VALUES ($1, $2, $3, $4, $5, 'consultation', 'scheduled', $6, true,
+         $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *`,
+      [patientId, dto.doctorId, dto.date, dto.startTime, dto.endTime, dto.notes ?? null,
+       dto.insuranceType ?? null, dto.insuranceProvider ?? null, dto.insuranceMemberId ?? null,
+       dto.insurancePlan ?? null, dto.insuranceCardUrl ?? null, dto.examRequestUrl ?? null,
+       dto.patientCpf ?? null, dto.patientCep ?? null, checkinToken, hasDocuments],
     );
-    return appt;
+
+    // If booking resolves an alert
+    if (dto.alertId) {
+      await this.pregnancyRepo.query(
+        `UPDATE appointment_alerts SET status = 'scheduled', scheduled_appointment_id = $1 WHERE id = $2`,
+        [appt.id, dto.alertId],
+      );
+    }
+
+    return { ...appt, checkinToken };
   }
 
   async cancelPatientAppointment(patientId: string, appointmentId: string) {

@@ -74,6 +74,42 @@ export class Appointment {
   @Column({ name: 'reminder_24h_sent', type: 'boolean', default: false })
   reminder24hSent: boolean;
 
+  @Column({ name: 'insurance_type', type: 'varchar', nullable: true })
+  insuranceType: string | null;
+
+  @Column({ name: 'insurance_provider', type: 'varchar', nullable: true })
+  insuranceProvider: string | null;
+
+  @Column({ name: 'insurance_member_id', type: 'varchar', nullable: true })
+  insuranceMemberId: string | null;
+
+  @Column({ name: 'insurance_plan', type: 'varchar', nullable: true })
+  insurancePlan: string | null;
+
+  @Column({ name: 'insurance_card_url', type: 'varchar', nullable: true })
+  insuranceCardUrl: string | null;
+
+  @Column({ name: 'exam_request_url', type: 'varchar', nullable: true })
+  examRequestUrl: string | null;
+
+  @Column({ name: 'patient_cpf', type: 'varchar', nullable: true })
+  patientCpf: string | null;
+
+  @Column({ name: 'patient_cep', type: 'varchar', nullable: true })
+  patientCep: string | null;
+
+  @Column({ name: 'is_checked_in', type: 'boolean', default: false })
+  isCheckedIn: boolean;
+
+  @Column({ name: 'checked_in_at', type: 'timestamptz', nullable: true })
+  checkedInAt: Date | null;
+
+  @Column({ name: 'checkin_token', type: 'varchar', nullable: true, unique: true })
+  checkinToken: string | null;
+
+  @Column({ name: 'documents_confirmed', type: 'boolean', default: false })
+  documentsConfirmed: boolean;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

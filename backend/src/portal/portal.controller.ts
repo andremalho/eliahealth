@@ -261,6 +261,14 @@ export class PortalController {
     return this.dataService.deletePatientExam(patientId, id);
   }
 
+  // ── Patient Appointment Alerts ──
+
+  @Get('appointment-alerts')
+  @Roles(UserRole.PATIENT)
+  getAppointmentAlerts(@CurrentUser('patientId') patientId: string) {
+    return this.dataService.getPatientAppointmentAlerts(patientId);
+  }
+
   // ── Patient Self-Booking ──
 
   @Get('appointments')

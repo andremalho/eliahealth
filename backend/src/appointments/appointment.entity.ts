@@ -59,6 +59,21 @@ export class Appointment {
   @Column({ name: 'cancellation_reason', type: 'text', nullable: true })
   cancellationReason: string | null;
 
+  @Column({ name: 'pregnancy_id', type: 'uuid', nullable: true })
+  pregnancyId: string | null;
+
+  @Column({ name: 'booked_by_patient', type: 'boolean', default: false })
+  bookedByPatient: boolean;
+
+  @Column({ name: 'auto_scheduled', type: 'boolean', default: false })
+  autoScheduled: boolean;
+
+  @Column({ name: 'reminder_48h_sent', type: 'boolean', default: false })
+  reminder48hSent: boolean;
+
+  @Column({ name: 'reminder_24h_sent', type: 'boolean', default: false })
+  reminder24hSent: boolean;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

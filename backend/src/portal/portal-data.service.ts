@@ -673,6 +673,97 @@ export class PortalDataService {
     return { deleted: true };
   }
 
+  // ── PATIENT SELF-BOOKING ──
+
+  async getPatientAppointments(patientId: string) {
+    return this.pregnancyRepo.query(
+      `SELECT a.id, a.date, a.start_time, a.end_time, a.type, a.status, a.notes,
+              a.booked_by_patient, a.auto_scheduled, u.name AS doctor_name
+       FROM appointments a
+       LEFT JOIN users u ON u.id = a.doctor_id
+       WHERE a.patient_id = $1 AND a.status != 'cancelled'
+       ORDER BY a.date ASC, a.start_time ASC`,
+      [patientId],
+    );
+  }
+
+  async getAvailableSlots(doctorId: string, date: string) {
+    // Delegate to slot service via raw query (simpler than injecting)
+    const schedules = await this.pregnancyRepo.query(
+      `SELECT start_time, end_time, slot_duration_min FROM doctor_schedules
+       WHERE doctor_id = $1 AND day_of_week = $2 AND is_active = true`,
+      [doctorId, new Date(date + 'T12:00:00').getDay()],
+    );
+    if (schedules.length === 0) return [];
+
+    const blocked = await this.pregnancyRepo.query(
+      `SELECT 1 FROM doctor_blocked_dates WHERE doctor_id = $1 AND blocked_date = $2`,
+      [doctorId, date],
+    );
+    if (blocked.length > 0) return [];
+
+    const sched = schedules[0];
+    const existing = await this.pregnancyRepo.query(
+      `SELECT start_time, end_time FROM appointments
+       WHERE doctor_id = $1 AND date = $2 AND status NOT IN ('cancelled', 'no_show')`,
+      [doctorId, date],
+    );
+
+    // Generate slots
+    const slots: { startTime: string; endTime: string; available: boolean }[] = [];
+    const [sh, sm] = sched.start_time.split(':').map(Number);
+    const [eh, em] = sched.end_time.split(':').map(Number);
+    const dur = sched.slot_duration_min;
+    let cur = sh * 60 + sm;
+    const end = eh * 60 + em;
+
+    while (cur + dur <= end) {
+      const st = `${String(Math.floor(cur / 60)).padStart(2, '0')}:${String(cur % 60).padStart(2, '0')}`;
+      const et = `${String(Math.floor((cur + dur) / 60)).padStart(2, '0')}:${String((cur + dur) % 60).padStart(2, '0')}`;
+      const occupied = existing.some((a: any) => a.start_time < et && a.end_time > st);
+      slots.push({ startTime: st, endTime: et, available: !occupied });
+      cur += dur;
+    }
+    return slots.filter((s) => s.available);
+  }
+
+  async bookAppointment(patientId: string, dto: {
+    doctorId: string; date: string; startTime: string; endTime: string; notes?: string;
+  }) {
+    // Validate slot is still available
+    const slots = await this.getAvailableSlots(dto.doctorId, dto.date);
+    const slotFree = slots.some((s) => s.startTime === dto.startTime && s.endTime === dto.endTime);
+    if (!slotFree) throw new BadRequestException('Horario nao disponivel');
+
+    const [appt] = await this.pregnancyRepo.query(
+      `INSERT INTO appointments (patient_id, doctor_id, date, start_time, end_time, type, status, notes, booked_by_patient)
+       VALUES ($1, $2, $3, $4, $5, 'consultation', 'scheduled', $6, true) RETURNING *`,
+      [patientId, dto.doctorId, dto.date, dto.startTime, dto.endTime, dto.notes ?? null],
+    );
+    return appt;
+  }
+
+  async cancelPatientAppointment(patientId: string, appointmentId: string) {
+    const [appt] = await this.pregnancyRepo.query(
+      `SELECT id, date, status FROM appointments WHERE id = $1 AND patient_id = $2`,
+      [appointmentId, patientId],
+    );
+    if (!appt) throw new NotFoundException('Agendamento nao encontrado');
+    if (appt.status === 'cancelled') throw new BadRequestException('Ja cancelado');
+
+    // Check 24h rule
+    const apptDate = new Date(appt.date + 'T00:00:00');
+    const now = new Date();
+    const diffHours = (apptDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    if (diffHours < 24) throw new BadRequestException('Cancelamento permitido ate 24h antes');
+
+    await this.pregnancyRepo.query(
+      `UPDATE appointments SET status = 'cancelled', cancellation_reason = 'Cancelado pela paciente' WHERE id = $1`,
+      [appointmentId],
+    );
+    return { cancelled: true };
+  }
+
   // ── MODULE 11: Postpartum Consultations ──
 
   async getPostpartumConsultations(patientId: string) {

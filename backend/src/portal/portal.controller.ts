@@ -261,6 +261,41 @@ export class PortalController {
     return this.dataService.deletePatientExam(patientId, id);
   }
 
+  // ── Patient Self-Booking ──
+
+  @Get('appointments')
+  @Roles(UserRole.PATIENT)
+  getMyAppointments(@CurrentUser('patientId') patientId: string) {
+    return this.dataService.getPatientAppointments(patientId);
+  }
+
+  @Get('appointments/slots')
+  @Roles(UserRole.PATIENT)
+  getAvailableSlots(
+    @Query('doctorId') doctorId: string,
+    @Query('date') date: string,
+  ) {
+    return this.dataService.getAvailableSlots(doctorId, date);
+  }
+
+  @Post('appointments/book')
+  @Roles(UserRole.PATIENT)
+  bookAppointment(
+    @CurrentUser('patientId') patientId: string,
+    @Body() body: { doctorId: string; date: string; startTime: string; endTime: string; notes?: string },
+  ) {
+    return this.dataService.bookAppointment(patientId, body);
+  }
+
+  @Delete('appointments/:id')
+  @Roles(UserRole.PATIENT)
+  cancelAppointment(
+    @CurrentUser('patientId') patientId: string,
+    @Param('id') id: string,
+  ) {
+    return this.dataService.cancelPatientAppointment(patientId, id);
+  }
+
   // ── Module 11: Postpartum Consultations ──
 
   @Get('postpartum')

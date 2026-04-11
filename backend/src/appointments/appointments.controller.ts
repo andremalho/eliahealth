@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service.js';
+import { SlotGenerationService } from './slot-generation.service.js';
+import { AutoScheduleService } from './auto-schedule.service.js';
 import { CreateAppointmentDto } from './dto/create-appointment.dto.js';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
@@ -9,7 +11,11 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 @Controller('appointments')
 @Roles(UserRole.PHYSICIAN, UserRole.ADMIN, UserRole.RECEPTIONIST)
 export class AppointmentsController {
-  constructor(private readonly service: AppointmentsService) {}
+  constructor(
+    private readonly service: AppointmentsService,
+    private readonly slotService: SlotGenerationService,
+    private readonly autoScheduleService: AutoScheduleService,
+  ) {}
 
   @Post()
   create(
@@ -55,6 +61,75 @@ export class AppointmentsController {
   @Delete(':id')
   cancel(@Param('id') id: string, @Body() body: { reason?: string }) {
     return this.service.cancel(id, body?.reason);
+  }
+
+  // ── Doctor Schedule & Slots ──
+
+  @Post('schedules')
+  @Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
+  setSchedule(
+    @CurrentUser('userId') userId: string,
+    @Body() body: { schedules: { dayOfWeek: number; startTime: string; endTime: string; slotDurationMin?: number }[] },
+  ) {
+    return this.slotService.setSchedule(userId, body.schedules);
+  }
+
+  @Get('schedules/:doctorId')
+  getSchedule(@Param('doctorId') doctorId: string) {
+    return this.slotService.getSchedule(doctorId);
+  }
+
+  @Post('blocked-dates')
+  @Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
+  blockDate(
+    @CurrentUser('userId') userId: string,
+    @Body() body: { date: string; reason?: string },
+  ) {
+    return this.slotService.blockDate(userId, body.date, body.reason);
+  }
+
+  @Get('blocked-dates/:doctorId')
+  getBlockedDates(@Param('doctorId') doctorId: string) {
+    return this.slotService.getBlockedDates(doctorId);
+  }
+
+  @Delete('blocked-dates/:id')
+  @Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
+  unblockDate(@Param('id') id: string) {
+    return this.slotService.unblockDate(id);
+  }
+
+  @Get('available-slots')
+  getAvailableSlots(
+    @Query('doctorId') doctorId: string,
+    @Query('date') date: string,
+  ) {
+    return this.slotService.getAvailableSlots(doctorId, date);
+  }
+
+  @Get('available-slots-range')
+  getAvailableSlotsRange(
+    @Query('doctorId') doctorId: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return this.slotService.getAvailableSlotsRange(doctorId, startDate, endDate);
+  }
+
+  // ── Auto-Schedule ──
+
+  @Post('auto-schedule/:pregnancyId')
+  @Roles(UserRole.PHYSICIAN, UserRole.ADMIN)
+  autoSchedule(
+    @Param('pregnancyId') pregnancyId: string,
+    @CurrentUser('userId') doctorId: string,
+  ) {
+    return this.autoScheduleService.generatePrenatalSchedule(pregnancyId, doctorId);
+  }
+
+  @Get('auto-schedule/:pregnancyId')
+  getAutoScheduled(@Param('pregnancyId') pregnancyId: string) {
+    return this.autoScheduleService.getAutoScheduled(pregnancyId);
   }
 
   // ── Procedures Calendar ──

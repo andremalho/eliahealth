@@ -13,6 +13,7 @@ import {
 import { usePatientAuthStore } from '../../store/patientAuth.store';
 import { toTitleCase } from '../../utils/formatters';
 import { cn } from '../../utils/cn';
+import PortalAppointmentsPage from './PortalAppointmentsPage';
 import AddPortalBpModal from './AddPortalBpModal';
 import AddPortalGlucoseModal from './AddPortalGlucoseModal';
 import AddPortalExamModal from './AddPortalExamModal';
@@ -31,6 +32,7 @@ function gaString(days: number): string {
 export default function PortalHomePage() {
   const navigate = useNavigate();
   const { patient, logout } = usePatientAuthStore();
+  const [appointmentsOpen, setAppointmentsOpen] = useState(false);
   const [bpOpen, setBpOpen] = useState(false);
   const [glucoseOpen, setGlucoseOpen] = useState(false);
   const [examOpen, setExamOpen] = useState(false);
@@ -238,6 +240,7 @@ export default function PortalHomePage() {
             </>
           )}
           <ActionButton icon={FileText} label="Enviar exame" color="text-violet-500" onClick={() => setExamOpen(true)} />
+          <ActionButton icon={Calendar} label="Agendamentos" color="text-emerald-500" onClick={() => setAppointmentsOpen(true)} />
         </div>
 
         {/* Consultas Puerperais */}
@@ -466,6 +469,7 @@ export default function PortalHomePage() {
         </p>
       </div>
 
+      {appointmentsOpen && <PortalAppointmentsPage onClose={() => setAppointmentsOpen(false)} />}
       {bpOpen && <AddPortalBpModal onClose={() => setBpOpen(false)} />}
       {glucoseOpen && <AddPortalGlucoseModal onClose={() => setGlucoseOpen(false)} />}
       {examOpen && <AddPortalExamModal onClose={() => setExamOpen(false)} />}

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Settings, User, Bell, Shield, LogOut } from 'lucide-react';
+import { Settings, User, Bell, Shield, LogOut, Calendar } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
 import { toast } from 'sonner';
 import { cn } from '../../utils/cn';
+import DoctorScheduleSettings from './DoctorScheduleSettings';
 
-type Tab = 'profile' | 'notifications' | 'security';
+type Tab = 'profile' | 'notifications' | 'security' | 'schedule';
 
 export default function SettingsPage() {
   const { user, logout } = useAuthStore();
@@ -12,6 +13,7 @@ export default function SettingsPage() {
 
   const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
     { key: 'profile', label: 'Perfil', icon: User },
+    { key: 'schedule', label: 'Agenda', icon: Calendar },
     { key: 'notifications', label: 'Notificacoes', icon: Bell },
     { key: 'security', label: 'Seguranca', icon: Shield },
   ];
@@ -80,6 +82,13 @@ export default function SettingsPage() {
               <p className="text-xs text-gray-400 mt-6">
                 Configuracoes de notificacao salvas localmente. Integracao com email em breve.
               </p>
+            </>
+          )}
+
+          {tab === 'schedule' && (
+            <>
+              <h2 className="text-lg font-semibold text-navy mb-4">Configuracao de Agenda</h2>
+              <DoctorScheduleSettings />
             </>
           )}
 

@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Home, Users, Calendar, Users2, Settings, HeartPulse, Stethoscope, BarChart3, Scan, ClipboardList,
+  BedDouble, MessageSquare, DollarSign,
   ChevronLeft, ChevronRight, LogOut, Menu,
 } from 'lucide-react';
 import { SkipLink } from '../ui/SkipLink';
@@ -20,7 +21,10 @@ const clinicalNavItems: NavItem[] = [
   { to: '/pregnancies', icon: Users, label: 'Gestacoes', module: 'prenatal' },
   { to: '/ultrasound', icon: Scan, label: 'Ultrassonografia', module: 'ultrasound' },
   { to: '/clinical', icon: ClipboardList, label: 'Clinica Geral', module: 'clinical_general' },
+  { to: '/hospitalization', icon: BedDouble, label: 'Internacoes', module: 'hospitalization' },
+  { to: '/chat', icon: MessageSquare, label: 'Mensagens' },
   { to: '/birth-calendar', icon: Calendar, label: 'Calendario' },
+  { to: '/billing', icon: DollarSign, label: 'Faturamento', module: 'tiss_billing' },
   { to: '/teams', icon: Users2, label: 'Equipes' },
   { to: '/analytics', icon: BarChart3, label: 'Pesquisa', module: 'research' },
   { to: '/settings', icon: Settings, label: 'Configuracoes' },

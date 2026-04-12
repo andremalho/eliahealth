@@ -13,6 +13,7 @@ import {
 import { usePatientAuthStore } from '../../store/patientAuth.store';
 import { toTitleCase } from '../../utils/formatters';
 import { cn } from '../../utils/cn';
+import PortalContentSection from './PortalContentSection';
 import PortalBookingFlow from './PortalBookingFlow';
 import AddPortalBpModal from './AddPortalBpModal';
 import AddPortalGlucoseModal from './AddPortalGlucoseModal';
@@ -463,6 +464,9 @@ export default function PortalHomePage() {
             </div>
           </Section>
         )}
+
+        {/* Conteudo educativo personalizado */}
+        <PortalContentSection gaWeek={ga.weeks} />
 
         <p className="text-center text-[10px] text-gray-400 pt-4 pb-2">
           eliahealth · seus dados estão protegidos

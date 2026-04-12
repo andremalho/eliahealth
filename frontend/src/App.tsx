@@ -25,6 +25,9 @@ import TeamsPage from './pages/teams/TeamsPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import AnalyticsDashboardPage from './pages/analytics/AnalyticsDashboardPage';
 import UltrasoundPage from './pages/ultrasound/UltrasoundPage';
+import HospitalizationPage from './pages/hospitalization/HospitalizationPage';
+import ChatPage from './pages/chat/ChatPage';
+import BillingPage from './pages/billing/BillingPage';
 import ReceptionDashboardPage from './pages/reception/ReceptionDashboardPage';
 import AgendaPage from './pages/reception/AgendaPage';
 import ReceptionPatientsPage from './pages/reception/ReceptionPatientsPage';
@@ -89,6 +92,9 @@ export default function App() {
             <Route path="/ultrasound" element={<UltrasoundPage />} />
             <Route path="/clinical" element={<ClinicalPage />} />
             <Route path="/teleconsulta/:sessionId" element={<VideoCallPage />} />
+            <Route path="/hospitalization" element={<HospitalizationPage />} />
+            <Route path="/chat" element={<ChatPage />} />
+            <Route path="/billing" element={<BillingPage />} />
             <Route path="/analytics" element={<AnalyticsDashboardPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/reception" element={<ReceptionDashboardPage />} />

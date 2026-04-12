@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Patient } from '../patients/patient.entity.js';
+import { generateSQL } from '../seeds/seed-test-patients.js';
 
 // BACKUP: configure pg_dump automatic daily via cron in docker-compose
 // REPLICATION: add PostgreSQL read replica for production reads
@@ -62,10 +63,38 @@ export class AdminService {
   }
 
   async triggerBackup() {
-    // In production: trigger pg_dump via child_process or cloud API
     return {
       message: 'Backup agendado. Implemente pg_dump via cron ou cloud backup API.',
       triggeredAt: new Date().toISOString(),
+    };
+  }
+
+  async seedTestData(doctorId: string) {
+    const logger = new Logger('SeedTestData');
+    logger.log('Iniciando seed de 140 pacientes teste...');
+
+    const sql = generateSQL(doctorId);
+    const statements = sql.split('\n').filter((s) => s.trim());
+
+    let inserted = 0;
+    let errors = 0;
+
+    for (const stmt of statements) {
+      try {
+        await this.patientRepo.query(stmt);
+        inserted++;
+      } catch (err) {
+        errors++;
+        // Skip duplicates silently
+      }
+    }
+
+    logger.log(`Seed completo: ${inserted} inseridos, ${errors} ignorados (duplicatas)`);
+    return {
+      message: `Seed de teste executado`,
+      inserted,
+      errors,
+      total: statements.length,
     };
   }
 }

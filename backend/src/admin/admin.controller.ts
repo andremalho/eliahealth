@@ -4,6 +4,7 @@ import { AuthService } from '../auth/auth.service.js';
 import { RegisterDto } from '../auth/dto/register.dto.js';
 import { Public } from '../auth/decorators/public.decorator.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
+import { CurrentUser } from '../auth/decorators/current-user.decorator.js';
 import { UserRole } from '../auth/auth.enums.js';
 
 @Controller('admin')
@@ -35,5 +36,11 @@ export class AdminController {
   @Roles(UserRole.SUPERADMIN)
   createUser(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
+  }
+
+  @Post('seed-test-data')
+  @Roles(UserRole.SUPERADMIN, UserRole.ADMIN)
+  async seedTestData(@CurrentUser('userId') userId: string) {
+    return this.service.seedTestData(userId);
   }
 }

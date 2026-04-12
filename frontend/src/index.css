@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  /* ── Brand Colors ── */
   --color-primary: #7C5CBF;
   --color-primary-light: #9B7DD4;
   --color-primary-dark: #6347A8;
@@ -8,24 +9,58 @@
   --color-navy-light: #1A2F55;
   --color-lilac: #7C5CBF;
   --color-lilac-light: #9B7DD4;
+
+  /* ── Surfaces ── */
   --color-panel: #F8F9FA;
   --color-cream-light: #FAFBFC;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F9FAFB;
+  --color-surface-active: #F3F4F6;
+
+  /* ── Semantic ── */
+  --color-success: #059669;
+  --color-success-light: #D1FAE5;
+  --color-warning: #D97706;
+  --color-warning-light: #FEF3C7;
+  --color-danger: #DC2626;
+  --color-danger-light: #FEE2E2;
+  --color-info: #2563EB;
+  --color-info-light: #DBEAFE;
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-modal: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-dropdown: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+
+  /* ── Radius ── */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  /* ── Transitions ── */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: #1F2937;
+  background: #F9FAFB;
 }
 
 #root {
   min-height: 100vh;
 }
 
-/* Esconde spinners nativos de <input type="number"> em todos os browsers.
- * O componente NumberField (components/forms/NumberField) substitui com
- * botoes +/- explicitos, que funcionam de forma consistente. */
+/* ── Number input spinners ── */
 input[type='number']::-webkit-inner-spin-button,
 input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -34,4 +69,38 @@ input[type='number']::-webkit-outer-spin-button {
 input[type='number'] {
   -moz-appearance: textfield;
   appearance: textfield;
+}
+
+/* ── Focus ring ── */
+*:focus-visible {
+  outline: 2px solid #7C5CBF;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+/* ── Selection ── */
+::selection {
+  background: #7C5CBF;
+  color: white;
+}
+
+/* ── Smooth scroll ── */
+html {
+  scroll-behavior: smooth;
 }

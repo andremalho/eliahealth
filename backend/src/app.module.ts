@@ -65,6 +65,7 @@ import { UploadsModule } from './uploads/uploads.module.js';
 import { PostpartumModule } from './postpartum/postpartum.module.js';
 import { AppointmentsModule } from './appointments/appointments.module.js';
 import { UltrasoundReportsModule } from './ultrasound-reports/ultrasound-reports.module.js';
+import { ClinicalConsultationModule } from './clinical-consultation/clinical-consultation.module.js';
 import { MailModule } from './mail/mail.module.js';
 
 @Module({
@@ -132,6 +133,7 @@ import { MailModule } from './mail/mail.module.js';
     PostpartumModule,
     AppointmentsModule,
     UltrasoundReportsModule,
+    ClinicalConsultationModule,
     LabIntegrationsModule,
     WhatsAppModule,
     FhirModule,

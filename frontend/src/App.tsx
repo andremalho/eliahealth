@@ -17,6 +17,7 @@ import PregnanciesListPage from './pages/pregnancies/PregnanciesListPage';
 import PatientsListPage from './pages/patients/PatientsListPage';
 import PatientPage from './pages/patients/PatientPage';
 import GynecologyPage from './pages/gynecology/GynecologyPage';
+import ClinicalPage from './pages/clinical/ClinicalPage';
 import BirthCalendarPage from './pages/calendar/BirthCalendarPage';
 import TeamsPage from './pages/teams/TeamsPage';
 import SettingsPage from './pages/settings/SettingsPage';
@@ -83,6 +84,7 @@ export default function App() {
             <Route path="/birth-calendar" element={<BirthCalendarPage />} />
             <Route path="/teams" element={<TeamsPage />} />
             <Route path="/ultrasound" element={<UltrasoundPage />} />
+            <Route path="/clinical" element={<ClinicalPage />} />
             <Route path="/analytics" element={<AnalyticsDashboardPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/reception" element={<ReceptionDashboardPage />} />

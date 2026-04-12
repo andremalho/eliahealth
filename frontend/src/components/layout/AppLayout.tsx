@@ -1,38 +1,58 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
-  Home, Users, Calendar, Users2, Settings, HeartPulse, Stethoscope, BarChart3, Scan,
+  Home, Users, Calendar, Users2, Settings, HeartPulse, Stethoscope, BarChart3, Scan, ClipboardList,
   ChevronLeft, ChevronRight, LogOut, Menu,
 } from 'lucide-react';
 import Logo from '../Logo';
 import { useAuthStore } from '../../store/auth.store';
+import { fetchMyModules } from '../../api/tenant.api';
 import { cn } from '../../utils/cn';
 import { toTitleCase } from '../../utils/formatters';
 
-const clinicalNavItems = [
-  { to: '/dashboard', icon: Home, label: 'Início' },
-  { to: '/gynecology', icon: Stethoscope, label: 'Ginecologia' },
-  { to: '/pregnancies', icon: Users, label: 'Gestações' },
-  { to: '/ultrasound', icon: Scan, label: 'Ultrassonografia' },
-  { to: '/birth-calendar', icon: Calendar, label: 'Calendário' },
+interface NavItem { to: string; icon: React.ElementType; label: string; module?: string }
+
+const clinicalNavItems: NavItem[] = [
+  { to: '/dashboard', icon: Home, label: 'Inicio' },
+  { to: '/gynecology', icon: Stethoscope, label: 'Ginecologia', module: 'gynecology' },
+  { to: '/pregnancies', icon: Users, label: 'Gestacoes', module: 'prenatal' },
+  { to: '/ultrasound', icon: Scan, label: 'Ultrassonografia', module: 'ultrasound' },
+  { to: '/clinical', icon: ClipboardList, label: 'Clinica Geral', module: 'clinical_general' },
+  { to: '/birth-calendar', icon: Calendar, label: 'Calendario' },
   { to: '/teams', icon: Users2, label: 'Equipes' },
-  { to: '/analytics', icon: BarChart3, label: 'Pesquisa' },
-  { to: '/settings', icon: Settings, label: 'Configurações' },
+  { to: '/analytics', icon: BarChart3, label: 'Pesquisa', module: 'research' },
+  { to: '/settings', icon: Settings, label: 'Configuracoes' },
 ];
 
-const receptionNavItems = [
-  { to: '/reception', icon: Home, label: 'Recepção' },
+const receptionNavItems: NavItem[] = [
+  { to: '/reception', icon: Home, label: 'Recepcao' },
   { to: '/reception/agenda', icon: Calendar, label: 'Agenda' },
   { to: '/reception/patients', icon: HeartPulse, label: 'Pacientes' },
-  { to: '/settings', icon: Settings, label: 'Configurações' },
+  { to: '/settings', icon: Settings, label: 'Configuracoes' },
 ];
 
 export default function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, logout } = useAuthStore();
-  const navItems = user?.role === 'receptionist' ? receptionNavItems : clinicalNavItems;
   const navigate = useNavigate();
+  const isReceptionist = user?.role === 'receptionist';
+
+  const { data: activeModules } = useQuery({
+    queryKey: ['tenant-modules'],
+    queryFn: fetchMyModules,
+    enabled: !isReceptionist,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const baseItems = isReceptionist ? receptionNavItems : clinicalNavItems;
+  const modules = activeModules ?? [];
+  const navItems = baseItems.filter((item) => {
+    if (!item.module) return true;
+    if (modules.length === 0) return true; // Show all until modules load
+    return modules.includes(item.module);
+  });
 
   const handleLogout = () => {
     logout();

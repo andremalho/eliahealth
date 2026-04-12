@@ -34,6 +34,7 @@ services:
       SMTP_PASS: ${SMTP_PASS:-}
       SMTP_FROM: ${SMTP_FROM:-EliaHealth <noreply@eliahealth.com>}
       PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:5173}
+      DAILY_API_KEY: ${DAILY_API_KEY:-}
     depends_on:
       - db
 

@@ -67,6 +67,9 @@ import { AppointmentsModule } from './appointments/appointments.module.js';
 import { UltrasoundReportsModule } from './ultrasound-reports/ultrasound-reports.module.js';
 import { ClinicalConsultationModule } from './clinical-consultation/clinical-consultation.module.js';
 import { TelemedicineModule } from './telemedicine/telemedicine.module.js';
+import { HospitalizationModule } from './hospitalization/hospitalization.module.js';
+import { ChatModule } from './chat/chat.module.js';
+import { BillingModule } from './billing/billing.module.js';
 import { MailModule } from './mail/mail.module.js';
 
 @Module({
@@ -136,6 +139,9 @@ import { MailModule } from './mail/mail.module.js';
     UltrasoundReportsModule,
     ClinicalConsultationModule,
     TelemedicineModule,
+    HospitalizationModule,
+    ChatModule,
+    BillingModule,
     LabIntegrationsModule,
     WhatsAppModule,
     FhirModule,

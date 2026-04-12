@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { join } from 'path';
 import { AppModule } from './app.module.js';
@@ -36,6 +37,25 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Swagger / OpenAPI
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('EliaHealth API')
+    .setDescription('Prontuario exclusivo da mulher — API de saude feminina')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .addTag('auth', 'Autenticacao e usuarios')
+    .addTag('patients', 'Cadastro e gestao de pacientes')
+    .addTag('pregnancies', 'Gestacoes e pre-natal')
+    .addTag('appointments', 'Agendamento e scheduling')
+    .addTag('portal', 'Portal da paciente (OTP)')
+    .addTag('ultrasound-reports', 'Laudos de ultrassonografia')
+    .addTag('telemedicine', 'Teleconsulta / videochamada')
+    .addTag('research', 'Pesquisa e analytics (dados anonimizados)')
+    .addTag('tenants', 'Multi-tenancy e configuracao de modulos')
+    .build();
+  const doc = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api', app, doc);
 
   await app.listen(process.env.PORT ?? 3000);
 }

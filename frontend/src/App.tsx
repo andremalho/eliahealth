@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import PublicCardPage from './pages/public/PublicCardPage';
@@ -43,6 +44,7 @@ export default function App() {
   const user = useAuthStore((s) => s.user);
 
   return (
+    <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <Toaster position="top-center" richColors closeButton />
       <BrowserRouter>
@@ -91,8 +93,18 @@ export default function App() {
             <Route path="/reception/agenda" element={<AgendaPage />} />
             <Route path="/reception/patients" element={<ReceptionPatientsPage />} />
           </Route>
+          <Route path="*" element={
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+              <div className="text-center">
+                <p className="text-6xl font-bold text-lilac/30 mb-4">404</p>
+                <p className="text-lg text-gray-600 mb-2">Pagina nao encontrada</p>
+                <a href="/" className="text-sm text-lilac hover:underline">Voltar ao inicio</a>
+              </div>
+            </div>
+          } />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

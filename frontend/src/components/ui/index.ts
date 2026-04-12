@@ -12,3 +12,5 @@ export { Tabs } from './Tabs';
 export { Stat } from './Stat';
 export { SearchInput } from './SearchInput';
 export { Skeleton, SkeletonCard, SkeletonRow } from './Skeleton';
+export { VisuallyHidden } from './VisuallyHidden';
+export { SkipLink } from './SkipLink';

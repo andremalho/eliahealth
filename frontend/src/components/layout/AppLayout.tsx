@@ -5,6 +5,7 @@ import {
   Home, Users, Calendar, Users2, Settings, HeartPulse, Stethoscope, BarChart3, Scan, ClipboardList,
   ChevronLeft, ChevronRight, LogOut, Menu,
 } from 'lucide-react';
+import { SkipLink } from '../ui/SkipLink';
 import Logo from '../Logo';
 import { useAuthStore } from '../../store/auth.store';
 import { fetchMyModules } from '../../api/tenant.api';
@@ -68,6 +69,7 @@ export default function AppLayout() {
 
   return (
     <div className="flex h-screen bg-gray-50">
+      <SkipLink />
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
@@ -150,7 +152,7 @@ export default function AppLayout() {
           <Logo size="sm" className="ml-3" />
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        <main id="main-content" className="flex-1 overflow-y-auto" role="main">
           <Outlet />
         </main>
       </div>

@@ -1,12 +1,15 @@
 import api from './client';
 
 export type GynecologyConsultationType =
+  | 'initial'
   | 'routine'
   | 'return'
   | 'urgent'
   | 'preconception'
   | 'postpartum'
   | 'adolescent';
+
+export type PhysicalActivityLevel = 'sedentary' | 'light' | 'moderate' | 'vigorous';
 
 export type SmokingStatus = 'never' | 'former' | 'current';
 
@@ -57,37 +60,81 @@ export interface GynecologyConsultation {
   mammographyAttachmentName: string | null;
   mammographyAttachmentMimeType: string | null;
   contraceptiveMethod: string | null;
+  sexuallyActive: boolean | null;
+  numberOfSexualPartners: number | null;
+  historyOfSTI: boolean | null;
+  historyOfSTIDetails: string | null;
   smokingStatus: SmokingStatus | null;
+  smokingPacksPerYear: number | null;
   alcoholUse: boolean | null;
   alcoholUsePattern: AlcoholUsePattern | null;
   drugUse: boolean | null;
   drugUseDetails: string | null;
+  physicalActivity: PhysicalActivityLevel | null;
+
+  previousGynecologicSurgeries: string | null;
+  historyOfEndometriosis: boolean | null;
+  historyOfMyoma: boolean | null;
+  historyOfOvarianCyst: boolean | null;
+  historyOfPCOS: boolean | null;
+  historyOfHPV: boolean | null;
+  historyOfCervicalDysplasia: boolean | null;
+
+  gravida: number | null;
+  para: number | null;
+  abortus: number | null;
+  cesarean: number | null;
+
+  familyHistoryBreastCancer: boolean | null;
+  familyHistoryOvarianCancer: boolean | null;
+  familyHistoryEndometrialCancer: boolean | null;
+  familyHistoryColorectalCancer: boolean | null;
+  familyHistoryDiabetes: boolean | null;
+  familyHistoryCardiovascularDisease: boolean | null;
+  familyHistoryThrombosis: boolean | null;
+  familyHistoryOsteoporosis: boolean | null;
+  familyHistoryHypertension: boolean | null;
+  familyHistoryDetails: string | null;
 
   weight: number | null;
   height: number | null;
   bmi: number | null;
+  waistCircumference: number | null;
   bloodPressureSystolic: number | null;
   bloodPressureDiastolic: number | null;
   heartRate: number | null;
+  temperature: number | null;
 
   breastExamPerformed: boolean;
+  breastExamNormal: boolean | null;
   breastExamFindings: string | null;
   biradsClassification: BiRads | null;
 
   pelvicExamPerformed: boolean;
+  vulvarExamNormal: boolean | null;
+  vulvarFindings: string | null;
+  speculoscopyPerformed: boolean | null;
   cervixAppearance: string | null;
   papSmearCollected: boolean | null;
+  bimanualExamNormal: boolean | null;
+  uterineSize: string | null;
+  adnexalFindings: string | null;
+  pelvicFloorAssessment: string | null;
 
   phq2Score: number | null;
   gad2Score: number | null;
+  mentalHealthNotes: string | null;
 
   diagnosis: string | null;
   icd10Codes: string[] | null;
+  requestedExams: Record<string, unknown> | null;
+  prescriptions: Record<string, unknown> | null;
   referrals: string | null;
   returnDate: string | null;
   notes: string | null;
   internalNotes: string | null;
 
+  initialAssessmentData: Record<string, unknown> | null;
   alerts: GynecologyAlert[] | null;
 
   createdAt: string;
@@ -107,42 +154,106 @@ export interface CreateGynecologyConsultationDto {
   consultationType?: GynecologyConsultationType;
   chiefComplaint?: string;
   currentIllnessHistory?: string;
+  // Menstrual
   lastMenstrualPeriod?: string;
   cycleInterval?: number;
   cycleDuration?: number;
   cycleVolume?: MenstrualVolume;
   dysmenorrhea?: DysmenorrheaGrade;
+  // Screening
   lastPapSmear?: string;
+  lastPapSmearResult?: string;
   papSmearAttachmentUrl?: string | null;
   papSmearAttachmentName?: string | null;
   papSmearAttachmentMimeType?: string | null;
   lastMammography?: string;
+  lastMammographyResult?: string;
   mammographyAttachmentUrl?: string | null;
   mammographyAttachmentName?: string | null;
   mammographyAttachmentMimeType?: string | null;
+  // Contraception & sexual
   contraceptiveMethod?: string;
+  sexuallyActive?: boolean;
+  numberOfSexualPartners?: number;
+  historyOfSTI?: boolean;
+  historyOfSTIDetails?: string;
+  // Habits
   smokingStatus?: SmokingStatus;
+  smokingPacksPerYear?: number;
   alcoholUse?: boolean;
   alcoholUsePattern?: AlcoholUsePattern;
   drugUse?: boolean;
   drugUseDetails?: string;
+  physicalActivity?: PhysicalActivityLevel;
+  // Gynecological history
+  previousGynecologicSurgeries?: string;
+  historyOfEndometriosis?: boolean;
+  endometriosisStage?: string;
+  historyOfMyoma?: boolean;
+  historyOfOvarianCyst?: boolean;
+  historyOfPCOS?: boolean;
+  historyOfHPV?: boolean;
+  historyOfCervicalDysplasia?: boolean;
+  // Obstetric history
+  gravida?: number;
+  para?: number;
+  abortus?: number;
+  cesarean?: number;
+  // Family history
+  familyHistoryBreastCancer?: boolean;
+  familyHistoryOvarianCancer?: boolean;
+  familyHistoryEndometrialCancer?: boolean;
+  familyHistoryColorectalCancer?: boolean;
+  familyHistoryDiabetes?: boolean;
+  familyHistoryCardiovascularDisease?: boolean;
+  familyHistoryThrombosis?: boolean;
+  familyHistoryOsteoporosis?: boolean;
+  familyHistoryHypertension?: boolean;
+  familyHistoryDetails?: string;
+  // Mental health
+  phq2Score?: number;
+  gad2Score?: number;
+  mentalHealthNotes?: string;
+  // Physical exam
   weight?: number;
   height?: number;
+  bmi?: number;
+  waistCircumference?: number;
   bloodPressureSystolic?: number;
   bloodPressureDiastolic?: number;
   heartRate?: number;
+  temperature?: number;
+  thyroidExam?: string;
+  lymphNodeExam?: string;
+  signsOfHyperandrogenism?: boolean;
+  hyperandrogenismDetails?: string;
+  // Breast exam
   breastExamPerformed?: boolean;
+  breastExamNormal?: boolean;
   breastExamFindings?: string;
   biradsClassification?: BiRads;
+  // Pelvic exam
   pelvicExamPerformed?: boolean;
+  vulvarExamNormal?: boolean;
+  vulvarFindings?: string;
+  speculoscopyPerformed?: boolean;
   cervixAppearance?: string;
   papSmearCollected?: boolean;
-  phq2Score?: number;
-  gad2Score?: number;
+  bimanualExamNormal?: boolean;
+  uterineSize?: string;
+  adnexalFindings?: string;
+  pelvicFloorAssessment?: string;
+  // Management
   diagnosis?: string;
+  icd10Codes?: string[];
+  requestedExams?: Record<string, unknown>;
+  prescriptions?: Record<string, unknown>;
   referrals?: string;
   returnDate?: string;
   notes?: string;
+  internalNotes?: string;
+  // Initial assessment
+  initialAssessmentData?: Record<string, unknown>;
 }
 
 export async function fetchGynecologyConsultations(
@@ -196,6 +307,7 @@ export async function deleteGynecologyConsultation(
 // ── Helpers de exibição em PT-BR ──
 
 export const CONSULTATION_TYPE_LABELS: Record<GynecologyConsultationType, string> = {
+  initial: 'Primeira consulta',
   routine: 'Rotina',
   return: 'Retorno',
   urgent: 'Urgência',
@@ -228,6 +340,13 @@ export const MENSTRUAL_VOLUME_LABELS: Record<MenstrualVolume, string> = {
   hypomenorrhea: 'Hipomenorragia',
   normal: 'Normal',
   hypermenorrhea: 'Hipermenorragia',
+};
+
+export const PHYSICAL_ACTIVITY_LABELS: Record<PhysicalActivityLevel, string> = {
+  sedentary: 'Sedentária',
+  light: 'Leve',
+  moderate: 'Moderada',
+  vigorous: 'Intensa',
 };
 
 // Métodos contraceptivos — espelha o enum do módulo de contracepção (FEBRASGO/OMS)
@@ -267,10 +386,12 @@ export const CONTRACEPTIVE_METHOD_OPTIONS: { value: string; label: string; group
 // Achados do exame mamário (FEBRASGO)
 export const BREAST_FINDING_OPTIONS: { value: string; label: string }[] = [
   { value: 'ndn', label: 'NDN (Nada Digno de Nota)' },
+  { value: 'dor', label: 'Dor' },
   { value: 'nodulo', label: 'Nódulo' },
   { value: 'retracao', label: 'Retração' },
   { value: 'alteracao_pele', label: 'Alteração de pele' },
   { value: 'descarga_papilar', label: 'Descarga papilar' },
+  { value: 'linfonodos', label: 'Linfonodos Axilares / Supraclaviculares' },
   { value: 'outros', label: 'Outros' },
 ];
 

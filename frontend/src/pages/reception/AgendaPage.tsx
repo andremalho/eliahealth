@@ -6,6 +6,7 @@ import {
   fetchAppointments, fetchDoctors, updateAppointment,
   STATUS_LABELS, STATUS_COLORS, TYPE_LABELS,
   CATEGORY_LABELS, CATEGORY_COLORS, CATEGORY_DOT_COLORS,
+  SPECIALTY_LABELS,
 } from '../../api/appointments.api';
 import { toTitleCase } from '../../utils/formatters';
 import { cn } from '../../utils/cn';
@@ -191,7 +192,7 @@ export default function AgendaPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-800 truncate">{a.patientName ? toTitleCase(a.patientName) : '—'}</p>
-                    <p className="text-xs text-gray-500">{a.doctorName ?? '—'} · {TYPE_LABELS[a.type] ?? a.type}</p>
+                    <p className="text-xs text-gray-500">{a.doctorName ?? '—'} · {a.specialty ? SPECIALTY_LABELS[a.specialty] : TYPE_LABELS[a.type] ?? a.type}</p>
                   </div>
                   {a.category && (
                     <span className={cn('px-2 py-0.5 text-[10px] font-medium rounded-full shrink-0', CATEGORY_COLORS[a.category])}>

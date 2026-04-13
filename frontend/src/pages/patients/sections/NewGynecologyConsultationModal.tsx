@@ -62,10 +62,12 @@ interface FormData {
   // Mama
   breastExamPerformed: boolean;
   breastFindings: string[]; // checkboxes
+  breastFindingDescDor: string;
   breastFindingDescNodulo: string;
   breastFindingDescRetracao: string;
   breastFindingDescAlteracaoPele: string;
   breastFindingDescDescargaPapilar: string;
+  breastFindingDescLinfonodos: string;
   breastFindingDescOutros: string;
   biradsClassification: BiRads | '';
 
@@ -568,86 +570,16 @@ export default function NewGynecologyConsultationModal({
             )}
           </Section>
 
-          {/* Hábitos */}
-          <Section title="Hábitos">
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Tabagismo">
-                <select {...register('smokingStatus')} className={inputCn(false)}>
-                  <option value="">—</option>
-                  {Object.entries(SMOKING_LABELS).map(([v, l]) => (
-                    <option key={v} value={v}>
-                      {l}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Etilismo">
-                <select {...register('alcoholUsePattern')} className={inputCn(false)}>
-                  <option value="">—</option>
-                  {Object.entries(ALCOHOL_USE_LABELS).map(([v, l]) => (
-                    <option key={v} value={v}>
-                      {l}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            </div>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" {...register('drugUse')} />
-              Uso de drogas ilícitas
-            </label>
-            {drugUseChecked && (
-              <Field label="Especificar substância(s) e padrão de uso">
-                <textarea
-                  {...register('drugUseDetails')}
-                  rows={2}
-                  placeholder="Ex: maconha — uso diário há 5 anos"
-                  className={inputCn(false)}
-                />
-              </Field>
-            )}
-          </Section>
-
           {/* Vitais */}
-          <Section title="Sinais vitais e antropometria">
-            <div className="grid grid-cols-3 gap-4">
-              <Field label="Peso (kg)">
-                <input
-                  {...register('weight')}
-                  type="number"
-                  step="0.1"
-                  className={inputCn(false)}
-                />
-              </Field>
-              <Field label="Altura (cm)">
-                <input
-                  {...register('height')}
-                  type="number"
-                  step="0.1"
-                  className={inputCn(false)}
-                />
-              </Field>
-              <Field label="FC (bpm)">
-                <input
-                  {...register('heartRate')}
-                  type="number"
-                  min={20}
-                  max={250}
-                  className={inputCn(false)}
-                />
-              </Field>
-            </div>
-
-            {/* IMC ao vivo */}
-            {bmi && (
-              <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50">
-                <span className="text-xs font-semibold text-gray-500 uppercase">IMC</span>
-                <span className="text-lg font-bold text-navy">{bmi.value}</span>
-                <span className={cn('px-2 py-0.5 text-xs font-semibold rounded-full', bmi.color)}>
-                  {bmi.label}
-                </span>
-              </div>
-            )}
+          <Section title="Sinais vitais">
+            <Field label="Peso (kg)">
+              <input
+                {...register('weight')}
+                type="number"
+                step="0.1"
+                className={inputCn(false)}
+              />
+            </Field>
 
             <div className="grid grid-cols-2 gap-4">
               <Field label="PA Sistólica (mmHg)">

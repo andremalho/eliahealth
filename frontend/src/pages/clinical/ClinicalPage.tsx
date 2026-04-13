@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ClipboardList, Plus, Pencil, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { ClipboardList, Plus, Pencil, AlertCircle, ChevronDown, ChevronUp, Search, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../api/client';
+import { fetchPatients } from '../../api/patients.api';
 import { fetchClinicalConsultations, deleteClinicalConsultation } from '../../api/clinical-consultations.api';
 import { toTitleCase } from '../../utils/formatters';
 import { cn } from '../../utils/cn';
@@ -27,6 +29,8 @@ function fmtDate(d: any): string {
 }
 
 export default function ClinicalPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
   const [selectedPatient, setSelectedPatient] = useState<{ id: string; fullName: string } | null>(null);
@@ -34,11 +38,39 @@ export default function ClinicalPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [listPage, setListPage] = useState(1);
+  const [listSearch, setListSearch] = useState('');
+
+  // Auto-select patient and open consultation modal from query params
+  const paramId = searchParams.get('patientId');
+  const paramName = searchParams.get('patientName');
+  const isNewConsultation = searchParams.get('newConsultation') === '1';
+  useEffect(() => {
+    if (paramId && paramName && !selectedPatient) {
+      setSelectedPatient({ id: paramId, fullName: paramName });
+      if (isNewConsultation) {
+        setEditing(null);
+        setModalOpen(true);
+      }
+    }
+  }, [paramId, paramName]);
 
   const { data: results } = useQuery({
     queryKey: ['patient-search-clinical', search],
     queryFn: () => searchPatients(search),
     enabled: search.length >= 2 && !selectedPatient,
+  });
+
+  const { data: patientList, isLoading: loadingList } = useQuery({
+    queryKey: ['patients-list-clinical', listPage, listSearch],
+    queryFn: async () => {
+      if (listSearch.length >= 2) {
+        const r = await searchPatients(listSearch);
+        return { data: r, total: r.length, totalPages: 1 };
+      }
+      return fetchPatients(listPage, 20);
+    },
+    enabled: !selectedPatient,
   });
 
   const { data: consultations } = useQuery({
@@ -60,9 +92,17 @@ export default function ClinicalPage() {
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-navy">Consulta Clinica Geral</h1>
-          <p className="text-sm text-gray-500 mt-0.5">SOAP + sinais vitais + CID-10</p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-navy">Consulta Clinica Medica</h1>
+            <p className="text-sm text-gray-500 mt-0.5">SOAP + sinais vitais + CID-10</p>
+          </div>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2 px-4 py-2 bg-lilac text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition"
+          >
+            <Plus className="w-4 h-4" /> Nova
+          </button>
         </div>
         {selectedPatient && (
           <Button icon={<Plus className="w-4 h-4" />} onClick={() => { setEditing(null); setModalOpen(true); }}>
@@ -107,7 +147,49 @@ export default function ClinicalPage() {
       </Card>
 
       {!selectedPatient ? (
-        <Card><EmptyState icon={<ClipboardList className="w-12 h-12" />} title="Selecione uma paciente" /></Card>
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="p-4 border-b">
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input value={listSearch} onChange={(e) => { setListSearch(e.target.value); setListPage(1); }}
+                placeholder="Buscar paciente..." className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lilac/30 focus:border-lilac" />
+            </div>
+          </div>
+          <div className="divide-y">
+            {loadingList ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-5"><div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" /><div className="flex-1"><div className="h-4 w-40 bg-gray-200 rounded animate-pulse" /></div></div>
+              ))
+            ) : (patientList?.data ?? []).length === 0 ? (
+              <div className="flex flex-col items-center py-16 text-gray-400">
+                <ClipboardList className="w-12 h-12 mb-3" />
+                <p className="font-medium">Nenhuma paciente encontrada</p>
+              </div>
+            ) : (
+              (patientList?.data ?? []).map((p: any) => {
+                const initials = p.fullName.split(' ').slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join('');
+                return (
+                  <div key={p.id} onClick={() => { setSelectedPatient({ id: p.id, fullName: p.fullName }); setSearch(''); }}
+                    className="flex items-center gap-4 p-5 hover:bg-gray-50 cursor-pointer transition group">
+                    <div className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center text-sm font-bold shrink-0">{initials}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-800 truncate">{toTitleCase(p.fullName)}</p>
+                      <p className="text-xs text-gray-400">{p.cpf}</p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-lilac transition shrink-0" />
+                  </div>
+                );
+              })
+            )}
+          </div>
+          {(patientList?.totalPages ?? 1) > 1 && (
+            <div className="flex items-center justify-center gap-2 p-4 border-t">
+              <button disabled={listPage <= 1} onClick={() => setListPage(listPage - 1)} className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Anterior</button>
+              <span className="text-xs text-gray-500">Pagina {listPage} de {patientList?.totalPages}</span>
+              <button disabled={listPage >= (patientList?.totalPages ?? 1)} onClick={() => setListPage(listPage + 1)} className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Proxima</button>
+            </div>
+          )}
+        </div>
       ) : items.length === 0 ? (
         <Card><EmptyState icon={<ClipboardList className="w-12 h-12" />} title="Nenhuma consulta clinica"
           action={<Button icon={<Plus className="w-4 h-4" />} onClick={() => setModalOpen(true)}>Nova consulta</Button>} /></Card>

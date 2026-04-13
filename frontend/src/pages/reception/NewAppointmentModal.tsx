@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { X, Loader2, Search } from 'lucide-react';
+import { X, Loader2, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
-import { createAppointment, fetchDoctors, TYPE_LABELS, CATEGORY_LABELS } from '../../api/appointments.api';
+import { createAppointment, fetchDoctors, TYPE_LABELS, CATEGORY_LABELS, SPECIALTY_LABELS } from '../../api/appointments.api';
 import api from '../../api/client';
 import { toTitleCase } from '../../utils/formatters';
 import { cn } from '../../utils/cn';
@@ -19,19 +19,43 @@ const TIMES = Array.from({ length: 25 }, (_, i) => {
   return `${String(h).padStart(2, '0')}:${m}`;
 }).filter((t) => t <= '19:00');
 
+interface PatientDetail {
+  id: string;
+  fullName: string;
+  cpf: string;
+  rg?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+}
+
 async function searchPatients(q: string) {
   if (!q || q.length < 2) return [];
   const { data } = await api.get('/patients', { params: { search: q, limit: 6 } });
-  return (data?.data ?? data ?? []) as { id: string; fullName: string; cpf: string }[];
+  return (data?.data ?? data ?? []) as PatientDetail[];
+}
+
+async function fetchPatientDetail(id: string): Promise<PatientDetail> {
+  const { data } = await api.get(`/patients/${id}`);
+  return data;
 }
 
 export default function NewAppointmentModal({ preSelectedPatient, onClose }: Props) {
   const qc = useQueryClient();
   const [patientSearch, setPatientSearch] = useState('');
-  const [selectedPatient, setSelectedPatient] = useState(preSelectedPatient ?? null);
+  const [selectedPatient, setSelectedPatient] = useState<PatientDetail | null>(preSelectedPatient ? { id: preSelectedPatient.id, fullName: preSelectedPatient.fullName, cpf: '' } : null);
   const [showResults, setShowResults] = useState(false);
+  const [showPatientInfo, setShowPatientInfo] = useState(false);
 
   const { data: doctors } = useQuery({ queryKey: ['doctors'], queryFn: fetchDoctors });
+  const { data: patientDetail } = useQuery({
+    queryKey: ['patient-detail', selectedPatient?.id],
+    queryFn: () => fetchPatientDetail(selectedPatient!.id),
+    enabled: !!selectedPatient?.id,
+  });
   const { data: patientResults } = useQuery({
     queryKey: ['patient-search-appt', patientSearch],
     queryFn: () => searchPatients(patientSearch),
@@ -44,6 +68,7 @@ export default function NewAppointmentModal({ preSelectedPatient, onClose }: Pro
       startTime: '08:00',
       endTime: '08:30',
       doctorId: '',
+      specialty: '',
       type: 'consultation',
       category: '',
       notes: '',
@@ -58,6 +83,7 @@ export default function NewAppointmentModal({ preSelectedPatient, onClose }: Pro
       startTime: data.startTime,
       endTime: data.endTime,
       type: data.type,
+      specialty: data.specialty || undefined,
       category: data.category || undefined,
       notes: data.notes || undefined,
     }),
@@ -112,6 +138,32 @@ export default function NewAppointmentModal({ preSelectedPatient, onClose }: Pro
             )}
           </div>
 
+          {/* Patient info */}
+          {selectedPatient && patientDetail && (
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setShowPatientInfo(!showPatientInfo)}
+                className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
+              >
+                <span>Dados da paciente</span>
+                {showPatientInfo ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+              {showPatientInfo && (
+                <div className="px-4 py-3 space-y-2 text-sm">
+                  <InfoRow label="CPF" value={patientDetail.cpf} />
+                  <InfoRow label="RG" value={patientDetail.rg} />
+                  <InfoRow label="E-mail" value={patientDetail.email} />
+                  <InfoRow label="Telefone" value={patientDetail.phone} />
+                  <InfoRow
+                    label="Endereco"
+                    value={[patientDetail.address, patientDetail.city, patientDetail.state, patientDetail.zipCode].filter(Boolean).join(', ')}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Doctor */}
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Medico(a) *</label>
@@ -141,6 +193,15 @@ export default function NewAppointmentModal({ preSelectedPatient, onClose }: Pro
                 {TIMES.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
+          </div>
+
+          {/* Specialty */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Especialidade *</label>
+            <select {...register('specialty', { required: true })} className={iCn}>
+              <option value="">Selecione...</option>
+              {Object.entries(SPECIALTY_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
           </div>
 
           {/* Type + Category */}
@@ -175,6 +236,15 @@ export default function NewAppointmentModal({ preSelectedPatient, onClose }: Pro
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value?: string }) {
+  return (
+    <div className="flex items-baseline gap-2">
+      <span className="text-gray-400 w-20 shrink-0">{label}</span>
+      <span className="text-gray-800">{value || <span className="text-gray-300 italic">nao informado</span>}</span>
     </div>
   );
 }

@@ -95,7 +95,7 @@ export default function NewPatientModal({ onClose }: { onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold text-navy">Nova Gestante</h2>
+          <h2 className="text-lg font-semibold text-navy">Nova Paciente - Obstetricia</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>

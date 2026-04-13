@@ -2,7 +2,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateUltrasoundReports1711900056000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`CREATE TYPE "report_status_enum" AS ENUM ('draft','pending_signature','signed','exported')`);
+    await queryRunner.query(`DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'report_status_enum') THEN CREATE TYPE "report_status_enum" AS ENUM ('draft','pending_signature','signed','exported'); END IF; END $$`);
 
     await queryRunner.query(`
       CREATE TABLE "ultrasound_reports" (

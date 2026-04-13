@@ -24,10 +24,19 @@ function progressColor(weeks: number) {
   return 'bg-orange-400';
 }
 
+const TRIMESTER_FILTERS = [
+  { label: 'Todas', value: 'all' },
+  { label: '1º Tri', value: '1' },
+  { label: '2º Tri', value: '2' },
+  { label: '3º Tri', value: '3' },
+  { label: 'Alto Risco', value: 'high_risk' },
+];
+
 export default function PregnanciesListPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('active');
+  const [trimesterFilter, setTrimesterFilter] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
 
   const { data: pregnancies, isLoading } = useQuery({
@@ -35,7 +44,12 @@ export default function PregnanciesListPage() {
     queryFn: () => fetchPregnancyList({ status: status || undefined, search: search || undefined }),
   });
 
-  const items = pregnancies ?? [];
+  const allItems = pregnancies ?? [];
+  const items = status === 'active' ? allItems.filter((p) => {
+    if (trimesterFilter === 'all') return true;
+    if (trimesterFilter === 'high_risk') return p.riskLevel === 'high';
+    return getTrimester(p.gestationalAge?.weeks ?? 0).toString() === trimesterFilter;
+  }) : allItems;
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
@@ -78,6 +92,23 @@ export default function PregnanciesListPage() {
             />
           </div>
         </div>
+
+        {status === 'active' && (
+          <div className="flex gap-2 px-4 py-3 border-b overflow-x-auto">
+            {TRIMESTER_FILTERS.map((f) => (
+              <button
+                key={f.value}
+                onClick={() => setTrimesterFilter(f.value)}
+                className={cn(
+                  'px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition',
+                  trimesterFilter === f.value ? 'bg-lilac text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="divide-y">
           {isLoading ? (

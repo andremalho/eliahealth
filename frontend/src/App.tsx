@@ -96,6 +96,7 @@ export default function App() {
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/billing" element={<BillingPage />} />
             <Route path="/analytics" element={<AnalyticsDashboardPage />} />
+            <Route path="/agenda" element={<AgendaPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/reception" element={<ReceptionDashboardPage />} />
             <Route path="/reception/agenda" element={<AgendaPage />} />

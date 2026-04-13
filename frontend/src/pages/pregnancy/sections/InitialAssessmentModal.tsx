@@ -127,6 +127,22 @@ interface FormData {
   pv: string;
   pc: string;
   pf: string;
+  // Obstetricos extras
+  ectopicPregnancy: boolean;
+  ectopicPregnancyDetails: string;
+  // Patologias de gestacoes anteriores
+  prevDmg: boolean;
+  prevPe: boolean;
+  prevEclampsia: boolean;
+  prevHellp: boolean;
+  prevColestase: boolean;
+  prevHiperemese: boolean;
+  prevItu: boolean;
+  prevRpmo: boolean;
+  prevTpp: boolean;
+  prevAnemia: boolean;
+  prevOther: boolean;
+  prevOtherText: string;
   // ── Antecedentes pessoais ──
   // Comorbidades
   cmHas: boolean;
@@ -234,6 +250,9 @@ export default function InitialAssessmentModal({
   const bmiCat = bmi > 0 ? bmiCategory(bmi) : null;
 
   const showDeliveryDetails = parseInt(paraW || '0', 10) >= 1;
+  const gravidaNum = parseInt(watch('gravida') || '0', 10);
+  const showEctopic = gravidaNum >= 1;
+  const showPrevPathologies = gravidaNum >= 2;
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -370,6 +389,29 @@ export default function InitialAssessmentModal({
       if (data.habitDrugs) habits.push('Uso de drogas');
       if (habits.length > 0) pregnancyPayload.habits = habits.join('; ');
 
+      // Gestacao ectopica
+      if (data.ectopicPregnancy) {
+        pregnancyPayload.ectopicPregnancy = true;
+        if (data.ectopicPregnancyDetails) pregnancyPayload.ectopicPregnancyDetails = data.ectopicPregnancyDetails;
+      }
+
+      // Patologias de gestacoes anteriores
+      const prevPathList: string[] = [];
+      if (data.prevDmg) prevPathList.push('DMG');
+      if (data.prevPe) prevPathList.push('Pré-eclâmpsia');
+      if (data.prevEclampsia) prevPathList.push('Eclâmpsia');
+      if (data.prevHellp) prevPathList.push('Síndrome HELLP');
+      if (data.prevColestase) prevPathList.push('Colestase gestacional');
+      if (data.prevHiperemese) prevPathList.push('Hiperêmese gravídica');
+      if (data.prevItu) prevPathList.push('ITU recorrente');
+      if (data.prevRpmo) prevPathList.push('RPMO');
+      if (data.prevTpp) prevPathList.push('Trabalho de parto pré-termo');
+      if (data.prevAnemia) prevPathList.push('Anemia');
+      if (data.prevOther && data.prevOtherText) prevPathList.push(data.prevOtherText);
+      if (prevPathList.length > 0) {
+        pregnancyPayload.previousPathologies = prevPathList.join('; ');
+      }
+
       return completeInitialAssessment(pregnancyId, pregnancyPayload);
     },
     onSuccess: () => {
@@ -441,6 +483,41 @@ export default function InitialAssessmentModal({
                 <Field label="PV (vaginais)"><input {...register('pv')} type="number" min="0" className={iCn} /></Field>
                 <Field label="PC (cesáreas)"><input {...register('pc')} type="number" min="0" className={iCn} /></Field>
                 <Field label="PF (fórcipes)"><input {...register('pf')} type="number" min="0" className={iCn} /></Field>
+              </div>
+            )}
+            {showEctopic && (
+              <div className="mt-3">
+                <CheckboxLine register={register('ectopicPregnancy')} label="Gestação Ectópica" />
+                {watch('ectopicPregnancy') && (
+                  <div className="ml-6 mt-1">
+                    <input {...register('ectopicPregnancyDetails')} placeholder="Detalhes (localização, tratamento...)" className={iCn} />
+                  </div>
+                )}
+              </div>
+            )}
+            {showPrevPathologies && (
+              <div className="mt-4">
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Patologias de gestações anteriores</h4>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  <CheckboxLine register={register('prevDmg')} label="DMG (Diabetes Mellitus Gestacional)" />
+                  <CheckboxLine register={register('prevPe')} label="Pré-eclâmpsia" />
+                  <CheckboxLine register={register('prevEclampsia')} label="Eclâmpsia" />
+                  <CheckboxLine register={register('prevHellp')} label="Síndrome HELLP" />
+                  <CheckboxLine register={register('prevColestase')} label="Colestase gestacional" />
+                  <CheckboxLine register={register('prevHiperemese')} label="Hiperêmese gravídica" />
+                  <CheckboxLine register={register('prevItu')} label="ITU recorrente" />
+                  <CheckboxLine register={register('prevRpmo')} label="RPMO" />
+                  <CheckboxLine register={register('prevTpp')} label="Trabalho de parto pré-termo" />
+                  <CheckboxLine register={register('prevAnemia')} label="Anemia" />
+                  <div>
+                    <CheckboxLine register={register('prevOther')} label="Outros" />
+                    {watch('prevOther') && (
+                      <div className="ml-6 mt-1">
+                        <input {...register('prevOtherText')} placeholder="Especificar..." className={iCn} />
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </Section>

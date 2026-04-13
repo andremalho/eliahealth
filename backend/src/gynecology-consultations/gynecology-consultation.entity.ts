@@ -205,6 +205,12 @@ export class GynecologyConsultation {
   @Column({ name: 'family_history_details', type: 'text', nullable: true })
   familyHistoryDetails: string | null;
 
+  @Column({ name: 'family_history_osteoporosis', type: 'boolean', nullable: true })
+  familyHistoryOsteoporosis: boolean | null;
+
+  @Column({ name: 'family_history_hypertension', type: 'boolean', nullable: true })
+  familyHistoryHypertension: boolean | null;
+
   // ── Saúde mental ──
   @Column({ name: 'phq2_score', type: 'int', nullable: true })
   phq2Score: number | null;
@@ -324,6 +330,10 @@ export class GynecologyConsultation {
 
   @Column({ name: 'internal_notes', type: 'text', nullable: true })
   internalNotes: string | null;
+
+  // ── Dados da avaliacao inicial (jsonb livre para campos da 1a consulta) ──
+  @Column({ name: 'initial_assessment_data', type: 'jsonb', nullable: true })
+  initialAssessmentData: Record<string, unknown> | null;
 
   // ── Copiloto: alertas estruturados ──
   @Column({ type: 'jsonb', nullable: true })

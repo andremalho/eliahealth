@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Stethoscope, Activity, Pill, Sparkles, Baby, Flower2, ClipboardCheck,
-  Search,
+  Search, Plus, ChevronRight, ArrowLeft,
 } from 'lucide-react';
 import api from '../../api/client';
+import { fetchPatients } from '../../api/patients.api';
 import { cn } from '../../utils/cn';
 import { toTitleCase } from '../../utils/formatters';
 import GynecologySection from '../patients/sections/GynecologySection';
@@ -27,7 +29,7 @@ const MODULES: { key: ModuleKey; label: string; icon: React.ElementType }[] = [
   { key: 'preventive', label: 'Rastreios', icon: ClipboardCheck },
 ];
 
-const SECTION_COMPONENTS: Record<ModuleKey, React.ComponentType<{ patientId: string }>> = {
+const SECTION_COMPONENTS: Record<ModuleKey, React.ComponentType<{ patientId: string; autoOpenModal?: boolean }>> = {
   gynecology: GynecologySection,
   menstrual: MenstrualCycleSection,
   contraception: ContraceptionSection,
@@ -37,95 +39,60 @@ const SECTION_COMPONENTS: Record<ModuleKey, React.ComponentType<{ patientId: str
   art: AssistedReproductionSection,
 };
 
-async function searchPatients(query: string) {
+async function searchPatientsApi(query: string) {
   if (!query || query.length < 2) return [];
   const { data } = await api.get('/patients', { params: { search: query, limit: 8 } });
   return (data?.data ?? data ?? []) as { id: string; fullName: string; cpf: string }[];
 }
 
 export default function GynecologyPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeModule, setActiveModule] = useState<ModuleKey>('gynecology');
   const [selectedPatient, setSelectedPatient] = useState<{ id: string; fullName: string } | null>(null);
   const [search, setSearch] = useState('');
-  const [showResults, setShowResults] = useState(false);
+  const [listPage, setListPage] = useState(1);
 
-  const { data: results } = useQuery({
-    queryKey: ['patient-search', search],
-    queryFn: () => searchPatients(search),
-    enabled: search.length >= 2,
+  // Auto-select patient from query params
+  const paramId = searchParams.get('patientId');
+  const paramName = searchParams.get('patientName');
+  const isNewConsultation = searchParams.get('newConsultation') === '1';
+  useEffect(() => {
+    if (paramId && paramName && !selectedPatient) {
+      setSelectedPatient({ id: paramId, fullName: paramName });
+    }
+  }, [paramId, paramName]);
+
+  // Patient list (when no patient selected)
+  const { data: patientList, isLoading: loadingList } = useQuery({
+    queryKey: ['patients-list', listPage, search],
+    queryFn: async () => {
+      if (search.length >= 2) {
+        const results = await searchPatientsApi(search);
+        return { data: results, total: results.length, totalPages: 1 };
+      }
+      return fetchPatients(listPage, 20);
+    },
+    enabled: !selectedPatient,
   });
-
-  const selectPatient = (p: { id: string; fullName: string }) => {
-    setSelectedPatient(p);
-    setSearch('');
-    setShowResults(false);
-  };
 
   const ActiveSection = SECTION_COMPONENTS[activeModule];
 
-  return (
-    <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Header with patient selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-navy">Ginecologia</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Prontuario ginecologico completo</p>
+  // Patient selected -> show modules
+  if (selectedPatient) {
+    return (
+      <div className="p-6 lg:p-8 max-w-7xl mx-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <button onClick={() => setSelectedPatient(null)} className="p-2 hover:bg-gray-100 rounded-lg">
+            <ArrowLeft className="w-5 h-5 text-gray-600" />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-semibold text-navy">Ginecologia</h1>
+            <p className="text-sm text-gray-500 mt-0.5">{toTitleCase(selectedPatient.fullName)}</p>
+          </div>
         </div>
 
-        {/* Patient selector */}
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            value={selectedPatient ? toTitleCase(selectedPatient.fullName) : search}
-            onChange={(e) => {
-              if (selectedPatient) setSelectedPatient(null);
-              setSearch(e.target.value);
-              setShowResults(true);
-            }}
-            onFocus={() => { if (!selectedPatient && search.length >= 2) setShowResults(true); }}
-            placeholder="Buscar paciente..."
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lilac/30 focus:border-lilac"
-          />
-          {selectedPatient && (
-            <button
-              onClick={() => { setSelectedPatient(null); setSearch(''); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-gray-600"
-            >
-              Trocar
-            </button>
-          )}
-
-          {showResults && results && results.length > 0 && !selectedPatient && (
-            <div className="absolute z-50 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
-              {results.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => selectPatient(p)}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-left"
-                >
-                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center text-xs font-bold shrink-0">
-                    {p.fullName.split(' ').slice(0, 2).map((w) => w[0]?.toUpperCase()).join('')}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-800">{toTitleCase(p.fullName)}</p>
-                    <p className="text-xs text-gray-400">{p.cpf}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {!selectedPatient ? (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col items-center py-20 text-gray-400">
-          <Stethoscope className="w-12 h-12 mb-4" />
-          <p className="text-lg font-medium text-gray-500">Selecione uma paciente</p>
-          <p className="text-sm mt-1">Use a busca acima para encontrar a paciente</p>
-        </div>
-      ) : (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          {/* Module tabs */}
           <div className="flex overflow-x-auto border-b">
             {MODULES.map((m) => {
               const Icon = m.icon;
@@ -136,9 +103,7 @@ export default function GynecologyPage() {
                   onClick={() => setActiveModule(m.key)}
                   className={cn(
                     'flex items-center gap-2 px-5 py-4 text-sm font-medium whitespace-nowrap transition border-b-2',
-                    isActive
-                      ? 'border-lilac text-lilac bg-lilac/5'
-                      : 'border-transparent text-gray-600 hover:text-navy hover:bg-gray-50',
+                    isActive ? 'border-lilac text-lilac bg-lilac/5' : 'border-transparent text-gray-600 hover:text-navy hover:bg-gray-50',
                   )}
                 >
                   <Icon className="w-4 h-4" />
@@ -147,12 +112,92 @@ export default function GynecologyPage() {
               );
             })}
           </div>
-
           <div className="p-6">
-            <ActiveSection patientId={selectedPatient.id} />
+            <ActiveSection patientId={selectedPatient.id} autoOpenModal={isNewConsultation && activeModule === 'gynecology'} />
           </div>
         </div>
-      )}
+      </div>
+    );
+  }
+
+  // No patient selected -> show patient list
+  const patients = patientList?.data ?? [];
+
+  return (
+    <div className="p-6 lg:p-8 max-w-5xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-navy">Ginecologia</h1>
+          <p className="text-sm text-gray-500 mt-1">{patientList?.total ?? 0} pacientes</p>
+        </div>
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center gap-2 px-4 py-2 bg-lilac text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition"
+        >
+          <Plus className="w-4 h-4" /> Nova
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div className="p-4 border-b">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setListPage(1); }}
+              placeholder="Buscar paciente..."
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lilac/30 focus:border-lilac"
+            />
+          </div>
+        </div>
+
+        <div className="divide-y">
+          {loadingList ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-5">
+                <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" />
+                <div className="flex-1 space-y-2"><div className="h-4 w-40 bg-gray-200 rounded animate-pulse" /></div>
+              </div>
+            ))
+          ) : patients.length === 0 ? (
+            <div className="flex flex-col items-center py-16 text-gray-400">
+              <Stethoscope className="w-12 h-12 mb-3" />
+              <p className="font-medium">Nenhuma paciente encontrada</p>
+            </div>
+          ) : (
+            patients.map((p) => {
+              const initials = p.fullName.split(' ').slice(0, 2).map((w) => w[0]?.toUpperCase()).join('');
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => setSelectedPatient({ id: p.id, fullName: p.fullName })}
+                  className="flex items-center gap-4 p-5 hover:bg-gray-50 cursor-pointer transition group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center text-sm font-bold shrink-0">
+                    {initials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-800 truncate">{toTitleCase(p.fullName)}</p>
+                    <p className="text-xs text-gray-400">{p.cpf}</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-lilac transition shrink-0" />
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Pagination */}
+        {(patientList?.totalPages ?? 1) > 1 && (
+          <div className="flex items-center justify-center gap-2 p-4 border-t">
+            <button disabled={listPage <= 1} onClick={() => setListPage(listPage - 1)}
+              className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Anterior</button>
+            <span className="text-xs text-gray-500">Pagina {listPage} de {patientList?.totalPages}</span>
+            <button disabled={listPage >= (patientList?.totalPages ?? 1)} onClick={() => setListPage(listPage + 1)}
+              className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Proxima</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -102,6 +102,15 @@ export class Patient {
   @Column({ name: 'profile_notes', type: 'text', nullable: true })
   profileNotes: string | null;
 
+  @Column({ name: 'marital_status', type: 'varchar', nullable: true })
+  maritalStatus: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  profession: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  education: string | null;
+
   @Column({ name: 'preferred_language', type: 'varchar', default: 'pt_BR' })
   preferredLanguage: string;
 

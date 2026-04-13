@@ -137,6 +137,18 @@ export class CreatePatientDto {
   profileNotes?: string;
 
   @IsOptional()
+  @IsString()
+  maritalStatus?: string;
+
+  @IsOptional()
+  @IsString()
+  profession?: string;
+
+  @IsOptional()
+  @IsString()
+  education?: string;
+
+  @IsOptional()
   @IsDateString()
   lgpdConsentAt?: string;
 }

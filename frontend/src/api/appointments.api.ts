@@ -2,12 +2,22 @@ import api from './client';
 
 export type AppointmentCategory = 'primeira_consulta' | 'retorno' | 'particular' | 'convenio' | 'urgencia' | 'encaixe';
 
+export type AppointmentSpecialty = 'obstetrics' | 'gynecology' | 'clinical' | 'ultrasound';
+
+export const SPECIALTY_LABELS: Record<AppointmentSpecialty, string> = {
+  obstetrics: 'Obstetricia',
+  gynecology: 'Ginecologia',
+  clinical: 'Clinica Medica',
+  ultrasound: 'Ultrassonografia',
+};
+
 export interface AppointmentItem {
   id: string;
   date: string;
   startTime: string;
   endTime: string;
   type: string;
+  specialty: AppointmentSpecialty | null;
   status: string;
   category: AppointmentCategory | null;
   notes: string | null;
@@ -49,6 +59,8 @@ export const createAppointment = async (dto: {
   startTime: string;
   endTime: string;
   type?: string;
+  specialty?: string;
+  category?: string;
   notes?: string;
 }) => (await api.post('/appointments', dto)).data;
 

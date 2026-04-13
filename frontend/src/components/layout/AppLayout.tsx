@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Home, Users, Calendar, Users2, Settings, HeartPulse, Stethoscope, BarChart3, Scan, ClipboardList,
+  Home, Calendar, Users2, Settings, HeartPulse, BarChart3,
   BedDouble, MessageSquare, DollarSign,
   ChevronLeft, ChevronRight, LogOut, Menu,
+  Baby, Heart, Stethoscope, FileText, Activity,
 } from 'lucide-react';
 import { SkipLink } from '../ui/SkipLink';
 import Logo from '../Logo';
@@ -17,10 +18,10 @@ interface NavItem { to: string; icon: React.ElementType; label: string; module?:
 
 const clinicalNavItems: NavItem[] = [
   { to: '/dashboard', icon: Home, label: 'Inicio' },
-  { to: '/gynecology', icon: Stethoscope, label: 'Ginecologia', module: 'gynecology' },
-  { to: '/pregnancies', icon: Users, label: 'Gestacoes', module: 'prenatal' },
-  { to: '/ultrasound', icon: Scan, label: 'Ultrassonografia', module: 'ultrasound' },
-  { to: '/clinical', icon: ClipboardList, label: 'Clinica Geral', module: 'clinical_general' },
+  { to: '/pregnancies', icon: Baby, label: 'Obstetricia', module: 'prenatal' },
+  { to: '/gynecology', icon: Heart, label: 'Ginecologia', module: 'gynecology' },
+  { to: '/clinical', icon: Stethoscope, label: 'Clinica Medica', module: 'clinical_general' },
+  { to: '/ultrasound', icon: FileText, label: 'Ultrassonografia', module: 'ultrasound' },
   { to: '/hospitalization', icon: BedDouble, label: 'Internacoes', module: 'hospitalization' },
   { to: '/chat', icon: MessageSquare, label: 'Mensagens' },
   { to: '/birth-calendar', icon: Calendar, label: 'Calendario' },
@@ -33,7 +34,7 @@ const clinicalNavItems: NavItem[] = [
 const receptionNavItems: NavItem[] = [
   { to: '/reception', icon: Home, label: 'Recepcao' },
   { to: '/reception/agenda', icon: Calendar, label: 'Agenda' },
-  { to: '/reception/patients', icon: HeartPulse, label: 'Pacientes' },
+  { to: '/reception/patients', icon: Activity, label: 'Pacientes' },
   { to: '/settings', icon: Settings, label: 'Configuracoes' },
 ];
 

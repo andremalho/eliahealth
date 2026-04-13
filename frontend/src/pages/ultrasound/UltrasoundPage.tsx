@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchPatients } from '../../api/patients.api';
 import {
   Stethoscope, Baby, Plus, FileText, Pencil, Shield, Send, Download,
   ChevronDown, ChevronUp, Search, Loader2,
@@ -27,6 +29,7 @@ async function searchPatients(q: string) {
 }
 
 export default function UltrasoundPage() {
+  const navigate = useNavigate();
   const qc = useQueryClient();
   const { user } = useAuthStore();
   const [tab, setTab] = useState<Tab>('obstetrica');
@@ -37,11 +40,25 @@ export default function UltrasoundPage() {
   const [formValues, setFormValues] = useState<Record<string, unknown>>({});
   const [viewingReport, setViewingReport] = useState<UltrasoundReportItem | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [listPage, setListPage] = useState(1);
+  const [listSearch, setListSearch] = useState('');
 
   const { data: patientResults } = useQuery({
     queryKey: ['patient-search-us', search],
     queryFn: () => searchPatients(search),
     enabled: search.length >= 2 && !selectedPatient,
+  });
+
+  const { data: patientList, isLoading: loadingList } = useQuery({
+    queryKey: ['patients-list-us', listPage, listSearch],
+    queryFn: async () => {
+      if (listSearch.length >= 2) {
+        const r = await searchPatients(listSearch);
+        return { data: r, total: r.length, totalPages: 1 };
+      }
+      return fetchPatients(listPage, 20);
+    },
+    enabled: !selectedPatient,
   });
 
   const { data: reports, isLoading: loadingReports } = useQuery({
@@ -95,9 +112,17 @@ export default function UltrasoundPage() {
     <div className="p-6 lg:p-8 max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold text-navy">Ultrassonografia</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Laudos estruturados com assinatura digital</p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-navy">Ultrassonografia</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Laudos estruturados com assinatura digital</p>
+          </div>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2 px-4 py-2 bg-lilac text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition"
+          >
+            <Plus className="w-4 h-4" /> Nova
+          </button>
         </div>
       </div>
 
@@ -133,9 +158,48 @@ export default function UltrasoundPage() {
       </div>
 
       {!selectedPatient ? (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col items-center py-20 text-gray-400">
-          <Stethoscope className="w-12 h-12 mb-4" />
-          <p className="text-lg font-medium text-gray-500">Selecione uma paciente</p>
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="p-4 border-b">
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input value={listSearch} onChange={(e) => { setListSearch(e.target.value); setListPage(1); }}
+                placeholder="Buscar paciente..." className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lilac/30 focus:border-lilac" />
+            </div>
+          </div>
+          <div className="divide-y">
+            {loadingList ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-5"><div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse" /><div className="flex-1"><div className="h-4 w-40 bg-gray-200 rounded animate-pulse" /></div></div>
+              ))
+            ) : (patientList?.data ?? []).length === 0 ? (
+              <div className="flex flex-col items-center py-16 text-gray-400">
+                <Stethoscope className="w-12 h-12 mb-3" />
+                <p className="font-medium">Nenhuma paciente encontrada</p>
+              </div>
+            ) : (
+              (patientList?.data ?? []).map((p: any) => {
+                const initials = p.fullName.split(' ').slice(0, 2).map((w: string) => w[0]?.toUpperCase()).join('');
+                return (
+                  <div key={p.id} onClick={() => { setSelectedPatient({ id: p.id, fullName: p.fullName }); }}
+                    className="flex items-center gap-4 p-5 hover:bg-gray-50 cursor-pointer transition group">
+                    <div className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center text-sm font-bold shrink-0">{initials}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-800 truncate">{toTitleCase(p.fullName)}</p>
+                      <p className="text-xs text-gray-400">{p.cpf}</p>
+                    </div>
+                    <span className="w-5 h-5 text-gray-300 group-hover:text-lilac transition shrink-0">&rsaquo;</span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+          {(patientList?.totalPages ?? 1) > 1 && (
+            <div className="flex items-center justify-center gap-2 p-4 border-t">
+              <button disabled={listPage <= 1} onClick={() => setListPage(listPage - 1)} className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Anterior</button>
+              <span className="text-xs text-gray-500">Pagina {listPage} de {patientList?.totalPages}</span>
+              <button disabled={listPage >= (patientList?.totalPages ?? 1)} onClick={() => setListPage(listPage + 1)} className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Proxima</button>
+            </div>
+          )}
         </div>
       ) : selectedTemplate ? (
         /* FORM MODE */

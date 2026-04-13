@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
@@ -29,15 +29,18 @@ import {
 import { cn } from '../../../utils/cn';
 import { formatDate } from '../../../utils/formatters';
 import NewGynecologyConsultationModal from './NewGynecologyConsultationModal';
+import InitialGynecologyConsultationModal from './InitialGynecologyConsultationModal';
 import { DeleteButton } from '../../../components/forms/DeleteButton';
+import { fetchPatient } from '../../../api/patients.api';
 
 function Skeleton({ className = '' }: { className?: string }) {
   return <div className={cn('animate-pulse bg-gray-200 rounded', className)} />;
 }
 
-export default function GynecologySection({ patientId }: { patientId: string }) {
+export default function GynecologySection({ patientId, autoOpenModal }: { patientId: string; autoOpenModal?: boolean }) {
   const qc = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
+  const [initialModalOpen, setInitialModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<GynecologyConsultation | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -48,6 +51,26 @@ export default function GynecologySection({ patientId }: { patientId: string }) 
     enabled: !!patientId,
   });
 
+  const { data: patient } = useQuery({
+    queryKey: ['patient-detail', patientId],
+    queryFn: () => fetchPatient(patientId),
+    enabled: !!patientId,
+  });
+
+  const consultations = data?.data ?? [];
+  const hasConsultations = consultations.length > 0;
+
+  // Auto-open: if new patient (no consultations), open initial modal; otherwise open regular
+  useEffect(() => {
+    if (autoOpenModal) {
+      if (!isLoading && !hasConsultations) {
+        setInitialModalOpen(true);
+      } else if (!isLoading && hasConsultations) {
+        setModalOpen(true);
+      }
+    }
+  }, [autoOpenModal, isLoading, hasConsultations]);
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteGynecologyConsultation(patientId, id),
     onMutate: (id) => setDeletingId(id),
@@ -56,8 +79,6 @@ export default function GynecologySection({ patientId }: { patientId: string }) 
       qc.invalidateQueries({ queryKey: ['gynecology-consultations', patientId] });
     },
   });
-
-  const consultations = data?.data ?? [];
 
   const closeModal = () => {
     setModalOpen(false);
@@ -78,11 +99,11 @@ export default function GynecologySection({ patientId }: { patientId: string }) 
           </p>
         </div>
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={() => hasConsultations ? setModalOpen(true) : setInitialModalOpen(true)}
           className="flex items-center gap-2 px-4 py-2 bg-lilac text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition"
         >
           <Plus className="w-4 h-4" />
-          Nova consulta
+          {hasConsultations ? 'Nova consulta' : 'Primeira consulta'}
         </button>
       </div>
 
@@ -95,8 +116,13 @@ export default function GynecologySection({ patientId }: { patientId: string }) 
       ) : consultations.length === 0 ? (
         <div className="flex flex-col items-center py-12 text-gray-400 border-2 border-dashed border-gray-200 rounded-lg">
           <Stethoscope className="w-10 h-10 mb-3" />
-          <p className="font-medium">Nenhuma consulta ginecológica</p>
-          <p className="text-sm mt-1">Clique em "Nova consulta" para começar</p>
+          <p className="font-medium">Nenhuma consulta ginecologica</p>
+          <button
+            onClick={() => setInitialModalOpen(true)}
+            className="mt-3 px-4 py-2 bg-lilac text-white text-sm rounded-lg hover:bg-primary-dark transition"
+          >
+            Iniciar primeira consulta
+          </button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -119,6 +145,13 @@ export default function GynecologySection({ patientId }: { patientId: string }) 
           patientId={patientId}
           consultation={editingItem ?? undefined}
           onClose={closeModal}
+        />
+      )}
+      {initialModalOpen && patient && (
+        <InitialGynecologyConsultationModal
+          patientId={patientId}
+          patient={patient}
+          onClose={() => setInitialModalOpen(false)}
         />
       )}
     </div>

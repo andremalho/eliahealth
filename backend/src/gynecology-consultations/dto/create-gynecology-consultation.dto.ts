@@ -144,4 +144,8 @@ export class CreateGynecologyConsultationDto {
   @IsOptional() @IsString() internalNotes?: string;
 
   @IsOptional() @IsArray() alerts?: GynecologyAlert[];
+
+  @IsOptional() @IsBoolean() familyHistoryOsteoporosis?: boolean;
+  @IsOptional() @IsBoolean() familyHistoryHypertension?: boolean;
+  @IsOptional() @IsObject() initialAssessmentData?: Record<string, unknown>;
 }

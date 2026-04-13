@@ -3,13 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Users, Calendar, Stethoscope, AlertTriangle,
-  Search, ChevronRight, Plus,
+  Search, ChevronRight, Plus, Clock,
 } from 'lucide-react';
 import { fetchPregnancyList, fetchUpcomingBirths } from '../../api/pregnancies.api';
+import { fetchAppointments, STATUS_LABELS, STATUS_COLORS, TYPE_LABELS, CATEGORY_LABELS } from '../../api/appointments.api';
+import type { AppointmentItem } from '../../api/appointments.api';
 import { useAuthStore } from '../../store/auth.store';
 import { cn } from '../../utils/cn';
 import { toTitleCase } from '../../utils/formatters';
 import NewPatientModal from './NewPatientModal';
+import NewPatientChooserModal from './NewPatientChooserModal';
+import NewPatientBaseModal from './NewPatientBaseModal';
+
+type SpecialtyKey = 'obstetrics' | 'gynecology' | 'clinical' | 'ultrasound';
 
 const trimesterFilters = [
   { label: 'Todas', value: 'all' },
@@ -40,7 +46,11 @@ export default function DashboardPage() {
   const { user } = useAuthStore();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
-  const [modalOpen, setModalOpen] = useState(false);
+  const [chooserOpen, setChooserOpen] = useState(false);
+  const [obsModalOpen, setObsModalOpen] = useState(false);
+  const [baseModalSpecialty, setBaseModalSpecialty] = useState<SpecialtyKey | null>(null);
+
+  const todayStr = new Date().toISOString().split('T')[0];
 
   const { data: pregnancies, isLoading } = useQuery({
     queryKey: ['pregnancies', 'list', search],
@@ -50,6 +60,11 @@ export default function DashboardPage() {
   const { data: upcoming } = useQuery({
     queryKey: ['upcoming-births'],
     queryFn: () => fetchUpcomingBirths(30),
+  });
+
+  const { data: todayAppointments, isLoading: loadingAppts } = useQuery({
+    queryKey: ['appointments', todayStr],
+    queryFn: () => fetchAppointments({ date: todayStr }),
   });
 
   const greeting = () => {
@@ -74,6 +89,36 @@ export default function DashboardPage() {
   const totalActive = pregnancies?.length ?? 0;
   const birthsThisMonth = Array.isArray(upcoming) ? upcoming.length : 0;
   const alertCount = (pregnancies ?? []).filter((p) => p.riskLevel === 'high').length;
+  const apptCount = todayAppointments?.length ?? 0;
+
+  const handleAppointmentClick = (appt: AppointmentItem) => {
+    if (!appt.patientId) return;
+    navigate(`/patients/${appt.patientId}`);
+  };
+
+  const handleChooserSelect = (area: SpecialtyKey) => {
+    setChooserOpen(false);
+    if (area === 'obstetrics') {
+      setObsModalOpen(true);
+    } else {
+      setBaseModalSpecialty(area);
+    }
+  };
+
+  const handlePatientCreated = (patientId: string, patientName: string) => {
+    const spec = baseModalSpecialty;
+    setBaseModalSpecialty(null);
+    const qs = `?patientId=${patientId}&patientName=${encodeURIComponent(patientName)}&newConsultation=1`;
+    if (spec === 'gynecology') {
+      navigate(`/gynecology${qs}`);
+    } else if (spec === 'clinical') {
+      navigate(`/clinical${qs}`);
+    } else if (spec === 'ultrasound') {
+      navigate(`/ultrasound${qs}`);
+    } else {
+      navigate(`/patients/${patientId}`);
+    }
+  };
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto">
@@ -86,10 +131,10 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-500">{today}</p>
         </div>
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={() => setChooserOpen(true)}
           className="flex items-center gap-2 px-5 py-2.5 bg-lilac text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition"
         >
-          <Plus className="w-4 h-4" /> Nova Gestante
+          <Plus className="w-4 h-4" /> Paciente
         </button>
       </div>
 
@@ -97,7 +142,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <SummaryCard icon={Users} color="bg-lilac/10 text-lilac" value={totalActive} label="gestantes ativas" />
         <SummaryCard icon={Calendar} color="bg-blue-50 text-blue-600" value={birthsThisMonth} label="partos este mês" />
-        <SummaryCard icon={Stethoscope} color="bg-emerald-50 text-emerald-600" value={0} label="consultas hoje" />
+        <SummaryCard icon={Stethoscope} color="bg-emerald-50 text-emerald-600" value={apptCount} label="consultas hoje" />
         <SummaryCard
           icon={AlertTriangle}
           color={alertCount > 0 ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-400'}
@@ -106,9 +151,58 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* Today's appointments */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm mb-8">
+        <div className="p-5 border-b">
+          <div className="flex items-center gap-2">
+            <Clock className="w-5 h-5 text-lilac" />
+            <h2 className="text-lg font-semibold text-navy">Agenda de Hoje</h2>
+          </div>
+        </div>
+        <div className="divide-y">
+          {loadingAppts ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-4">
+                <Skeleton className="w-14 h-8 rounded" />
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-4 w-24 ml-auto" />
+              </div>
+            ))
+          ) : (todayAppointments ?? []).length === 0 ? (
+            <div className="flex flex-col items-center py-12 text-gray-400">
+              <Calendar className="w-10 h-10 mb-2" />
+              <p className="text-sm">Nenhum agendamento para hoje</p>
+            </div>
+          ) : (
+            (todayAppointments ?? []).map((a) => (
+              <div
+                key={a.id}
+                onClick={() => handleAppointmentClick(a)}
+                className="flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer transition group"
+              >
+                <div className="text-center shrink-0 w-14">
+                  <p className="text-sm font-bold text-navy">{a.startTime?.slice(0, 5)}</p>
+                  <p className="text-[10px] text-gray-400">{a.endTime?.slice(0, 5)}</p>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-800 truncate">{a.patientName ? toTitleCase(a.patientName) : '—'}</p>
+                  <p className="text-xs text-gray-500">
+                    {TYPE_LABELS[a.type] ?? a.type}
+                    {a.category ? ` · ${CATEGORY_LABELS[a.category] ?? a.category}` : ''}
+                  </p>
+                </div>
+                <span className={cn('px-2 py-0.5 text-[10px] font-medium rounded-full shrink-0', STATUS_COLORS[a.status])}>
+                  {STATUS_LABELS[a.status] ?? a.status}
+                </span>
+                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-lilac transition shrink-0" />
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       {/* Pregnancies list */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-        {/* List header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-5 border-b">
           <h2 className="text-lg font-semibold text-navy">Gestações Ativas</h2>
           <div className="relative">
@@ -122,7 +216,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Filters */}
         <div className="flex gap-2 px-5 py-3 border-b overflow-x-auto">
           {trimesterFilters.map((f) => (
             <button
@@ -140,7 +233,6 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* List */}
         <div className="divide-y">
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
@@ -158,10 +250,10 @@ export default function DashboardPage() {
               <Users className="w-12 h-12 mb-3" />
               <p className="font-medium">Nenhuma gestante encontrada</p>
               <button
-                onClick={() => setModalOpen(true)}
+                onClick={() => setChooserOpen(true)}
                 className="mt-4 px-4 py-2 bg-lilac text-white text-sm rounded-lg hover:bg-primary-dark transition"
               >
-                Cadastrar gestante
+                Cadastrar paciente
               </button>
             </div>
           ) : (
@@ -172,7 +264,20 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {modalOpen && <NewPatientModal onClose={() => setModalOpen(false)} />}
+      {chooserOpen && (
+        <NewPatientChooserModal
+          onClose={() => setChooserOpen(false)}
+          onSelect={handleChooserSelect}
+        />
+      )}
+      {obsModalOpen && <NewPatientModal onClose={() => setObsModalOpen(false)} />}
+      {baseModalSpecialty && (
+        <NewPatientBaseModal
+          specialty={baseModalSpecialty}
+          onClose={() => setBaseModalSpecialty(null)}
+          onCreated={handlePatientCreated}
+        />
+      )}
     </div>
   );
 }

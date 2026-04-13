@@ -1,4 +1,5 @@
 export enum GynecologyConsultationType {
+  INITIAL = 'initial',                 // Primeira consulta
   ROUTINE = 'routine',                 // Consulta de rotina
   RETURN = 'return',                   // Retorno
   URGENT = 'urgent',                   // Urgência

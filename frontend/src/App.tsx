@@ -24,6 +24,7 @@ import BirthCalendarPage from './pages/calendar/BirthCalendarPage';
 import TeamsPage from './pages/teams/TeamsPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import AnalyticsDashboardPage from './pages/analytics/AnalyticsDashboardPage';
+import AnalyticsImpactPage from './pages/analytics/AnalyticsImpactPage';
 import UltrasoundPage from './pages/ultrasound/UltrasoundPage';
 import HospitalizationPage from './pages/hospitalization/HospitalizationPage';
 import ChatPage from './pages/chat/ChatPage';
@@ -96,6 +97,7 @@ export default function App() {
             <Route path="/chat" element={<ChatPage />} />
             <Route path="/billing" element={<BillingPage />} />
             <Route path="/analytics" element={<AnalyticsDashboardPage />} />
+            <Route path="/analytics/impact" element={<AnalyticsImpactPage />} />
             <Route path="/agenda" element={<AgendaPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/reception" element={<ReceptionDashboardPage />} />

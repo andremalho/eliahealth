@@ -75,6 +75,9 @@ import { MailModule } from './mail/mail.module.js';
 import { ConsultationSummaryModule } from './consultation-summary/consultation-summary.module.js';
 import { ClinicalCopilotModule } from './clinical-copilot/clinical-copilot.module.js';
 import { PatientChatModule } from './patient-chat/patient-chat.module.js';
+import { CopilotDashboardModule } from './copilot-dashboard/copilot-dashboard.module.js';
+import { AnalyticsModule } from './analytics/analytics.module.js';
+import { DoctorOnboardingModule } from './doctor-onboarding/doctor-onboarding.module.js';
 
 @Module({
   imports: [
@@ -165,6 +168,9 @@ import { PatientChatModule } from './patient-chat/patient-chat.module.js';
     ConsultationSummaryModule,
     ClinicalCopilotModule,
     PatientChatModule,
+    CopilotDashboardModule,
+    AnalyticsModule,
+    DoctorOnboardingModule,
   ],
   controllers: [AppController],
   providers: [

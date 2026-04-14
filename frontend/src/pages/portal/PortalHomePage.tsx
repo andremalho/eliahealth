@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
   Heart, LogOut, Calendar, Loader2, AlertCircle, Activity, Droplets,
-  Syringe, FileText, Stethoscope, Plus, FlaskConical, Baby,
+  Syringe, FileText, Stethoscope, Plus, FlaskConical, Baby, MessageSquareText,
 } from 'lucide-react';
 import {
   fetchDashboard, fetchPortalProfile, fetchPortalConsultations, fetchPortalVaccines,
   fetchPortalLabResults, fetchPortalUltrasounds, fetchPortalBp, fetchPortalGlucose,
   fetchPortalVaginalSwabs, fetchPortalPatientExams, fetchPortalPostpartum,
 } from '../../api/portal.api';
+import { fetchPortalConsultationSummaries, markSummaryAsRead } from '../../api/consultation-summaries.api';
 import { usePatientAuthStore } from '../../store/patientAuth.store';
 import { toTitleCase } from '../../utils/formatters';
 import { cn } from '../../utils/cn';
@@ -112,6 +113,14 @@ export default function PortalHomePage() {
     enabled: !!dashboard,
   });
 
+  const { data: summaries } = useQuery({
+    queryKey: ['portal-summaries'],
+    queryFn: () => fetchPortalConsultationSummaries(),
+    enabled: !!dashboard,
+  });
+
+  const qc = useQueryClient();
+
   const handleLogout = () => {
     logout();
     navigate('/portal/login');
@@ -156,6 +165,7 @@ export default function PortalHomePage() {
   const swabList = Array.isArray(swabs) ? swabs : [];
   const myExamsList = Array.isArray(myExams) ? myExams : [];
   const ppList = Array.isArray(postpartum) ? postpartum : [];
+  const summaryList = summaries?.data ?? [];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-lilac/10 to-white pb-12">
@@ -243,6 +253,49 @@ export default function PortalHomePage() {
           <ActionButton icon={FileText} label="Enviar exame" color="text-violet-500" onClick={() => setExamOpen(true)} />
           <ActionButton icon={Calendar} label="Agendamentos" color="text-emerald-500" onClick={() => setAppointmentsOpen(true)} />
         </div>
+
+        {/* Minhas Consultas Explicadas */}
+        {summaryList.length > 0 && (
+          <Section title="Minhas consultas explicadas" icon={MessageSquareText} count={summaryList.length}>
+            <div className="space-y-3">
+              {summaryList.slice(0, 5).map((s: any) => {
+                const isUnread = !s.readAt;
+                return (
+                  <div
+                    key={s.id}
+                    className={cn(
+                      'border rounded-xl p-3 cursor-pointer transition-colors',
+                      isUnread ? 'border-lilac/30 bg-lilac/5' : 'border-gray-100 bg-white',
+                    )}
+                    onClick={() => {
+                      if (isUnread) {
+                        markSummaryAsRead(s.id).then(() => {
+                          qc.invalidateQueries({ queryKey: ['portal-summaries'] });
+                        });
+                      }
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs text-gray-500">{fmtDate(s.consultationDate)}</span>
+                      <div className="flex items-center gap-2">
+                        {s.gestationalAgeDays != null && (
+                          <span className="text-[10px] text-lilac bg-lilac/10 px-1.5 py-0.5 rounded-full">
+                            {gaString(s.gestationalAgeDays)}
+                          </span>
+                        )}
+                        {isUnread && (
+                          <span className="w-2 h-2 rounded-full bg-lilac" />
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-xs text-navy font-medium mb-1">Dr(a). {s.doctorName}</p>
+                    <p className="text-xs text-gray-600 whitespace-pre-line line-clamp-4">{s.summaryText}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </Section>
+        )}
 
         {/* Consultas Puerperais */}
         {ppList.length > 0 && (

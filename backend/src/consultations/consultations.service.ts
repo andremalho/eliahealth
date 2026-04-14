@@ -6,6 +6,7 @@ import { Consultation } from './consultation.entity.js';
 import { FhrStatus, EdemaGrade, ConsultationAlert } from './consultation.enums.js';
 import { PregnanciesService } from '../pregnancies/pregnancies.service.js';
 import { CopilotService } from '../copilot/copilot.service.js';
+import { ConsultationSummaryService } from '../consultation-summary/consultation-summary.service.js';
 import { CreateConsultationDto } from './dto/create-consultation.dto.js';
 import { UpdateConsultationDto } from './dto/update-consultation.dto.js';
 
@@ -19,9 +20,16 @@ export class ConsultationsService {
     private readonly pregnanciesService: PregnanciesService,
     @Inject(forwardRef(() => CopilotService))
     private readonly copilotService: CopilotService,
+    @Inject(forwardRef(() => ConsultationSummaryService))
+    private readonly summaryService: ConsultationSummaryService,
   ) {}
 
-  async create(pregnancyId: string, dto: CreateConsultationDto): Promise<Consultation> {
+  async create(
+    pregnancyId: string,
+    dto: CreateConsultationDto,
+    doctorId?: string,
+    tenantId?: string | null,
+  ): Promise<Consultation> {
     const pregnancy = await this.pregnanciesService.findOne(pregnancyId);
     const ga = this.pregnanciesService.getGestationalAge(pregnancy, new Date(dto.date));
 
@@ -40,6 +48,9 @@ export class ConsultationsService {
     } catch (err) {
       this.logger.warn(`Falha ao executar detectPatterns para consulta ${saved.id}: ${(err as Error).message}`);
     }
+
+    // Nota: o resumo para paciente (ConsultationSummary) e gerado
+    // APOS o medico revisar o checklist do copiloto (ClinicalCopilotService.markCheckAsReviewed)
 
     return saved;
   }

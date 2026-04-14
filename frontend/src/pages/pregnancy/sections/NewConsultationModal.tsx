@@ -1,14 +1,15 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Lock, Loader2 } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import api from '../../../api/client';
 import { updateConsultation } from '../../../api/pregnancy.api';
-import { cn } from '../../../utils/cn';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { Textarea } from '../../../components/ui/Textarea';
+import CopilotCheckModal from './CopilotCheckModal';
 
 interface Props { pregnancyId: string; initial?: any; onClose: () => void }
 
@@ -39,6 +40,7 @@ const CERVICAL_OPTIONS = [
 export default function NewConsultationModal({ pregnancyId, initial, onClose }: Props) {
   const qc = useQueryClient();
   const isEdit = !!initial?.id;
+  const [savedConsultationId, setSavedConsultationId] = useState<string | null>(null);
   const { register, handleSubmit, watch, formState: { isSubmitting } } = useForm<Record<string, string>>({
     defaultValues: {
       date: initial?.date ?? new Date().toISOString().split('T')[0],
@@ -83,7 +85,16 @@ export default function NewConsultationModal({ pregnancyId, initial, onClose }: 
       if (isEdit) return updateConsultation(initial.id, payload);
       return (await api.post(`/pregnancies/${pregnancyId}/consultations`, payload)).data;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['consultations', pregnancyId] }); onClose(); },
+    onSuccess: (result: any) => {
+      qc.invalidateQueries({ queryKey: ['consultations', pregnancyId] });
+      // Apos salvar, abrir checklist do copiloto para revisao
+      const consultId = result?.id ?? initial?.id;
+      if (consultId) {
+        setSavedConsultationId(consultId);
+      } else {
+        onClose();
+      }
+    },
   });
 
   return (
@@ -145,6 +156,14 @@ export default function NewConsultationModal({ pregnancyId, initial, onClose }: 
             className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-lilac/30 focus:border-lilac bg-gray-50" />
         </div>
       </form>
+
+      {savedConsultationId && (
+        <CopilotCheckModal
+          consultationId={savedConsultationId}
+          onClose={() => { setSavedConsultationId(null); onClose(); }}
+          onReviewComplete={() => { setSavedConsultationId(null); onClose(); }}
+        />
+      )}
     </Modal>
   );
 }

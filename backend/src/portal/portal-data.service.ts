@@ -848,4 +848,73 @@ export class PortalDataService {
 
     return { id: examId, reviewStatus: status };
   }
+
+  // ── MODULE: Consultation Summaries (Minhas Consultas Explicadas) ──
+
+  async getConsultationSummaries(patientId: string, page = 1, limit = 20) {
+    const [data, [countRow]] = await Promise.all([
+      this.pregnancyRepo.query(
+        `SELECT cs.id, cs.summary_text, cs.status, cs.delivery_channel,
+                cs.sent_at, cs.read_at, cs.created_at,
+                c.date AS consultation_date, c.gestational_age_days,
+                u.name AS doctor_name
+         FROM consultation_summaries cs
+         JOIN consultations c ON c.id = cs.consultation_id
+         LEFT JOIN users u ON u.id = cs.doctor_id
+         WHERE cs.patient_id = $1
+           AND cs.status IN ('sent', 'delivered', 'read')
+         ORDER BY cs.created_at DESC
+         LIMIT $2 OFFSET $3`,
+        [patientId, limit, (page - 1) * limit],
+      ),
+      this.pregnancyRepo.query(
+        `SELECT COUNT(*)::int AS total
+         FROM consultation_summaries
+         WHERE patient_id = $1
+           AND status IN ('sent', 'delivered', 'read')`,
+        [patientId],
+      ),
+    ]);
+
+    const total = countRow?.total ?? 0;
+    this.audit(patientId, 'consultation_summaries');
+
+    return {
+      data: data.map((row: any) => ({
+        id: row.id,
+        summaryText: row.summary_text,
+        status: row.status,
+        consultationDate: row.consultation_date,
+        gestationalAgeDays: row.gestational_age_days,
+        doctorName: row.doctor_name,
+        sentAt: row.sent_at,
+        readAt: row.read_at,
+        createdAt: row.created_at,
+      })),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async markSummaryAsRead(patientId: string, summaryId: string) {
+    const [summary] = await this.pregnancyRepo.query(
+      `SELECT id, status, read_at FROM consultation_summaries
+       WHERE id = $1 AND patient_id = $2
+         AND status IN ('sent', 'delivered', 'read')`,
+      [summaryId, patientId],
+    );
+    if (!summary) throw new NotFoundException('Resumo nao encontrado');
+
+    if (!summary.read_at) {
+      await this.pregnancyRepo.query(
+        `UPDATE consultation_summaries SET read_at = NOW(), status = 'read', updated_at = NOW() WHERE id = $1`,
+        [summaryId],
+      );
+    }
+
+    this.audit(patientId, 'consultation_summary_read');
+    return { id: summaryId, readAt: summary.read_at || new Date().toISOString() };
+  }
 }

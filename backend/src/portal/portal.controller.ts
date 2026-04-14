@@ -304,7 +304,30 @@ export class PortalController {
     return this.dataService.cancelPatientAppointment(patientId, id);
   }
 
-  // ── Module 11: Postpartum Consultations ──
+  // ── Module 11: Consultation Summaries (Minhas Consultas Explicadas) ──
+
+  @Get('consultation-summaries')
+  @Roles(UserRole.PATIENT)
+  getConsultationSummaries(
+    @CurrentUser('patientId') patientId: string,
+    @Query('page') csPage?: string,
+    @Query('limit') csLimit?: string,
+  ) {
+    const p = Math.max(1, parseInt(csPage ?? '1', 10) || 1);
+    const l = Math.min(100, Math.max(1, parseInt(csLimit ?? '20', 10) || 20));
+    return this.dataService.getConsultationSummaries(patientId, p, l);
+  }
+
+  @Patch('consultation-summaries/:id/read')
+  @Roles(UserRole.PATIENT)
+  markSummaryAsRead(
+    @CurrentUser('patientId') patientId: string,
+    @Param('id') id: string,
+  ) {
+    return this.dataService.markSummaryAsRead(patientId, id);
+  }
+
+  // ── Module 12: Postpartum Consultations ──
 
   @Get('postpartum')
   @Roles(UserRole.PATIENT)

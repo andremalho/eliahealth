@@ -18,6 +18,7 @@ import ShareModal from './sections/ShareModal';
 import TimelineSection from './sections/TimelineSection';
 import PostpartumSection from './sections/PostpartumSection';
 import EditPatientDataModal from './sections/EditPatientDataModal';
+import ConsultationSummaryPanel from './sections/ConsultationSummaryPanel';
 import {
   VaccinesCard, VaginalSwabsCard, BiologicalFatherCard,
   UltrasoundsCard, LabResultsCard, PrescriptionsCard, FilesCard,
@@ -81,6 +82,7 @@ export default function PregnancyPage() {
   const [viewMode, setViewMode] = useState<'table' | 'list'>('table');
   const [consultationModal, setConsultationModal] = useState(false);
   const [editingConsultation, setEditingConsultation] = useState<any>(null);
+  const [expandedConsultationId, setExpandedConsultationId] = useState<string | null>(null);
   const [initialAssessmentModal, setInitialAssessmentModal] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [pdfDownloading, setPdfDownloading] = useState(false);
@@ -462,17 +464,27 @@ export default function PregnancyPage() {
             ) : (
               <div className="divide-y">
                 {consultations.map((c: any) => (
-                  <div key={c.id} className="p-4 hover:bg-gray-50">
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="px-2 py-0.5 bg-lilac/10 text-lilac text-xs font-semibold rounded-full">{gaString(c.gestationalAgeDays ?? c.gestational_age_days ?? 0)}</span>
-                      <span className="text-gray-700">{new Date((c.date ?? '') + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                  <div key={c.id}>
+                    <div
+                      className="p-4 hover:bg-gray-50 cursor-pointer"
+                      onClick={() => setExpandedConsultationId(expandedConsultationId === c.id ? null : c.id)}
+                    >
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="px-2 py-0.5 bg-lilac/10 text-lilac text-xs font-semibold rounded-full">{gaString(c.gestationalAgeDays ?? c.gestational_age_days ?? 0)}</span>
+                        <span className="text-gray-700">{new Date((c.date ?? '') + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                      </div>
+                      {(c.subjective || c.assessment) && <p className="text-xs text-gray-500 mt-2 line-clamp-2">{c.subjective ?? c.assessment}</p>}
+                      <div className="flex gap-4 mt-2 text-xs text-gray-500 flex-wrap">
+                        {(c.weightKg ?? c.weight_kg) && <span>Peso: {c.weightKg ?? c.weight_kg}kg</span>}
+                        {(c.bpSystolic ?? c.bp_systolic) && <span>PA: {c.bpSystolic ?? c.bp_systolic}/{c.bpDiastolic ?? c.bp_diastolic}</span>}
+                        {(c.fetalHeartRate ?? c.fetal_heart_rate) && <span>BCF: {c.fetalHeartRate ?? c.fetal_heart_rate}</span>}
+                      </div>
                     </div>
-                    {(c.subjective || c.assessment) && <p className="text-xs text-gray-500 mt-2 line-clamp-2">{c.subjective ?? c.assessment}</p>}
-                    <div className="flex gap-4 mt-2 text-xs text-gray-500 flex-wrap">
-                      {(c.weightKg ?? c.weight_kg) && <span>Peso: {c.weightKg ?? c.weight_kg}kg</span>}
-                      {(c.bpSystolic ?? c.bp_systolic) && <span>PA: {c.bpSystolic ?? c.bp_systolic}/{c.bpDiastolic ?? c.bp_diastolic}</span>}
-                      {(c.fetalHeartRate ?? c.fetal_heart_rate) && <span>BCF: {c.fetalHeartRate ?? c.fetal_heart_rate}</span>}
-                    </div>
+                    {expandedConsultationId === c.id && (
+                      <div className="px-4 pb-4">
+                        <ConsultationSummaryPanel consultationId={c.id} />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

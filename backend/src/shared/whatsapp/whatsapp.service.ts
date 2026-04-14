@@ -37,6 +37,32 @@ export class WhatsAppService {
     });
   }
 
+  async sendConsultationSummary(phone: string, patientName: string, summaryText: string): Promise<void> {
+    if (!this.enabled) {
+      this.logger.log(`[DEV] Resumo para ${phone} (${patientName}):\n${summaryText.slice(0, 200)}...`);
+      return;
+    }
+
+    const url = `${this.config.get('WHATSAPP_API_URL')}/messages`;
+    const firstName = patientName.split(' ')[0];
+    const header = `Ola ${firstName}! Aqui esta o resumo da sua consulta:`;
+    const fullMessage = `${header}\n\n${summaryText}`;
+
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.config.get('WHATSAPP_ACCESS_TOKEN')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to: phone,
+        type: 'text',
+        text: { body: fullMessage },
+      }),
+    });
+  }
+
   async sendWelcome(phone: string, patientName: string, doctorName: string): Promise<void> {
     if (!this.enabled) {
       this.logger.log(`[DEV] Welcome para ${phone}: ${patientName} via ${doctorName}`);

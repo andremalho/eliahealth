@@ -19,6 +19,7 @@ import TimelineSection from './sections/TimelineSection';
 import PostpartumSection from './sections/PostpartumSection';
 import EditPatientDataModal from './sections/EditPatientDataModal';
 import ConsultationSummaryPanel from './sections/ConsultationSummaryPanel';
+import CopilotSidePanel from './sections/CopilotSidePanel';
 import {
   VaccinesCard, VaginalSwabsCard, BiologicalFatherCard,
   UltrasoundsCard, LabResultsCard, PrescriptionsCard, FilesCard,
@@ -519,11 +520,18 @@ export default function PregnancyPage() {
 
       {pregnancyId && <CopilotPanel pregnancyId={pregnancyId} />}
       {consultationModal && pregnancyId && (
-        <NewConsultationModal
-          pregnancyId={pregnancyId}
-          initial={editingConsultation}
-          onClose={() => { setConsultationModal(false); setEditingConsultation(null); }}
-        />
+        <>
+          <NewConsultationModal
+            pregnancyId={pregnancyId}
+            initial={editingConsultation}
+            onClose={() => { setConsultationModal(false); setEditingConsultation(null); }}
+          />
+          {editingConsultation?.id && pregnancy?.patientId && (
+            <div className="fixed right-0 top-0 h-full z-30 hidden xl:block">
+              <CopilotSidePanel consultationId={editingConsultation.id} patientId={pregnancy.patientId} />
+            </div>
+          )}
+        </>
       )}
       {shareModalOpen && pregnancyId && (
         <ShareModal

@@ -74,6 +74,7 @@ import { ContentModule } from './content/content.module.js';
 import { MailModule } from './mail/mail.module.js';
 import { ConsultationSummaryModule } from './consultation-summary/consultation-summary.module.js';
 import { ClinicalCopilotModule } from './clinical-copilot/clinical-copilot.module.js';
+import { PatientChatModule } from './patient-chat/patient-chat.module.js';
 
 @Module({
   imports: [
@@ -163,6 +164,7 @@ import { ClinicalCopilotModule } from './clinical-copilot/clinical-copilot.modul
     MenopauseAssessmentsModule,
     ConsultationSummaryModule,
     ClinicalCopilotModule,
+    PatientChatModule,
   ],
   controllers: [AppController],
   providers: [

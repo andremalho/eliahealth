@@ -14,6 +14,7 @@ import { toTitleCase } from '../../utils/formatters';
 import NewPatientModal from './NewPatientModal';
 import NewPatientChooserModal from './NewPatientChooserModal';
 import NewPatientBaseModal from './NewPatientBaseModal';
+import LongitudinalAlertsSection from './LongitudinalAlertsSection';
 
 type SpecialtyKey = 'obstetrics' | 'gynecology' | 'clinical' | 'ultrasound';
 
@@ -136,6 +137,11 @@ export default function DashboardPage() {
         >
           <Plus className="w-4 h-4" /> Paciente
         </button>
+      </div>
+
+      {/* Longitudinal Alerts */}
+      <div className="mb-6">
+        <LongitudinalAlertsSection />
       </div>
 
       {/* Summary Cards */}

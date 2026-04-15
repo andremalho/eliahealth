@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   CheckCircle2, AlertTriangle, XCircle, Loader2, ChevronDown, ChevronUp,
@@ -57,11 +57,11 @@ export default function CopilotCheckModal({ consultationId, onClose, onReviewCom
   const [resolvingItem, setResolvingItem] = useState<string | null>(null);
 
   // Generate check on mount
-  useState(() => {
+  useEffect(() => {
     generatePostConsultationCheck(consultationId)
       .then((result) => { setCheck(result); setLoading(false); })
       .catch((err) => { setError(err.message); setLoading(false); });
-  });
+  }, [consultationId]);
 
   const resolveMut = useMutation({
     mutationFn: (params: { itemId: string; resolution: string; note?: string }) =>

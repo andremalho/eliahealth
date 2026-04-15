@@ -301,14 +301,14 @@ export default function PortalHomePage() {
         {ppList.length > 0 && (
           <Section title="Consultas pos-parto" icon={Baby} count={ppList.length}>
             <div className="space-y-3">
-              {ppList.map((c: any, i: number) => {
+              {ppList.map((c: any) => {
                 const days = c.days_postpartum ?? 0;
                 const bp = c.bp_systolic ? `${c.bp_systolic}/${c.bp_diastolic}` : null;
                 const bfLabels: Record<string, string> = { exclusive: 'Exclusivo', predominant: 'Predominante', complemented: 'Complementado', not_breastfeeding: 'Nao amamenta' };
                 const moodLabels: Record<string, string> = { normal: 'Normal', mild: 'Leve', moderate: 'Moderado', severe: 'Grave' };
                 const alerts = c.alerts ?? [];
                 return (
-                  <div key={i} className="border-b border-gray-100 pb-3 last:border-0">
+                  <div key={c.id ?? c.date} className="border-b border-gray-100 pb-3 last:border-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="px-2 py-0.5 bg-lilac/10 text-lilac text-[10px] font-semibold rounded-full">{days}d pos-parto</span>
                       <span className="text-xs text-gray-500">{fmtDate(c.date)}</span>

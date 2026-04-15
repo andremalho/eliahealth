@@ -45,6 +45,23 @@ export class User {
   @Column({ name: 'refresh_token_hash', type: 'varchar', nullable: true })
   refreshTokenHash: string | null;
 
+  // ── Certificacao digital ──
+
+  @Column({ name: 'certificate_thumbprint', type: 'varchar', length: 64, nullable: true })
+  certificateThumbprint: string | null;
+
+  @Column({ name: 'certificate_subject', type: 'varchar', length: 500, nullable: true })
+  certificateSubject: string | null;
+
+  @Column({ name: 'certificate_issuer', type: 'varchar', length: 500, nullable: true })
+  certificateIssuer: string | null;
+
+  @Column({ name: 'certificate_expires_at', type: 'timestamptz', nullable: true })
+  certificateExpiresAt: Date | null;
+
+  @Column({ name: 'certificate_registered_at', type: 'timestamptz', nullable: true })
+  certificateRegisteredAt: Date | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

@@ -3,11 +3,7 @@ import {
   Post,
   Get,
   Body,
-  Req,
-  Res,
-  UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service.js';
 import { PhoneVerificationService } from '../shared/whatsapp/phone-verification.service.js';
 import { RegisterDto } from './dto/register.dto.js';
@@ -16,7 +12,6 @@ import { PatientLoginDto } from './dto/patient-login.dto.js';
 import { RefreshTokenDto } from './dto/refresh-token.dto.js';
 import { Public } from './decorators/public.decorator.js';
 import { CurrentUser } from './decorators/current-user.decorator.js';
-import { RolesGuard } from './guards/roles.guard.js';
 
 @Controller('auth')
 export class AuthController {
@@ -84,17 +79,32 @@ export class AuthController {
     return this.authService.listDoctors(tenantId);
   }
 
-  // ── Google OAuth ──
+  // ── Certificacao Digital ──
 
   @Public()
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  googleAuth() {}
+  @Post('certificate-login')
+  certificateLogin(
+    @Body() body: {
+      thumbprint: string;
+      subject: string;
+      issuer: string;
+      notAfter: string;
+      email: string;
+    },
+  ) {
+    return this.authService.loginByCertificate(body);
+  }
 
-  @Public()
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  googleCallback(@Req() req: any) {
-    return this.authService.loginByGoogle(req.user);
+  @Post('register-certificate')
+  registerCertificate(
+    @CurrentUser('userId') userId: string,
+    @Body() body: {
+      thumbprint: string;
+      subject: string;
+      issuer: string;
+      notAfter: string;
+    },
+  ) {
+    return this.authService.registerCertificate(userId, body);
   }
 }

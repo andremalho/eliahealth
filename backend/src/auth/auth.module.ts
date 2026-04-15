@@ -9,7 +9,6 @@ import { PasswordHistory } from './password-history.entity.js';
 import { AuthService } from './auth.service.js';
 import { AuthController } from './auth.controller.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
-import { GoogleStrategy } from './strategies/google.strategy.js';
 import { PhoneVerificationService } from '../shared/whatsapp/phone-verification.service.js';
 import { PatientsModule } from '../patients/patients.module.js';
 import { OnboardingModule } from '../onboarding/onboarding.module.js';
@@ -30,7 +29,7 @@ import { OnboardingModule } from '../onboarding/onboarding.module.js';
     OnboardingModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, GoogleStrategy, PhoneVerificationService],
+  providers: [AuthService, JwtStrategy, PhoneVerificationService],
   exports: [AuthService, JwtStrategy],
 })
 export class AuthModule {}

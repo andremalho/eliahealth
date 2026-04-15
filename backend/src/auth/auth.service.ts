@@ -199,37 +199,57 @@ export class AuthService {
     return { accessToken, role: UserRole.PATIENT, patientId: patient.id };
   }
 
-  // ── Login by Google OAuth ──
+  // ── Login por Certificado Digital ──
 
-  async loginByGoogle(profile: { email: string; name: string }) {
-    let user = await this.userRepo.findOneBy({ email: profile.email });
+  async loginByCertificate(cert: {
+    thumbprint: string;
+    subject: string;
+    issuer: string;
+    notAfter: string;
+    email: string;
+  }) {
+    const expiresAt = new Date(cert.notAfter);
+    if (expiresAt < new Date()) {
+      throw new UnauthorizedException('Certificado digital expirado');
+    }
+
+    let user = await this.userRepo.findOneBy({ certificateThumbprint: cert.thumbprint });
     if (!user) {
-      // Auto-create patient user
-      const hash = await bcrypt.hash(Math.random().toString(36), SALT_ROUNDS);
-      user = this.userRepo.create({
-        name: profile.name,
-        email: profile.email,
-        password: hash,
-        role: UserRole.PATIENT,
-      });
-      user = await this.userRepo.save(user);
+      user = await this.userRepo.findOneBy({ email: cert.email });
     }
 
-    if (user.role === UserRole.PATIENT) {
-      const [patient] = await this.userRepo.query(
-        `SELECT id FROM patients WHERE email = $1 LIMIT 1`,
-        [profile.email],
-      );
-      const payload = {
-        sub: patient?.id ?? user.id,
-        email: user.email,
-        role: UserRole.PATIENT,
-        patientId: patient?.id ?? user.id,
-      };
-      return { accessToken: this.jwtService.sign(payload, { expiresIn: 30 * 24 * 60 * 60 }), role: UserRole.PATIENT };
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Usuario nao encontrado para este certificado');
     }
 
-    return this.generateTokens(user, 'google-oauth', null);
+    // Vincular certificado automaticamente se nao vinculado
+    if (!user.certificateThumbprint) {
+      user.certificateThumbprint = cert.thumbprint;
+      user.certificateSubject = cert.subject;
+      user.certificateIssuer = cert.issuer;
+      user.certificateExpiresAt = expiresAt;
+      user.certificateRegisteredAt = new Date();
+      await this.userRepo.save(user);
+    }
+
+    return this.generateTokens(user, 'certificate', null);
+  }
+
+  async registerCertificate(
+    userId: string,
+    cert: { thumbprint: string; subject: string; issuer: string; notAfter: string },
+  ) {
+    const user = await this.userRepo.findOneBy({ id: userId });
+    if (!user) throw new UnauthorizedException('Usuario nao encontrado');
+
+    user.certificateThumbprint = cert.thumbprint;
+    user.certificateSubject = cert.subject;
+    user.certificateIssuer = cert.issuer;
+    user.certificateExpiresAt = new Date(cert.notAfter);
+    user.certificateRegisteredAt = new Date();
+    await this.userRepo.save(user);
+
+    return { message: 'Certificado digital registrado com sucesso' };
   }
 
   // ── Doctors list ──

@@ -41,6 +41,13 @@ export class TenantConfig {
   @Column({ name: 'mod_tiss_billing', default: false }) modTissBilling: boolean;
   @Column({ name: 'mod_fhir_rnds', default: false }) modFhirRnds: boolean;
 
+  // ── Certificacao digital ──
+  @Column({ name: 'certificate_validity_days', type: 'int', default: 365 })
+  certificateValidityDays: number;
+
+  @Column({ name: 'certificate_required', type: 'boolean', default: false })
+  certificateRequired: boolean;
+
   @CreateDateColumn({ name: 'created_at' }) createdAt: Date;
   @UpdateDateColumn({ name: 'updated_at' }) updatedAt: Date;
 

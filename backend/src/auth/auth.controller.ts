@@ -79,7 +79,7 @@ export class AuthController {
     return this.authService.listDoctors(tenantId);
   }
 
-  // ── Certificacao Digital ──
+  // ── Certificacao Digital (PKI + Token) ──
 
   @Public()
   @Post('certificate-login')
@@ -90,9 +90,22 @@ export class AuthController {
       issuer: string;
       notAfter: string;
       email: string;
+      provider: string;
     },
   ) {
     return this.authService.loginByCertificate(body);
+  }
+
+  @Public()
+  @Post('token-login')
+  tokenLogin(
+    @Body() body: {
+      token: string;
+      provider: string;
+      email: string;
+    },
+  ) {
+    return this.authService.loginByToken(body);
   }
 
   @Post('register-certificate')
@@ -103,6 +116,7 @@ export class AuthController {
       subject: string;
       issuer: string;
       notAfter: string;
+      provider?: string;
     },
   ) {
     return this.authService.registerCertificate(userId, body);

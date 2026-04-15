@@ -48,6 +48,9 @@ export class TenantConfig {
   @Column({ name: 'certificate_required', type: 'boolean', default: false })
   certificateRequired: boolean;
 
+  @Column({ name: 'certificate_providers', type: 'jsonb', default: ['icp_brasil', 'bird_id', 'certisign', 'valid'] })
+  certificateProviders: string[];
+
   @CreateDateColumn({ name: 'created_at' }) createdAt: Date;
   @UpdateDateColumn({ name: 'updated_at' }) updatedAt: Date;
 

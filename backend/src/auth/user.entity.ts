@@ -5,7 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { UserRole } from './auth.enums.js';
+import { UserRole, CertificateProvider } from './auth.enums.js';
 
 @Entity('users')
 export class User {
@@ -61,6 +61,21 @@ export class User {
 
   @Column({ name: 'certificate_registered_at', type: 'timestamptz', nullable: true })
   certificateRegisteredAt: Date | null;
+
+  @Column({
+    name: 'certificate_provider',
+    type: 'enum',
+    enum: CertificateProvider,
+    enumName: 'certificate_provider_enum',
+    nullable: true,
+  })
+  certificateProvider: CertificateProvider | null;
+
+  @Column({ name: 'certificate_token', type: 'varchar', length: 500, nullable: true })
+  certificateToken: string | null;
+
+  @Column({ name: 'certificate_token_expires_at', type: 'timestamptz', nullable: true })
+  certificateTokenExpiresAt: Date | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

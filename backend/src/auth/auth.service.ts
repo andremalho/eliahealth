@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './user.entity.js';
-import { UserRole } from './auth.enums.js';
+import { UserRole, CertificateProvider } from './auth.enums.js';
 import { RefreshToken } from './refresh-token.entity.js';
 import { PasswordHistory } from './password-history.entity.js';
 import { PatientsService } from '../patients/patients.service.js';
@@ -199,7 +199,7 @@ export class AuthService {
     return { accessToken, role: UserRole.PATIENT, patientId: patient.id };
   }
 
-  // ── Login por Certificado Digital ──
+  // ── Login por Certificado Digital (PKI) ──
 
   async loginByCertificate(cert: {
     thumbprint: string;
@@ -207,11 +207,16 @@ export class AuthService {
     issuer: string;
     notAfter: string;
     email: string;
+    provider: string;
   }) {
     const expiresAt = new Date(cert.notAfter);
     if (expiresAt < new Date()) {
       throw new UnauthorizedException('Certificado digital expirado');
     }
+
+    const provider = (Object.values(CertificateProvider) as string[]).includes(cert.provider)
+      ? (cert.provider as CertificateProvider)
+      : CertificateProvider.OTHER;
 
     let user = await this.userRepo.findOneBy({ certificateThumbprint: cert.thumbprint });
     if (!user) {
@@ -229,27 +234,60 @@ export class AuthService {
       user.certificateIssuer = cert.issuer;
       user.certificateExpiresAt = expiresAt;
       user.certificateRegisteredAt = new Date();
+      user.certificateProvider = provider;
       await this.userRepo.save(user);
     }
 
-    return this.generateTokens(user, 'certificate', null);
+    return this.generateTokens(user, `certificate:${provider}`, null);
   }
+
+  // ── Login por Token Temporario (Bird ID, VIDaaS, SafeID) ──
+
+  async loginByToken(data: {
+    token: string;
+    provider: string;
+    email: string;
+  }) {
+    const provider = (Object.values(CertificateProvider) as string[]).includes(data.provider)
+      ? (data.provider as CertificateProvider)
+      : CertificateProvider.OTHER;
+
+    const user = await this.userRepo.findOneBy({ email: data.email });
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Usuario nao encontrado');
+    }
+
+    // Salvar token temporario no usuario
+    user.certificateToken = data.token;
+    user.certificateTokenExpiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8h
+    user.certificateProvider = provider;
+    await this.userRepo.save(user);
+
+    return this.generateTokens(user, `token:${provider}`, null);
+  }
+
+  // ── Registrar PKI (vincular certificado ao usuario logado) ──
 
   async registerCertificate(
     userId: string,
-    cert: { thumbprint: string; subject: string; issuer: string; notAfter: string },
+    cert: { thumbprint: string; subject: string; issuer: string; notAfter: string; provider?: string },
   ) {
     const user = await this.userRepo.findOneBy({ id: userId });
     if (!user) throw new UnauthorizedException('Usuario nao encontrado');
+
+    const provider = cert.provider && (Object.values(CertificateProvider) as string[]).includes(cert.provider)
+      ? (cert.provider as CertificateProvider)
+      : CertificateProvider.ICP_BRASIL;
 
     user.certificateThumbprint = cert.thumbprint;
     user.certificateSubject = cert.subject;
     user.certificateIssuer = cert.issuer;
     user.certificateExpiresAt = new Date(cert.notAfter);
     user.certificateRegisteredAt = new Date();
+    user.certificateProvider = provider;
     await this.userRepo.save(user);
 
-    return { message: 'Certificado digital registrado com sucesso' };
+    return { message: 'Certificado digital registrado com sucesso', provider };
   }
 
   // ── Doctors list ──

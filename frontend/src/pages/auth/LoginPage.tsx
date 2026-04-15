@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, Lock, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2, ShieldCheck, KeyRound, X } from 'lucide-react';
 import api from '../../api/client';
 import { useAuthStore } from '../../store/auth.store';
 import { cn } from '../../utils/cn';
@@ -25,6 +25,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [certLoading, setCertLoading] = useState(false);
+  const [showTokenLogin, setShowTokenLogin] = useState(false);
 
   const {
     register,
@@ -187,9 +188,38 @@ export default function LoginPage() {
             )}
             {certLoading ? 'Lendo certificado...' : 'Entrar com Certificado Digital'}
           </button>
+
+          {/* Token temporario (Bird ID, VIDaaS, SafeID) */}
+          <button
+            onClick={() => setShowTokenLogin(true)}
+            className="w-full mt-2 py-2.5 border border-gray-200 rounded-lg text-gray-600 text-sm hover:bg-gray-50 transition flex items-center justify-center gap-2"
+          >
+            <KeyRound className="w-4 h-4 text-gray-400" />
+            Entrar com Token (Bird ID, VIDaaS, SafeID)
+          </button>
+
           <p className="text-center text-[11px] text-gray-400 mt-2">
-            ICP-Brasil (e-CPF / e-CNPJ)
+            ICP-Brasil, Bird ID, Certisign, Valid, SafeID, VIDaaS
           </p>
+
+          {/* Modal token login */}
+          {showTokenLogin && (
+            <TokenLoginModal
+              onClose={() => setShowTokenLogin(false)}
+              onLogin={async (provider, token, email) => {
+                setError(null);
+                try {
+                  const res = await api.post('/auth/token-login', { token, provider, email });
+                  const { accessToken, userId, role, name } = res.data;
+                  login(accessToken, { userId, email, role, name });
+                  navigate('/dashboard');
+                } catch (err: any) {
+                  setError(err.response?.data?.message ?? 'Erro ao autenticar com token');
+                  setShowTokenLogin(false);
+                }
+              }}
+            />
+          )}
 
           <p className="text-center text-sm text-gray-500 mt-8">
             Nao tem conta?{' '}
@@ -219,8 +249,9 @@ async function requestDigitalCertificate(): Promise<{
   issuer: string;
   notAfter: string;
   email: string;
+  provider: string;
 } | null> {
-  // Web PKI (Lacuna Software) — plugin para certificados ICP-Brasil
+  // Web PKI (Lacuna Software) — certificados ICP-Brasil, Bird ID, Certisign, Valid
   if (typeof (window as any).LacunaWebPKI !== 'undefined') {
     return new Promise((resolve) => {
       const pki = new (window as any).LacunaWebPKI();
@@ -230,12 +261,21 @@ async function requestDigitalCertificate(): Promise<{
             if (certs.length === 0) { resolve(null); return; }
             const cert = certs[0];
             pki.readCertificate(cert.thumbprint).success((certData: any) => {
+              const issuer = (certData.issuerName ?? '').toLowerCase();
+              let provider = 'icp_brasil';
+              if (issuer.includes('bird')) provider = 'bird_id';
+              else if (issuer.includes('certisign')) provider = 'certisign';
+              else if (issuer.includes('valid')) provider = 'valid';
+              else if (issuer.includes('safeid')) provider = 'safeid';
+              else if (issuer.includes('vidaas')) provider = 'vidaas';
+
               resolve({
                 thumbprint: certData.thumbprint,
                 subject: certData.subjectName,
                 issuer: certData.issuerName,
                 notAfter: certData.validityEnd,
                 email: certData.email ?? certData.subjectName,
+                provider,
               });
             });
           });
@@ -245,8 +285,8 @@ async function requestDigitalCertificate(): Promise<{
     });
   }
 
-  // Fallback dev: prompt manual
-  const email = window.prompt('Certificado Digital — informe o e-mail vinculado ao certificado:');
+  // Fallback dev
+  const email = window.prompt('Certificado Digital — informe o e-mail vinculado:');
   if (!email) return null;
 
   return {
@@ -255,5 +295,90 @@ async function requestDigitalCertificate(): Promise<{
     issuer: 'DEV ICP-Brasil',
     notAfter: new Date(Date.now() + 365 * 86400000).toISOString(),
     email,
+    provider: 'icp_brasil',
   };
+}
+
+const TOKEN_PROVIDERS = [
+  { value: 'bird_id', label: 'Bird ID' },
+  { value: 'vidaas', label: 'VIDaaS' },
+  { value: 'safeid', label: 'SafeID' },
+  { value: 'certisign', label: 'Certisign' },
+  { value: 'valid', label: 'Valid' },
+];
+
+function TokenLoginModal({
+  onClose,
+  onLogin,
+}: {
+  onClose: () => void;
+  onLogin: (provider: string, token: string, email: string) => void;
+}) {
+  const [provider, setProvider] = useState('bird_id');
+  const [token, setToken] = useState('');
+  const [email, setEmail] = useState('');
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-sm p-6 relative">
+        <button onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="flex items-center gap-2 mb-4">
+          <KeyRound className="w-5 h-5 text-lilac" />
+          <h3 className="font-semibold text-navy">Login por Token</h3>
+        </div>
+
+        <p className="text-xs text-gray-500 mb-4">
+          Use o token temporario gerado pelo seu provedor de certificado digital.
+        </p>
+
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Provedor</label>
+            <select
+              value={provider}
+              onChange={(e) => setProvider(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            >
+              {TOKEN_PROVIDERS.map((p) => (
+                <option key={p.value} value={p.value}>{p.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">E-mail</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="seu@email.com"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Token</label>
+            <input
+              type="text"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              placeholder="Cole o token aqui..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
+
+          <button
+            onClick={() => { if (token && email) onLogin(provider, token, email); }}
+            disabled={!token || !email}
+            className="w-full py-2.5 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition disabled:opacity-50"
+          >
+            Autenticar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }

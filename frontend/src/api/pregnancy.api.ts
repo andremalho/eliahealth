@@ -1,6 +1,6 @@
 import api from './client';
 
-// ── Uploads — extracao por IA, arquivo descartado ──
+// ── Uploads — extração por IA, arquivo descartado ──
 export const extractFromFile = async (
   file: File,
   type: 'lab_result' | 'ultrasound',

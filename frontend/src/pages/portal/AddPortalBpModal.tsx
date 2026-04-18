@@ -32,8 +32,8 @@ export default function AddPortalBpModal({ onClose }: { onClose: () => void }) {
       }),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['portal-bp'] });
-      toast.success('Pressao arterial registrada', {
-        description: data?.isAltered ? 'Valor alterado — informe sua equipe medica' : undefined,
+      toast.success('Pressão arterial registrada', {
+        description: data?.isAltered ? 'Valor alterado — informe sua equipe médica' : undefined,
       });
       onClose();
     },

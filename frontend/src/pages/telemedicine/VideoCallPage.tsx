@@ -155,11 +155,11 @@ export default function VideoCallPage() {
         {/* Notes panel */}
         {showNotes && joined && (
           <div className="absolute right-4 top-4 w-80 bg-gray-800/95 backdrop-blur rounded-xl shadow-2xl p-4">
-            <p className="text-xs font-medium text-gray-400 mb-2">Anotacoes da consulta</p>
+            <p className="text-xs font-medium text-gray-400 mb-2">Anotações da consulta</p>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Registrar observacoes durante a consulta..."
+              placeholder="Registrar observações durante a consulta..."
               className="w-full h-40 bg-gray-700 text-white text-sm rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-lilac/30"
             />
           </div>

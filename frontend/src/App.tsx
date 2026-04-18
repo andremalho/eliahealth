@@ -108,7 +108,7 @@ export default function App() {
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
               <div className="text-center">
                 <p className="text-6xl font-bold text-lilac/30 mb-4">404</p>
-                <p className="text-lg text-gray-600 mb-2">Pagina nao encontrada</p>
+                <p className="text-lg text-gray-600 mb-2">Pagina não encontrada</p>
                 <a href="/" className="text-sm text-lilac hover:underline">Voltar ao inicio</a>
               </div>
             </div>

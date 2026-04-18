@@ -9,7 +9,7 @@ export class DoctorOnboardingController {
   @Get('progress/:flowName')
   getProgress(
     @Param('flowName') flowName: string,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('userId') userId: string,
   ) {
     return this.service.getProgress(userId, flowName);
   }
@@ -17,7 +17,7 @@ export class DoctorOnboardingController {
   @Patch('progress/:flowName')
   updateProgress(
     @Param('flowName') flowName: string,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('userId') userId: string,
     @CurrentUser('tenantId') tenantId: string,
     @Body() body: { currentStep?: number; completed?: boolean; skipped?: boolean },
   ) {
@@ -27,7 +27,7 @@ export class DoctorOnboardingController {
   @Post('restart/:flowName')
   restart(
     @Param('flowName') flowName: string,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('userId') userId: string,
     @CurrentUser('tenantId') tenantId: string,
   ) {
     return this.service.restart(userId, tenantId, flowName);

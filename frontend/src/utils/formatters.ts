@@ -37,8 +37,8 @@ export function formatDateLong(date: Date = new Date()): string {
 
   const diaSemana = dias[date.getDay()];
   const dia = date.getDate();
-  const mes = meses[date.getMonth()];
+  const mês = meses[date.getMonth()];
   const ano = date.getFullYear();
 
-  return `${diaSemana}, ${dia} de ${mes} de ${ano}`;
+  return `${diaSemana}, ${dia} de ${mês} de ${ano}`;
 }

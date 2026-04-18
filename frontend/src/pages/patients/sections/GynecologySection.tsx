@@ -395,7 +395,7 @@ function Block({ label, children }: { label: string; children: React.ReactNode }
   return (
     <div>
       <p className="text-xs font-semibold text-gray-500 uppercase mb-1">{label}</p>
-      <p className="text-sm text-gray-700 whitespace-pre-wrap">{children}</p>
+      <p className="text-sm text-gray-700 whitespace-pré-wrap">{children}</p>
     </div>
   );
 }

@@ -128,19 +128,65 @@ export default function DashboardPage() {
       {/* Onboarding */}
       <OnboardingTooltip flowName="doctor_main" />
 
-      {/* Header */}
-      <div id="dashboard-header" className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      {/* Header editorial */}
+      <div id="dashboard-header" className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
         <div>
-          <h1 className="text-2xl font-semibold text-navy">
-            {greeting()}, Dr. {userName}
+          <div
+            style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 10,
+              letterSpacing: '0.3em',
+              textTransform: 'uppercase',
+              color: 'rgba(20,22,31,0.55)',
+              marginBottom: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+            }}
+          >
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#D97757' }} aria-hidden />
+            {today}
+          </div>
+          <h1
+            style={{
+              fontFamily: "'Fraunces', serif",
+              fontSize: 'clamp(1.8rem, 3.5vw, 2.4rem)',
+              fontWeight: 400,
+              letterSpacing: '-0.025em',
+              color: '#14161F',
+              margin: 0,
+              lineHeight: 1.08,
+            }}
+          >
+            {greeting()},{' '}
+            <span style={{ fontStyle: 'italic', color: '#B85A3D' }}>Dr. {userName}</span>
+            <span aria-hidden style={{ color: '#D97757' }}>.</span>
           </h1>
-          <p className="text-sm text-gray-500">{today}</p>
         </div>
         <button
           onClick={() => setChooserOpen(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-lilac text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '14px 22px',
+            background: '#14161F',
+            color: '#F5EFE6',
+            border: 'none',
+            borderRadius: 2,
+            fontSize: 12,
+            fontWeight: 600,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            fontFamily: "'Figtree', sans-serif",
+            transition: 'background 0.3s',
+            alignSelf: 'flex-start',
+          }}
+          onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.background = '#D97757'}
+          onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.background = '#14161F'}
         >
-          <Plus className="w-4 h-4" /> Paciente
+          <Plus className="w-4 h-4" /> Novo paciente
         </button>
       </div>
 

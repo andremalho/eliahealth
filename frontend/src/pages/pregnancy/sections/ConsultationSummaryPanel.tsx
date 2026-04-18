@@ -147,7 +147,7 @@ export default function ConsultationSummaryPanel({ consultationId }: Props) {
                       loading={approveMut.isPending}
                       onClick={() => approveMut.mutate({ id: summary.id, text: editText })}
                     >
-                      <Check className="w-4 h-4 mr-1" /> Aprovar com edicoes
+                      <Check className="w-4 h-4 mr-1" /> Aprovar com edições
                     </Button>
                   </>
                 ) : (

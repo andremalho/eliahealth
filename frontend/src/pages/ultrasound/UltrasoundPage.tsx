@@ -197,7 +197,7 @@ export default function UltrasoundPage() {
             <div className="flex items-center justify-center gap-2 p-4 border-t">
               <button disabled={listPage <= 1} onClick={() => setListPage(listPage - 1)} className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Anterior</button>
               <span className="text-xs text-gray-500">Pagina {listPage} de {patientList?.totalPages}</span>
-              <button disabled={listPage >= (patientList?.totalPages ?? 1)} onClick={() => setListPage(listPage + 1)} className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Proxima</button>
+              <button disabled={listPage >= (patientList?.totalPages ?? 1)} onClick={() => setListPage(listPage + 1)} className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Próxima</button>
             </div>
           )}
         </div>
@@ -292,7 +292,7 @@ export default function UltrasoundPage() {
                           <div className="border-t px-4 py-3 space-y-3">
                             {r.conclusion && (
                               <div>
-                                <p className="text-[10px] text-gray-500 uppercase font-semibold mb-1">Conclusao</p>
+                                <p className="text-[10px] text-gray-500 uppercase font-semibold mb-1">Conclusão</p>
                                 <p className="text-xs text-gray-700">{r.conclusion}</p>
                               </div>
                             )}

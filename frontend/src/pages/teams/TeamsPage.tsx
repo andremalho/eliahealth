@@ -29,7 +29,7 @@ async function removeMember(id: string) {
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  physician: 'Medico(a)',
+  physician: 'Médico(a)',
   nurse: 'Enfermeiro(a)',
   admin: 'Administrador(a)',
   receptionist: 'Recepcionista',
@@ -108,7 +108,7 @@ export default function TeamsPage() {
               onChange={(e) => setRole(e.target.value)}
               className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lilac/30 focus:border-lilac"
             >
-              <option value="physician">Medico(a)</option>
+              <option value="physician">Médico(a)</option>
               <option value="nurse">Enfermeiro(a)</option>
               <option value="admin">Administrador(a)</option>
               <option value="receptionist">Recepcionista</option>

@@ -49,7 +49,7 @@ export default function PortalAppointmentsPage({ onClose }: { onClose: () => voi
       toast.success('Consulta agendada com sucesso!');
       setStep('list');
     },
-    onError: () => toast.error('Horario nao disponivel'),
+    onError: () => toast.error('Horario não disponivel'),
   });
 
   const cancelMut = useMutation({
@@ -70,7 +70,7 @@ export default function PortalAppointmentsPage({ onClose }: { onClose: () => voi
       <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-xl w-full sm:max-w-md mx-auto max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h2 className="text-lg font-semibold text-navy">
-            {step === 'list' ? 'Meus Agendamentos' : step === 'doctor' ? 'Escolher Medico' : step === 'date' ? 'Escolher Data' : 'Horarios Disponiveis'}
+            {step === 'list' ? 'Meus Agendamentos' : step === 'doctor' ? 'Escolher Médico' : step === 'date' ? 'Escolher Data' : 'Horarios Disponiveis'}
           </h2>
           <button onClick={onClose} className="text-gray-400"><X className="w-5 h-5" /></button>
         </div>
@@ -130,7 +130,7 @@ export default function PortalAppointmentsPage({ onClose }: { onClose: () => voi
           {step === 'slot' && (
             <>
               <button onClick={() => setStep('doctor')} className="text-xs text-gray-400 mb-3 flex items-center gap-1">
-                <ChevronLeft className="w-3 h-3" /> Trocar medico
+                <ChevronLeft className="w-3 h-3" /> Trocar médico
               </button>
               <p className="text-sm text-gray-600 mb-3">Dr(a) {selectedDoctor?.name}</p>
 

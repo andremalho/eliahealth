@@ -8,15 +8,15 @@ import {
   fetchLongitudinalAlerts,
   markAlertAsRead,
   respondToAlert,
-  LongitudinalAlert,
+  type LongitudinalAlert,
 } from '../../api/longitudinal-alerts.api';
 import { cn } from '../../utils/cn';
 
 const TYPE_CONFIG: Record<string, { icon: any; label: string; color: string }> = {
   missed_followup: { icon: Calendar, label: 'Retorno perdido', color: 'text-amber-600' },
   pending_exam: { icon: FileSearch, label: 'Exame pendente', color: 'text-blue-600' },
-  copilot_trend: { icon: TrendingDown, label: 'Tendencia copiloto', color: 'text-violet-600' },
-  pattern_detected: { icon: AlertTriangle, label: 'Padrao detectado', color: 'text-red-600' },
+  copilot_trend: { icon: TrendingDown, label: 'Tendência copiloto', color: 'text-violet-600' },
+  pattern_detected: { icon: AlertTriangle, label: 'Padrão detectado', color: 'text-red-600' },
 };
 
 export default function LongitudinalAlertsSection() {
@@ -54,7 +54,7 @@ export default function LongitudinalAlertsSection() {
           onClick={() => setShowAll(!showAll)}
           className="text-xs text-lilac hover:underline"
         >
-          {showAll ? 'Apenas nao lidos' : 'Ver todos'}
+          {showAll ? 'Apenas não lidos' : 'Ver todos'}
         </button>
       </div>
 

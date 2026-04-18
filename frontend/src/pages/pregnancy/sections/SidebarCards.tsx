@@ -480,7 +480,7 @@ export function PatientExamsReviewCard({ pregnancyId }: { pregnancyId: string })
                     </button>
                     <button
                       onClick={() => {
-                        const notes = window.prompt('Motivo da rejeicao (opcional):');
+                        const notes = window.prompt('Motivo da rejeição (opcional):');
                         review.mutate({ id: e.id, status: 'rejected', notes: notes ?? undefined });
                       }}
                       className="p-1 rounded bg-red-50 text-red-500 hover:bg-red-100"
@@ -502,7 +502,7 @@ export function PatientExamsReviewCard({ pregnancyId }: { pregnancyId: string })
           ))}
           {pending.length > 0 && (
             <p className="text-[10px] text-amber-600 font-medium">
-              {pending.length} exame{pending.length > 1 ? 's' : ''} aguardando revisao
+              {pending.length} exame{pending.length > 1 ? 's' : ''} aguardando revisão
             </p>
           )}
         </div>

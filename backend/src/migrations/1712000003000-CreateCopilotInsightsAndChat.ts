@@ -6,6 +6,11 @@ export class CreateCopilotInsightsAndChat1712000003000
   name = 'CreateCopilotInsightsAndChat1712000003000';
 
   async up(queryRunner: QueryRunner): Promise<void> {
+    // Colisão de nome: migration 1711900063000 cria chat_messages com schema legado
+    // (patient_id/doctor_id/sender_type). Este módulo precisa do schema novo
+    // (session_id/metadata) usado por patient-chat/analytics/copilot-dashboard.
+    await queryRunner.query(`DROP TABLE IF EXISTS "chat_messages" CASCADE`);
+
     // ── Fase 3: copilot_insights ──
     await queryRunner.query(
       `CREATE TYPE "copilot_insight_type_enum" AS ENUM ('anamnesis_gap', 'differential', 'drug_interaction', 'contraindication', 'contextual_alert', 'exam_suggestion', 'guideline_reminder', 'trend_alert')`,

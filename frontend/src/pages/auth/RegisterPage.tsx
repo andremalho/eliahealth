@@ -10,7 +10,7 @@ import { cn } from '../../utils/cn';
 import Logo from '../../components/Logo';
 
 const isWhiteLabel = import.meta.env.VITE_WHITE_LABEL === 'true';
-const tagline = import.meta.env.VITE_APP_TAGLINE ?? 'Prontuario exclusivo da mulher';
+const tagline = import.meta.env.VITE_APP_TAGLINE ?? 'Prontuário exclusivo da mulher';
 
 const STATES = [
   'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA',
@@ -184,7 +184,7 @@ export default function RegisterPage() {
                   <input {...register('name')} placeholder="João Silva" className={inputCn(!!errors.name)} />
                 </Field>
                 <Field label="E-mail *" icon={Mail} error={errors.email?.message}>
-                  <input {...register('email')} type="email" placeholder="joao@clinica.com" className={inputCn(!!errors.email)} />
+                  <input {...register('email')} type="email" placeholder="joao@clínica.com" className={inputCn(!!errors.email)} />
                 </Field>
                 <Field label="Telefone *" icon={Phone} error={errors.phone?.message}>
                   <input value={phoneValue} onChange={(e) => setValue('phone', phoneMask(e.target.value), { shouldValidate: true })} placeholder="(11) 99999-9999" className={inputCn(!!errors.phone)} />

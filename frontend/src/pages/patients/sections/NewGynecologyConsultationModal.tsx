@@ -238,7 +238,7 @@ export default function NewGynecologyConsultationModal({
           breastExamPerformed: !!consultation.breastExamPerformed,
           breastFindings: initialBreastFindings,
           breastFindingDescNodulo: initialBreastDescs['nodulo'] ?? '',
-          breastFindingDescRetracao: initialBreastDescs['retracao'] ?? '',
+          breastFindingDescRetracao: initialBreastDescs['retração'] ?? '',
           breastFindingDescAlteracaoPele: initialBreastDescs['alteracao_pele'] ?? '',
           breastFindingDescDescargaPapilar: initialBreastDescs['descarga_papilar'] ?? '',
           breastFindingDescOutros: initialBreastDescs['outros'] ?? '',
@@ -342,7 +342,7 @@ export default function NewGynecologyConsultationModal({
       dto.breastExamPerformed = !!data.breastExamPerformed;
       const findingDescMap: Record<string, string> = {
         nodulo: data.breastFindingDescNodulo,
-        retracao: data.breastFindingDescRetracao,
+        retração: data.breastFindingDescRetracao,
         alteracao_pele: data.breastFindingDescAlteracaoPele,
         descarga_papilar: data.breastFindingDescDescargaPapilar,
         outros: data.breastFindingDescOutros,

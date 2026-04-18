@@ -388,7 +388,7 @@ export const BREAST_FINDING_OPTIONS: { value: string; label: string }[] = [
   { value: 'ndn', label: 'NDN (Nada Digno de Nota)' },
   { value: 'dor', label: 'Dor' },
   { value: 'nodulo', label: 'Nódulo' },
-  { value: 'retracao', label: 'Retração' },
+  { value: 'retração', label: 'Retração' },
   { value: 'alteracao_pele', label: 'Alteração de pele' },
   { value: 'descarga_papilar', label: 'Descarga papilar' },
   { value: 'linfonodos', label: 'Linfonodos Axilares / Supraclaviculares' },

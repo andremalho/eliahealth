@@ -14,13 +14,13 @@ describe('Input', () => {
   });
 
   it('shows error message', () => {
-    render(<Input label="CPF" error="CPF invalido" />);
-    expect(screen.getByText('CPF invalido')).toBeInTheDocument();
+    render(<Input label="CPF" error="CPF inválido" />);
+    expect(screen.getByText('CPF inválido')).toBeInTheDocument();
   });
 
   it('shows hint text', () => {
-    render(<Input label="CEP" hint="Apenas numeros" />);
-    expect(screen.getByText('Apenas numeros')).toBeInTheDocument();
+    render(<Input label="CEP" hint="Apenas números" />);
+    expect(screen.getByText('Apenas números')).toBeInTheDocument();
   });
 
   it('sets aria-invalid on error', () => {

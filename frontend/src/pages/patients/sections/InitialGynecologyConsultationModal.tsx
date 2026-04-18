@@ -112,12 +112,12 @@ interface FormData {
   cmInfSifilis: boolean;
   // 9. Cirurgicos
   surgeries: string;
-  // 10. Medicacoes/alergias
+  // 10. Medicações/alergias
   medications: string;
   hasAllergy: boolean;
   allergyText: string;
   vaccinations: string;
-  // 11. Familia
+  // 11. Família
   fhBreastCancer: boolean;
   fhOvarianCancer: boolean;
   fhEndometrialCancer: boolean;
@@ -180,7 +180,7 @@ interface FormData {
   lastUltrasound: string;
   lastHormonalExams: string;
   lastSerology: string;
-  // 16. Diagnostico + conduta
+  // 16. Diagnóstico + conduta
   diagnosis: string;
   icd10: string;
   requestedExams: string;
@@ -260,15 +260,15 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
 
       // Comorbidities
       const comorbidities: string[] = [];
-      if (data.cmHas) comorbidities.push('Hipertensao Arterial');
+      if (data.cmHas) comorbidities.push('Hipertensão Arterial');
       if (data.cmDm) comorbidities.push(`Diabetes mellitus${data.cmDmSubtype ? ` (${data.cmDmSubtype})` : ''}`);
-      if (data.cmThyroid) comorbidities.push(`Doencas tireoidianas${data.cmThyroidSubtype ? ` (${data.cmThyroidSubtype})` : ''}`);
+      if (data.cmThyroid) comorbidities.push(`Doenças tireoidianas${data.cmThyroidSubtype ? ` (${data.cmThyroidSubtype})` : ''}`);
       if (data.cmTrombo) comorbidities.push('Trombofilias');
       if (data.cmEnxaqueca) comorbidities.push('Enxaqueca');
-      if (data.cmAutoimmune) comorbidities.push(`Doencas autoimunes: ${data.cmAutoimmuneText || ''}`);
-      if (data.cmPsych) comorbidities.push(`Doencas psiquiatricas: ${data.cmPsychText || ''}`);
-      if (data.cmRenal) comorbidities.push(`Doencas renais: ${data.cmRenalText || ''}`);
-      if (data.cmHepatic) comorbidities.push('Doencas hepaticas');
+      if (data.cmAutoimmune) comorbidities.push(`Doenças autoimunes: ${data.cmAutoimmuneText || ''}`);
+      if (data.cmPsych) comorbidities.push(`Doenças psiquiatricas: ${data.cmPsychText || ''}`);
+      if (data.cmRenal) comorbidities.push(`Doenças renais: ${data.cmRenalText || ''}`);
+      if (data.cmHepatic) comorbidities.push('Doenças hepaticas');
       if (data.cmEpilepsy) comorbidities.push('Epilepsia');
       if (data.cmObesity) comorbidities.push('Obesidade');
       if (data.cmCancer) comorbidities.push(`Cancer previo: ${data.cmCancerText || ''}`);
@@ -278,7 +278,7 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
       if (data.cmInfHepC) infParts.push('Hepatite C');
       if (data.cmInfTb) infParts.push('Tuberculose');
       if (data.cmInfSifilis) infParts.push('Sifilis');
-      if (infParts.length) comorbidities.push(`Doencas infecciosas cronicas: ${infParts.join(', ')}`);
+      if (infParts.length) comorbidities.push(`Doenças infecciosas cronicas: ${infParts.join(', ')}`);
       if (comorbidities.length) patientPayload.comorbiditiesSelected = comorbidities;
 
       if (data.hasAllergy && data.allergyText) patientPayload.allergies = data.allergyText;
@@ -309,7 +309,7 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
         cycleVolume: data.cycleVolume || undefined,
         dysmenorrhea: data.dysmenorrhea || undefined,
         // Sexual
-        sexuallyActive: data.sexuallyActive === 'sim' ? true : data.sexuallyActive === 'nao' ? false : undefined,
+        sexuallyActive: data.sexuallyActive === 'sim' ? true : data.sexuallyActive === 'não' ? false : undefined,
         numberOfSexualPartners: data.numberOfSexualPartners ? Number(data.numberOfSexualPartners) : undefined,
         historyOfSTI: data.historyOfSTI || undefined,
         historyOfSTIDetails: data.historyOfSTIDetails || undefined,
@@ -374,7 +374,7 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
         vulvarFindings: data.vulvarFindings || undefined,
         cervixAppearance: data.cervixAppearance || undefined,
         papSmearCollected: data.papSmearCollected || undefined,
-        bimanualExamNormal: data.bimanualExamNormal === 'sim' ? true : data.bimanualExamNormal === 'nao' ? false : undefined,
+        bimanualExamNormal: data.bimanualExamNormal === 'sim' ? true : data.bimanualExamNormal === 'não' ? false : undefined,
         uterineSize: data.uterineSize || undefined,
         adnexalFindings: data.adnexalFindings || undefined,
         // Screening
@@ -434,7 +434,7 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
         <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10 rounded-t-2xl">
           <div>
             <h2 className="text-lg font-semibold text-navy">Primeira consulta ginecologica</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Avaliacao inicial completa</p>
+            <p className="text-xs text-gray-400 mt-0.5">Avaliação inicial completa</p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
         </div>
@@ -473,18 +473,18 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
           {/* 2. Motivo + HDA */}
           <CollapsibleSection title="Motivo da consulta e HDA" defaultOpen>
             <Field label="Queixa principal"><input {...register('chiefComplaint')} placeholder="Em palavras da paciente" className={iCn} /></Field>
-            <Field label="Historia da doenca atual"><textarea {...register('currentIllnessHistory')} rows={3} placeholder="Inicio, duracao, evolucao, fatores de melhora/piora..." className={iCn} /></Field>
+            <Field label="História da doença atual"><textarea {...register('currentIllnessHistory')} rows={3} placeholder="Inicio, duração, evolução, fatores de melhora/piora..." className={iCn} /></Field>
           </CollapsibleSection>
 
-          {/* 3. Historia menstrual */}
-          <CollapsibleSection title="Historia menstrual">
+          {/* 3. História menstrual */}
+          <CollapsibleSection title="História menstrual">
             <div className="grid grid-cols-3 gap-3">
               <Field label="Menarca (idade)"><input {...register('menarcheAge')} type="number" min={6} max={20} className={iCn} /></Field>
               <Field label="DUM"><input {...register('lastMenstrualPeriod')} type="date" className={iCn} /></Field>
               <Field label="Intervalo (dias)"><input {...register('cycleInterval')} type="number" min={10} max={120} className={iCn} /></Field>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <Field label="Duracao (dias)"><input {...register('cycleDuration')} type="number" min={1} max={30} className={iCn} /></Field>
+              <Field label="Duração (dias)"><input {...register('cycleDuration')} type="number" min={1} max={30} className={iCn} /></Field>
               <Field label="Volume">
                 <select {...register('cycleVolume')} className={iCn}>
                   <option value="">—</option>
@@ -501,17 +501,17 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
               <Chk register={register('hasClots')} label="Coagulos" />
               <Chk register={register('hasIntermenstrualBleeding')} label="Escape intermenstrual" />
-              <Chk register={register('hasPostcoitalBleeding')} label="Sangramento pos-coital" />
-              <Chk register={register('hasPMS')} label="Sindrome pre-menstrual" />
+              <Chk register={register('hasPostcoitalBleeding')} label="Sangramento pós-coital" />
+              <Chk register={register('hasPMS')} label="Sindrome pré-menstrual" />
             </div>
           </CollapsibleSection>
 
           {/* 4. Sexual e reprodutiva */}
-          <CollapsibleSection title="Historia sexual e reprodutiva">
+          <CollapsibleSection title="História sexual e reprodutiva">
             <div className="grid grid-cols-3 gap-3">
               <Field label="Vida sexual">
                 <select {...register('sexuallyActive')} className={iCn}>
-                  <option value="">—</option><option value="sim">Ativa</option><option value="nao">Inativa</option>
+                  <option value="">—</option><option value="sim">Ativa</option><option value="não">Inativa</option>
                 </select>
               </Field>
               <Field label="N. parceiros"><input {...register('numberOfSexualPartners')} type="number" min={0} className={iCn} /></Field>
@@ -521,7 +521,7 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
                 </select>
               </Field>
             </div>
-            <Chk register={register('historyOfSTI')} label="Historia de ISTs" />
+            <Chk register={register('historyOfSTI')} label="História de ISTs" />
             {watch('historyOfSTI') && <Field label="Detalhes ISTs"><input {...register('historyOfSTIDetails')} className={iCn} /></Field>}
             <div className="grid grid-cols-3 gap-3">
               <Chk register={register('dyspareunia')} label="Dispareunia" />
@@ -532,14 +532,14 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
               </Field>
               <Field label="Desejo reprodutivo">
                 <select {...register('reproductiveDesire')} className={iCn}>
-                  <option value="">—</option><option value="sim">Quer engravidar</option><option value="nao">Evitar gravidez</option><option value="tentando">Em tentativa</option><option value="indefinido">Indefinido</option>
+                  <option value="">—</option><option value="sim">Quer engravidar</option><option value="não">Evitar gravidez</option><option value="tentando">Em tentativa</option><option value="indefinido">Indefinido</option>
                 </select>
               </Field>
             </div>
           </CollapsibleSection>
 
           {/* 5. Contraceptiva */}
-          <CollapsibleSection title="Historia contraceptiva">
+          <CollapsibleSection title="História contraceptiva">
             <Field label="Metodo atual">
               <select {...register('contraceptiveMethodKey')} className={iCn}>
                 <option value="">—</option>
@@ -549,8 +549,8 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
             {watch('contraceptiveMethodKey') && watch('contraceptiveMethodKey') !== 'none' && (
               <Field label="Marca / detalhes"><input {...register('contraceptiveBrand')} placeholder="Ex: Mirena, Yasmin..." className={iCn} /></Field>
             )}
-            <Field label="Metodos previos"><textarea {...register('previousMethods')} rows={2} placeholder="Metodos usados anteriormente e motivos de descontinuacao" className={iCn} /></Field>
-            <Field label="Satisfacao com metodo atual">
+            <Field label="Metodos previos"><textarea {...register('previousMethods')} rows={2} placeholder="Metodos usados anteriormente e motivos de descontinuação" className={iCn} /></Field>
+            <Field label="Satisfação com metodo atual">
               <select {...register('contraceptiveSatisfaction')} className={iCn}>
                 <option value="">—</option><option value="satisfeita">Satisfeita</option><option value="insatisfeita">Insatisfeita</option><option value="deseja_trocar">Deseja trocar</option>
               </select>
@@ -565,8 +565,8 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
               <Field label="A"><input {...register('abortus')} type="number" min={0} className={iCn} /></Field>
               <Field label="C"><input {...register('cesarean')} type="number" min={0} className={iCn} /></Field>
             </div>
-            <Chk register={register('ectopicPregnancy')} label="Gestacao ectopica" />
-            <Field label="Complicacoes/patologias de gestacoes anteriores"><textarea {...register('previousObstetricPathologies')} rows={2} placeholder="DMG, pre-eclampsia, prematuridade, hemorragia..." className={iCn} /></Field>
+            <Chk register={register('ectopicPregnancy')} label="Gestação ectopica" />
+            <Field label="Complicações/patologias de gestações anteriores"><textarea {...register('previousObstetricPathologies')} rows={2} placeholder="DMG, pré-eclampsia, prematuridade, hemorragia..." className={iCn} /></Field>
           </CollapsibleSection>
 
           {/* 7. Ginecologicos */}
@@ -583,7 +583,7 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
             <div className="grid grid-cols-2 gap-3">
               <Field label="Status menopausa">
                 <select {...register('menopauseStatus')} className={iCn}>
-                  <option value="">—</option><option value="pre">Pre-menopausa</option><option value="peri">Perimenopausa</option><option value="pos">Pos-menopausa</option><option value="na">N/A</option>
+                  <option value="">—</option><option value="pre">Pré-menopausa</option><option value="peri">Perimenopausa</option><option value="pos">Pós-menopausa</option><option value="na">N/A</option>
                 </select>
               </Field>
               <Field label="Terapia hormonal"><input {...register('hormoneTherapy')} placeholder="Se usa ou usou, descrever" className={iCn} /></Field>
@@ -593,30 +593,30 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
           {/* 8. Antecedentes pessoais */}
           <CollapsibleSection title="Antecedentes pessoais patologicos">
             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-              <Chk register={register('cmHas')} label="Hipertensao" />
+              <Chk register={register('cmHas')} label="Hipertensão" />
               <div>
                 <Chk register={register('cmDm')} label="Diabetes mellitus" />
                 {watch('cmDm') && <input {...register('cmDmSubtype')} placeholder="DM1, DM2, LADA, MODY" className={cn(iCn, 'ml-6 mt-1 w-[calc(100%-1.5rem)]')} />}
               </div>
               <div>
-                <Chk register={register('cmThyroid')} label="Doencas tireoidianas" />
+                <Chk register={register('cmThyroid')} label="Doenças tireoidianas" />
                 {watch('cmThyroid') && <input {...register('cmThyroidSubtype')} placeholder="Hipo, hiper, Hashimoto, Graves" className={cn(iCn, 'ml-6 mt-1 w-[calc(100%-1.5rem)]')} />}
               </div>
               <Chk register={register('cmTrombo')} label="Trombofilias" />
               <Chk register={register('cmEnxaqueca')} label="Enxaqueca" />
               <div>
-                <Chk register={register('cmAutoimmune')} label="Doencas autoimunes" />
+                <Chk register={register('cmAutoimmune')} label="Doenças autoimunes" />
                 {watch('cmAutoimmune') && <input {...register('cmAutoimmuneText')} placeholder="LES, AR, Sjogren..." className={cn(iCn, 'ml-6 mt-1 w-[calc(100%-1.5rem)]')} />}
               </div>
               <div>
-                <Chk register={register('cmPsych')} label="Doencas psiquiatricas" />
-                {watch('cmPsych') && <input {...register('cmPsychText')} placeholder="Ansiedade, depressao..." className={cn(iCn, 'ml-6 mt-1 w-[calc(100%-1.5rem)]')} />}
+                <Chk register={register('cmPsych')} label="Doenças psiquiatricas" />
+                {watch('cmPsych') && <input {...register('cmPsychText')} placeholder="Ansiedade, depressão..." className={cn(iCn, 'ml-6 mt-1 w-[calc(100%-1.5rem)]')} />}
               </div>
               <div>
-                <Chk register={register('cmRenal')} label="Doencas renais" />
+                <Chk register={register('cmRenal')} label="Doenças renais" />
                 {watch('cmRenal') && <input {...register('cmRenalText')} className={cn(iCn, 'ml-6 mt-1 w-[calc(100%-1.5rem)]')} />}
               </div>
-              <Chk register={register('cmHepatic')} label="Doencas hepaticas" />
+              <Chk register={register('cmHepatic')} label="Doenças hepaticas" />
               <Chk register={register('cmEpilepsy')} label="Epilepsia" />
               <Chk register={register('cmObesity')} label="Obesidade" />
               <div>
@@ -624,7 +624,7 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
                 {watch('cmCancer') && <input {...register('cmCancerText')} placeholder="Tipo e tratamento" className={cn(iCn, 'ml-6 mt-1 w-[calc(100%-1.5rem)]')} />}
               </div>
             </div>
-            <p className="text-xs font-semibold text-gray-500 uppercase mt-3 mb-1">Doencas infecciosas cronicas</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase mt-3 mb-1">Doenças infecciosas cronicas</p>
             <div className="flex flex-wrap gap-x-4 gap-y-1">
               <Chk register={register('cmInfHiv')} label="HIV" />
               <Chk register={register('cmInfHepB')} label="Hepatite B" />
@@ -636,19 +636,19 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
 
           {/* 9. Cirurgicos */}
           <CollapsibleSection title="Antecedentes cirurgicos">
-            <Field label="Cirurgias previas"><textarea {...register('surgeries')} rows={2} placeholder="Cirurgias, datas, complicacoes..." className={iCn} /></Field>
+            <Field label="Cirurgias previas"><textarea {...register('surgeries')} rows={2} placeholder="Cirurgias, datas, complicações..." className={iCn} /></Field>
           </CollapsibleSection>
 
-          {/* 10. Medicacoes/alergias */}
-          <CollapsibleSection title="Medicacoes, alergias e imunizacoes">
+          {/* 10. Medicações/alergias */}
+          <CollapsibleSection title="Medicações, alergias e imunizações">
             <Field label="Medicamentos em uso"><textarea {...register('medications')} rows={2} placeholder="Incluir hormonios, fitoterápicos, suplementos..." className={iCn} /></Field>
             <Chk register={register('hasAllergy')} label="Possui alergia conhecida" />
             {hasAllergyW && <Field label="Descrever alergias"><input {...register('allergyText')} className={iCn} /></Field>}
-            <Field label="Situacao vacinal relevante"><textarea {...register('vaccinations')} rows={2} placeholder="HPV, Hepatite B, Rubeola, Influenza..." className={iCn} /></Field>
+            <Field label="Situação vacinal relevante"><textarea {...register('vaccinations')} rows={2} placeholder="HPV, Hepatite B, Rubeola, Influenza..." className={iCn} /></Field>
           </CollapsibleSection>
 
-          {/* 11. Familia */}
-          <CollapsibleSection title="Historia familiar">
+          {/* 11. Família */}
+          <CollapsibleSection title="História familiar">
             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
               <Chk register={register('fhBreastCancer')} label="Cancer de mama" />
               <Chk register={register('fhOvarianCancer')} label="Cancer de ovario" />
@@ -657,8 +657,8 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
               <Chk register={register('fhThrombosis')} label="Trombose / trombofilias" />
               <Chk register={register('fhOsteoporosis')} label="Osteoporose" />
               <Chk register={register('fhDiabetes')} label="Diabetes" />
-              <Chk register={register('fhHypertension')} label="Hipertensao" />
-              <Chk register={register('fhCardiovascular')} label="Doenca cardiovascular" />
+              <Chk register={register('fhHypertension')} label="Hipertensão" />
+              <Chk register={register('fhCardiovascular')} label="Doença cardiovascular" />
             </div>
             <Field label="Detalhes / outros"><textarea {...register('fhDetails')} rows={2} placeholder="Parentesco e detalhes relevantes" className={iCn} /></Field>
           </CollapsibleSection>
@@ -688,7 +688,7 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
                   {Object.entries(PHYSICAL_ACTIVITY_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select>
               </Field>
-              <Field label="Alimentacao"><input {...register('diet')} placeholder="Descricao breve" className={iCn} /></Field>
+              <Field label="Alimentação"><input {...register('diet')} placeholder="Descrição breve" className={iCn} /></Field>
               <Field label="Sono"><input {...register('sleep')} placeholder="Qualidade/horas" className={iCn} /></Field>
             </div>
           </CollapsibleSection>
@@ -705,7 +705,7 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
               <Chk register={register('sxDorMamaria')} label="Dor mamaria" />
               <Chk register={register('sxFogachos')} label="Fogachos" />
               <Chk register={register('sxRessecamento')} label="Ressecamento vaginal" />
-              <Chk register={register('sxHumor')} label="Alteracao de humor" />
+              <Chk register={register('sxHumor')} label="Alteração de humor" />
               <Chk register={register('sxQuedaCabelo')} label="Queda de cabelo" />
               <Chk register={register('sxHirsutismo')} label="Hirsutismo" />
               <Chk register={register('sxAcne')} label="Acne" />
@@ -717,7 +717,7 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
 
           {/* 14. Exame fisico */}
           <CollapsibleSection title="Exame fisico">
-            <Field label="Abdome"><textarea {...register('abdomenNotes')} rows={2} placeholder="Inspecao, dor, massas, cicatrizes..." className={iCn} /></Field>
+            <Field label="Abdome"><textarea {...register('abdomenNotes')} rows={2} placeholder="Inspeção, dor, massas, cicatrizes..." className={iCn} /></Field>
 
             <p className="text-xs font-semibold text-gray-500 uppercase mt-2 mb-1">Exame mamario</p>
             <Chk register={register('breastExamPerformed')} label="Exame realizado" />
@@ -752,13 +752,13 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
             <Chk register={register('pelvicExamPerformed')} label="Exame realizado" />
             {watch('pelvicExamPerformed') && (
               <>
-                <Field label="Vulva"><input {...register('vulvarFindings')} placeholder="Normal / alteracoes" className={iCn} /></Field>
+                <Field label="Vulva"><input {...register('vulvarFindings')} placeholder="Normal / alterações" className={iCn} /></Field>
                 <Field label="Colo uterino"><textarea {...register('cervixAppearance')} rows={2} className={iCn} /></Field>
                 <Chk register={register('papSmearCollected')} label="Citologico coletado" />
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Toque bimanual">
                     <select {...register('bimanualExamNormal')} className={iCn}>
-                      <option value="">—</option><option value="sim">Normal</option><option value="nao">Alterado</option>
+                      <option value="">—</option><option value="sim">Normal</option><option value="não">Alterado</option>
                     </select>
                   </Field>
                   <Field label="Tamanho uterino"><input {...register('uterineSize')} className={iCn} /></Field>
@@ -771,29 +771,29 @@ export default function InitialGynecologyConsultationModal({ patientId, patient,
           {/* 15. Exames previos */}
           <CollapsibleSection title="Exames previos">
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Ultimo preventivo"><input {...register('lastPapSmear')} type="date" className={iCn} /></Field>
+              <Field label="Último preventivo"><input {...register('lastPapSmear')} type="date" className={iCn} /></Field>
               <Field label="Resultado"><input {...register('lastPapSmearResult')} className={iCn} /></Field>
             </div>
             <AttachmentField label="Anexar laudo preventivo" value={papAttachment} onChange={setPapAttachment} patientId={patientId} />
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Ultima mamografia"><input {...register('lastMammography')} type="date" className={iCn} /></Field>
+              <Field label="Última mamografia"><input {...register('lastMammography')} type="date" className={iCn} /></Field>
               <Field label="Resultado"><input {...register('lastMammographyResult')} className={iCn} /></Field>
             </div>
             <AttachmentField label="Anexar laudo mamografia" value={mammoAttachment} onChange={setMammoAttachment} patientId={patientId} />
-            <Field label="Ultimo US transvaginal"><input {...register('lastUltrasound')} placeholder="Data e resultado" className={iCn} /></Field>
+            <Field label="Último US transvaginal"><input {...register('lastUltrasound')} placeholder="Data e resultado" className={iCn} /></Field>
             <Field label="Exames hormonais relevantes"><input {...register('lastHormonalExams')} className={iCn} /></Field>
             <Field label="Sorologias / ISTs"><input {...register('lastSerology')} className={iCn} /></Field>
           </CollapsibleSection>
 
-          {/* 16. Diagnostico + conduta */}
+          {/* 16. Diagnóstico + conduta */}
           <CollapsibleSection title="Hipoteses diagnosticas e conduta" defaultOpen>
-            <Field label="Diagnostico / impressao"><textarea {...register('diagnosis')} rows={2} className={iCn} /></Field>
+            <Field label="Diagnóstico / impressão"><textarea {...register('diagnosis')} rows={2} className={iCn} /></Field>
             <Field label="CID-10 (separados por virgula)"><input {...register('icd10')} placeholder="Ex: N92.0, E28.2" className={iCn} /></Field>
             <Field label="Exames solicitados"><textarea {...register('requestedExams')} rows={2} className={iCn} /></Field>
-            <Field label="Prescricoes"><textarea {...register('prescriptions')} rows={2} className={iCn} /></Field>
+            <Field label="Prescrições"><textarea {...register('prescriptions')} rows={2} className={iCn} /></Field>
             <Field label="Encaminhamentos"><textarea {...register('referrals')} rows={2} className={iCn} /></Field>
             <Field label="Data de retorno"><input {...register('returnDate')} type="date" className={iCn} /></Field>
-            <Field label="Observacoes"><textarea {...register('notes')} rows={2} className={iCn} /></Field>
+            <Field label="Observações"><textarea {...register('notes')} rows={2} className={iCn} /></Field>
           </CollapsibleSection>
 
           {/* Submit */}

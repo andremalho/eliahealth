@@ -35,5 +35,5 @@ export const STATUS_LABELS: Record<string, string> = {
   in_progress: 'Em andamento',
   completed: 'Concluida',
   cancelled: 'Cancelada',
-  no_show: 'Nao compareceu',
+  no_show: 'Não compareceu',
 };

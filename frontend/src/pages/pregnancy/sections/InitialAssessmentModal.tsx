@@ -98,7 +98,7 @@ function parseDefaults(patient: any, pregnancy: any, initialWeightKg?: number | 
   if (adds.some((a) => /Etilismo/i.test(a))) d.habitAlcohol = true;
   if (adds.some((a) => /drogas/i.test(a))) d.habitDrugs = true;
 
-  // Patologias da gestacao atual
+  // Patologias da gestação atual
   const cur: string = pregnancy?.currentPathologies ?? '';
   if (/DMG/i.test(cur)) d.cgDmg = true;
   if (/Pré-eclâmpsia/i.test(cur)) d.cgPe = true;
@@ -130,7 +130,7 @@ interface FormData {
   // Obstetricos extras
   ectopicPregnancy: boolean;
   ectopicPregnancyDetails: string;
-  // Patologias de gestacoes anteriores
+  // Patologias de gestações anteriores
   prevDmg: boolean;
   prevPe: boolean;
   prevEclampsia: boolean;
@@ -181,7 +181,7 @@ interface FormData {
   gynecologicalNotes: string;
   // Cirurgicos
   surgeries: string;
-  // Patologias da gestacao atual
+  // Patologias da gestação atual
   cgDmg: boolean;
   cgPe: boolean;
   cgEclampsia: boolean;
@@ -201,7 +201,7 @@ interface FormData {
   // Alergias
   hasAllergy: boolean;
   allergyText: string;
-  // Medicacoes
+  // Medicações
   medications: string;
 }
 
@@ -327,7 +327,7 @@ export default function InitialAssessmentModal({
         await updatePatient(patientId, patientPayload);
       }
 
-      // Cria consulta inicial com o peso (peso e dado de consulta, nao da paciente)
+      // Cria consulta inicial com o peso (peso e dado de consulta, não da paciente)
       if (data.weightKg) {
         try {
           await api.post(`/pregnancies/${pregnancyId}/consultations`, {
@@ -336,7 +336,7 @@ export default function InitialAssessmentModal({
             subjective: 'Avaliação inicial',
           });
         } catch (err) {
-          // Nao bloqueia o fluxo se ja existir consulta hoje
+          // Não bloqueia o fluxo se já existir consulta hoje
           console.warn('Falha ao criar consulta inicial', err);
         }
       }
@@ -354,7 +354,7 @@ export default function InitialAssessmentModal({
         if (data.pf) pregnancyPayload.forcepsDeliveries = parseInt(data.pf, 10);
       }
 
-      // Patologias da gestacao atual = checkboxes estruturadas + sumario de comorbidades para auto-deteccao de risco
+      // Patologias da gestação atual = checkboxes estruturadas + sumario de comorbidades para auto-detecção de risco
       const currentPathList: string[] = [];
       if (data.cgDmg) currentPathList.push('DMG');
       if (data.cgPe) currentPathList.push('Pré-eclâmpsia');
@@ -389,13 +389,13 @@ export default function InitialAssessmentModal({
       if (data.habitDrugs) habits.push('Uso de drogas');
       if (habits.length > 0) pregnancyPayload.habits = habits.join('; ');
 
-      // Gestacao ectopica
+      // Gestação ectopica
       if (data.ectopicPregnancy) {
         pregnancyPayload.ectopicPregnancy = true;
         if (data.ectopicPregnancyDetails) pregnancyPayload.ectopicPregnancyDetails = data.ectopicPregnancyDetails;
       }
 
-      // Patologias de gestacoes anteriores
+      // Patologias de gestações anteriores
       const prevPathList: string[] = [];
       if (data.prevDmg) prevPathList.push('DMG');
       if (data.prevPe) prevPathList.push('Pré-eclâmpsia');
@@ -633,7 +633,7 @@ export default function InitialAssessmentModal({
             )}
           </div>
 
-          {/* Patologias da gestacao atual */}
+          {/* Patologias da gestação atual */}
           <Section title="Patologias da gestação atual">
             <p className="text-[10px] text-gray-400 mb-2">Diagnósticos surgidos nesta gestação. Comorbidades pré-existentes ficam acima.</p>
             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
@@ -670,7 +670,7 @@ export default function InitialAssessmentModal({
             )}
           </Section>
 
-          {/* Medicacoes */}
+          {/* Medicações */}
           <Section title="Medicações em uso">
             <textarea {...register('medications')} rows={2} placeholder="Lista de medicamentos atuais..." className={cn(iCn, 'resize-none')} />
           </Section>

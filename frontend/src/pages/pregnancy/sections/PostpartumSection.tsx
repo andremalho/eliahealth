@@ -19,16 +19,16 @@ const lochiaLabel: Record<string, string> = {
   rubra: 'Rubra', serosa: 'Serosa', alba: 'Alba', absent: 'Ausente',
 };
 const involutionLabel: Record<string, string> = {
-  normal: 'Normal', subinvolution: 'Subinvolucao', not_palpable: 'Nao palpavel',
+  normal: 'Normal', subinvolution: 'Subinvolução', not_palpable: 'Não palpavel',
 };
 const bfLabel: Record<string, string> = {
-  exclusive: 'Exclusivo', predominant: 'Predominante', complemented: 'Complementado', not_breastfeeding: 'Nao amamenta',
+  exclusive: 'Exclusivo', predominant: 'Predominante', complemented: 'Complementado', not_breastfeeding: 'Não amamenta',
 };
 const moodLabel: Record<string, string> = {
   normal: 'Normal', mild: 'Leve', moderate: 'Moderado', severe: 'Grave',
 };
 const woundLabel: Record<string, string> = {
-  good: 'Boa', dehiscence: 'Deiscencia', infection: 'Infeccao', hematoma: 'Hematoma', not_applicable: 'N/A',
+  good: 'Boa', dehiscence: 'Deiscencia', infection: 'Infecção', hematoma: 'Hematoma', not_applicable: 'N/A',
 };
 
 export default function PostpartumSection({ pregnancyId }: Props) {
@@ -73,7 +73,7 @@ export default function PostpartumSection({ pregnancyId }: Props) {
         <div className="flex flex-col items-center py-12 text-gray-400">
           <FileText className="w-8 h-8 mb-2" />
           <p className="text-sm">Nenhuma consulta puerperal</p>
-          <p className="text-xs mt-1">Registre a primeira consulta pos-parto</p>
+          <p className="text-xs mt-1">Registre a primeira consulta pós-parto</p>
         </div>
       ) : (
         <div className="divide-y">
@@ -94,7 +94,7 @@ export default function PostpartumSection({ pregnancyId }: Props) {
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     <span className="px-2.5 py-1 bg-lilac/10 text-lilac text-xs font-semibold rounded-full">
-                      {days}d pos-parto
+                      {days}d pós-parto
                     </span>
                     <span className="text-sm text-gray-700">{fmtDate(c.date)}</span>
                     {hasNb && (
@@ -124,7 +124,7 @@ export default function PostpartumSection({ pregnancyId }: Props) {
                 {/* Clinical summary chips */}
                 <div className="flex gap-2 mt-2 flex-wrap text-xs">
                   {bp && <Chip label="PA" value={bp} danger={(c.bpSystolic ?? c.bp_systolic) >= 140} />}
-                  {involution && <Chip label="Involucao" value={involutionLabel[involution] ?? involution} />}
+                  {involution && <Chip label="Involução" value={involutionLabel[involution] ?? involution} />}
                   {lochia && <Chip label="Loquios" value={lochiaLabel[lochia] ?? lochia} />}
                   {wound && wound !== 'not_applicable' && <Chip label="Ferida" value={woundLabel[wound] ?? wound} danger={wound === 'infection'} />}
                   {bf && <Chip label="Aleitamento" value={bfLabel[bf] ?? bf} />}

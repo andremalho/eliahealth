@@ -108,7 +108,7 @@ export default function PregnancyPage() {
   const isLoading = lp || lPat;
   const initialAssessmentDone = !!(pregnancy as any)?.firstConsultationCompletedAt;
 
-  // Auto-abre o modal de avaliacao inicial uma vez ao entrar, se ainda nao foi preenchido
+  // Auto-abre o modal de avaliação inicial uma vez ao entrar, se ainda não foi preenchido
   useEffect(() => {
     if (pregnancy && patient && !initialAssessmentDone) {
       const key = `assessment_prompted_${pregnancyId}`;

@@ -45,7 +45,7 @@ export default function AnalyticsImpactPage() {
         <div className="flex items-center gap-2">
           <input type="date" value={from} onChange={(e) => setFrom(e.target.value)}
             className="text-xs border border-gray-300 rounded-lg px-2 py-1.5" />
-          <span className="text-xs text-gray-400">ate</span>
+          <span className="text-xs text-gray-400">até</span>
           <input type="date" value={to} onChange={(e) => setTo(e.target.value)}
             className="text-xs border border-gray-300 rounded-lg px-2 py-1.5" />
         </div>
@@ -55,7 +55,7 @@ export default function AnalyticsImpactPage() {
       <div className="bg-gradient-to-r from-navy to-lilac rounded-2xl p-6 text-white mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Shield className="w-5 h-5" />
-          <h2 className="font-semibold">Impacto Clinico</h2>
+          <h2 className="font-semibold">Impacto Clínico</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <ImpactStat
@@ -64,11 +64,11 @@ export default function AnalyticsImpactPage() {
           />
           <ImpactStat
             value={data.clinicalImpact.gapsAcceptedByDoctor}
-            label="Gaps corrigidos pelo medico"
+            label="Gaps corrigidos pelo médico"
           />
           <ImpactStat
             value={`${data.clinicalImpact.gapsCorrectionRate}%`}
-            label="Taxa de correcao"
+            label="Taxa de correção"
             highlight
           />
           <ImpactStat
@@ -89,20 +89,20 @@ export default function AnalyticsImpactPage() {
       {/* Metrics grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Summary Metrics */}
-        <MetricCard icon={FileText} title="Ponte de Comunicacao">
+        <MetricCard icon={FileText} title="Ponte de Comunicação">
           <div className="grid grid-cols-3 gap-3 text-center">
             <Metric value={data.summaryMetrics.totalGenerated} label="Gerados" />
             <Metric value={data.summaryMetrics.totalSent} label="Enviados" />
             <Metric value={`${data.summaryMetrics.readRate}%`} label="Lidos" />
           </div>
           <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
-            Tempo medio de aprovacao: {data.summaryMetrics.avgApprovalTimeMin}min |
-            {data.summaryMetrics.editRate}% editados pelo medico
+            Tempo medio de aprovação: {data.summaryMetrics.avgApprovalTimeMin}min |
+            {data.summaryMetrics.editRate}% editados pelo médico
           </div>
         </MetricCard>
 
         {/* Copilot Metrics */}
-        <MetricCard icon={Brain} title="Copiloto de Decisao">
+        <MetricCard icon={Brain} title="Copiloto de Decisão">
           <div className="grid grid-cols-3 gap-3 text-center">
             <Metric value={data.copilotMetrics.totalItems} label="Itens gerados" />
             <Metric value={`${data.copilotMetrics.acceptanceRate}%`} label="Aceitos" />
@@ -124,12 +124,12 @@ export default function AnalyticsImpactPage() {
         {/* Chat Metrics */}
         <MetricCard icon={MessageSquare} title="Chatbot">
           <div className="grid grid-cols-3 gap-3 text-center">
-            <Metric value={data.chatMetrics.totalSessions} label="Sessoes" />
+            <Metric value={data.chatMetrics.totalSessions} label="Sessões" />
             <Metric value={data.chatMetrics.totalMessages} label="Mensagens" />
             <Metric value={`${data.chatMetrics.avgResponseTimeSec}s`} label="Tempo resp." />
           </div>
           <div className="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">
-            Taxa de escalacao: {data.chatMetrics.escalationRate}%
+            Taxa de escalação: {data.chatMetrics.escalationRate}%
           </div>
         </MetricCard>
 
@@ -138,7 +138,7 @@ export default function AnalyticsImpactPage() {
           <div className="grid grid-cols-3 gap-3 text-center">
             <Metric value={data.longitudinalMetrics.totalAlerts} label="Alertas" />
             <Metric value={`${data.longitudinalMetrics.readRate}%`} label="Lidos" />
-            <Metric value={`${data.longitudinalMetrics.actionRate}%`} label="Com acao" />
+            <Metric value={`${data.longitudinalMetrics.actionRate}%`} label="Com ação" />
           </div>
         </MetricCard>
       </div>

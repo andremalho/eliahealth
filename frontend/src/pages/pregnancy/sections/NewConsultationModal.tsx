@@ -17,7 +17,7 @@ const MF_OPTIONS = [
   { value: 'Presentes e ativos', label: 'Presentes e ativos' },
   { value: 'Presentes e hipoativos', label: 'Presentes e hipoativos' },
   { value: 'Ausentes', label: 'Ausentes' },
-  { value: 'Não avaliado', label: 'Nao avaliado' },
+  { value: 'Não avaliado', label: 'Não avaliado' },
 ];
 const EDEMA_OPTIONS = [
   { value: 'absent', label: 'Ausente' }, { value: '1plus', label: '+/4+' },
@@ -87,7 +87,7 @@ export default function NewConsultationModal({ pregnancyId, initial, onClose }: 
     },
     onSuccess: (result: any) => {
       qc.invalidateQueries({ queryKey: ['consultations', pregnancyId] });
-      // Apos salvar, abrir checklist do copiloto para revisao
+      // Após salvar, abrir checklist do copiloto para revisão
       const consultId = result?.id ?? initial?.id;
       if (consultId) {
         setSavedConsultationId(consultId);
@@ -130,29 +130,29 @@ export default function NewConsultationModal({ pregnancyId, initial, onClose }: 
         <div className="grid grid-cols-3 gap-3">
           <Select label="Movimentos Fetais" options={MF_OPTIONS} placeholder="—" {...register('fetalMovements')} />
           <Select label="Edema" options={EDEMA_OPTIONS} placeholder="—" {...register('edemaGrade')} />
-          <Select label="Apresentacao Fetal" options={PRESENTATION_OPTIONS} placeholder="—" {...register('fetalPresentation')} />
+          <Select label="Apresentação Fetal" options={PRESENTATION_OPTIONS} placeholder="—" {...register('fetalPresentation')} />
         </div>
 
         <div className="grid grid-cols-3 gap-3">
           <Select label="Toque Vaginal" options={CERVICAL_OPTIONS} placeholder="—" {...register('cervicalState')} />
           {cervicalState === 'dilated' && (
-            <Input label="Dilatacao (cm)" type="number" placeholder="3" {...register('cervicalDilation')} />
+            <Input label="Dilatação (cm)" type="number" placeholder="3" {...register('cervicalDilation')} />
           )}
           {cervicalState === 'other' && (
             <div className="col-span-2">
-              <Input label="Descricao" placeholder="Descreva o achado..." {...register('vaginalExam')} />
+              <Input label="Descrição" placeholder="Descreva o achado..." {...register('vaginalExam')} />
             </div>
           )}
         </div>
 
         <Textarea label="Queixas" rows={2} placeholder="Queixas da paciente..." {...register('subjective')} />
-        <Textarea label="Conduta" rows={2} placeholder="Conduta e orientacoes..." {...register('plan')} />
+        <Textarea label="Conduta" rows={2} placeholder="Conduta e orientações..." {...register('plan')} />
 
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1.5 flex items-center gap-1">
-            <Lock className="w-3 h-3" /> Observacoes confidenciais
+            <Lock className="w-3 h-3" /> Observações confidenciais
           </label>
-          <textarea {...register('confidentialNotes')} rows={2} placeholder="Apenas visivel para equipe medica..."
+          <textarea {...register('confidentialNotes')} rows={2} placeholder="Apenas visivel para equipe médica..."
             className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-800 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-lilac/30 focus:border-lilac bg-gray-50" />
         </div>
       </form>

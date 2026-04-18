@@ -4,7 +4,7 @@ import {
   AlertTriangle, XCircle, Stethoscope, Pill, Syringe, FileSearch,
   Activity, BookOpen, TrendingUp, HelpCircle,
 } from 'lucide-react';
-import { useCopilotSocket, CopilotInsightData } from '../../../hooks/useCopilotSocket';
+import { useCopilotSocket, type CopilotInsightData } from '../../../hooks/useCopilotSocket';
 import { cn } from '../../../utils/cn';
 
 interface Props {
@@ -26,12 +26,12 @@ const TYPE_ICONS: Record<string, any> = {
 const TYPE_LABELS: Record<string, string> = {
   anamnesis_gap: 'Anamnese',
   differential: 'Diferencial',
-  drug_interaction: 'Interacao',
-  contraindication: 'Contraindicacao',
+  drug_interaction: 'Interação',
+  contraindication: 'Contraindicação',
   contextual_alert: 'Alerta',
   exam_suggestion: 'Exame',
   guideline_reminder: 'Guideline',
-  trend_alert: 'Tendencia',
+  trend_alert: 'Tendência',
 };
 
 export default function CopilotSidePanel({ consultationId, patientId }: Props) {
@@ -66,7 +66,7 @@ export default function CopilotSidePanel({ consultationId, patientId }: Props) {
       <div className="flex items-center justify-between px-3 py-2 border-b border-gray-100 bg-gray-50">
         <div className="flex items-center gap-2">
           <Brain className="w-4 h-4 text-lilac" />
-          <span className="text-xs font-semibold text-navy">Copiloto Clinico</span>
+          <span className="text-xs font-semibold text-navy">Copiloto Clínico</span>
           {connected && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Conectado" />}
           {loading && <Loader2 className="w-3 h-3 text-lilac animate-spin" />}
         </div>
@@ -105,10 +105,10 @@ export default function CopilotSidePanel({ consultationId, patientId }: Props) {
       {totalBadge > 0 && (
         <div className="flex items-center gap-2 px-3 py-1.5 border-t border-gray-100 text-[10px]">
           {actionRequired.length > 0 && (
-            <span className="text-red-600 font-medium">{actionRequired.length} acao</span>
+            <span className="text-red-600 font-medium">{actionRequired.length} ação</span>
           )}
           {attention.length > 0 && (
-            <span className="text-amber-600 font-medium">{attention.length} atencao</span>
+            <span className="text-amber-600 font-medium">{attention.length} atenção</span>
           )}
         </div>
       )}

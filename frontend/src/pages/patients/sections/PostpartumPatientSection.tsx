@@ -15,12 +15,12 @@ import { DeleteButton } from '../../../components/forms/DeleteButton';
 import NewPostpartumModal from '../../pregnancy/sections/NewPostpartumModal';
 
 const LOCHIA: Record<string, string> = { rubra: 'Rubra', serosa: 'Serosa', alba: 'Alba', absent: 'Ausente' };
-const INVOLUTION: Record<string, string> = { normal: 'Normal', subinvolution: 'Subinvolucao', not_palpable: 'Nao palpavel' };
-const BF: Record<string, string> = { exclusive: 'Exclusivo', predominant: 'Predominante', complemented: 'Complementado', not_breastfeeding: 'Nao amamenta' };
+const INVOLUTION: Record<string, string> = { normal: 'Normal', subinvolution: 'Subinvolução', not_palpable: 'Não palpavel' };
+const BF: Record<string, string> = { exclusive: 'Exclusivo', predominant: 'Predominante', complemented: 'Complementado', not_breastfeeding: 'Não amamenta' };
 const BREAST: Record<string, string> = { normal: 'Normal', engorgement: 'Ingurgitamento', fissure: 'Fissura', mastitis: 'Mastite', abscess: 'Abscesso' };
 const MOOD: Record<string, string> = { normal: 'Normal', mild: 'Leve', moderate: 'Moderado', severe: 'Grave' };
-const WOUND: Record<string, string> = { good: 'Boa', dehiscence: 'Deiscencia', infection: 'Infeccao', hematoma: 'Hematoma', not_applicable: 'N/A' };
-const DELIVERY: Record<string, string> = { vaginal: 'Vaginal', cesarean: 'Cesarea', forceps: 'Forceps', vacuum: 'Vacuo' };
+const WOUND: Record<string, string> = { good: 'Boa', dehiscence: 'Deiscencia', infection: 'Infecção', hematoma: 'Hematoma', not_applicable: 'N/A' };
+const DELIVERY: Record<string, string> = { vaginal: 'Vaginal', cesarean: 'Cesárea', forceps: 'Forceps', vacuum: 'Vacuo' };
 
 function fmtDate(d: any): string {
   if (!d) return '—';
@@ -107,7 +107,7 @@ export default function PostpartumPatientSection({ patientId }: { patientId: str
         <div>
           <h2 className="text-lg font-semibold text-navy">Consultas Puerperais</h2>
           <p className="text-xs text-gray-500 mt-0.5">
-            Acompanhamento pos-parto — involucao, amamentacao, saude mental
+            Acompanhamento pós-parto — involução, amamentação, saúde mental
           </p>
         </div>
         {pregnancyIds.length > 0 && (
@@ -124,12 +124,12 @@ export default function PostpartumPatientSection({ patientId }: { patientId: str
         <div className="flex flex-col items-center py-16 text-gray-400">
           <FileText className="w-10 h-10 mb-3" />
           <p className="font-medium">Nenhuma consulta puerperal</p>
-          <p className="text-sm mt-1">Acesse a gestacao da paciente para registrar a primeira consulta.</p>
+          <p className="text-sm mt-1">Acesse a gestação da paciente para registrar a primeira consulta.</p>
           <button
             onClick={() => navigate(`/patients/${patientId}`)}
             className="mt-3 flex items-center gap-1.5 text-xs text-lilac hover:text-primary-dark"
           >
-            <ExternalLink className="w-3.5 h-3.5" /> Ver gestacoes
+            <ExternalLink className="w-3.5 h-3.5" /> Ver gestações
           </button>
         </div>
       ) : (
@@ -169,7 +169,7 @@ export default function PostpartumPatientSection({ patientId }: { patientId: str
                 >
                   <div className="flex items-center gap-3">
                     <span className="px-2.5 py-1 bg-lilac/10 text-lilac text-xs font-semibold rounded-full">
-                      {days}d pos-parto
+                      {days}d pós-parto
                     </span>
                     <span className="text-sm text-gray-700">{fmtDate(c.date)}</span>
                     {deliveryType && (
@@ -224,7 +224,7 @@ export default function PostpartumPatientSection({ patientId }: { patientId: str
                     {(involution || lochia) && (
                       <Sec title="Utero e Loquios">
                         <Grid>
-                          {involution && <Field label="Involucao" value={INVOLUTION[involution] ?? involution} />}
+                          {involution && <Field label="Involução" value={INVOLUTION[involution] ?? involution} />}
                           {val(c, 'fundalHeightCm') && <Field label="AU" value={`${val(c, 'fundalHeightCm')} cm`} />}
                           {lochia && <Field label="Loquios" value={LOCHIA[lochia] ?? lochia} />}
                           {lochiaAmt && <Field label="Quantidade" value={lochiaAmt === 'scant' ? 'Escassa' : lochiaAmt === 'moderate' ? 'Moderada' : 'Abundante'} danger={lochiaAmt === 'heavy'} />}
@@ -243,17 +243,17 @@ export default function PostpartumPatientSection({ patientId }: { patientId: str
                     )}
 
                     {(bf || breast) && (
-                      <Sec title="Mamas e Amamentacao">
+                      <Sec title="Mamas e Amamentação">
                         <Grid>
                           {bf && <Field label="Aleitamento" value={BF[bf] ?? bf} />}
-                          {breast && <Field label="Condicao" value={BREAST[breast] ?? breast} danger={breast === 'mastitis' || breast === 'abscess'} />}
+                          {breast && <Field label="Condição" value={BREAST[breast] ?? breast} danger={breast === 'mastitis' || breast === 'abscess'} />}
                           {val(c, 'breastfeedingNotes') && <Field label="Obs" value={val(c, 'breastfeedingNotes')} span={2} />}
                         </Grid>
                       </Sec>
                     )}
 
                     {(mood || epds != null) && (
-                      <Sec title="Saude Mental">
+                      <Sec title="Saúde Mental">
                         <Grid>
                           {mood && <Field label="Humor" value={MOOD[mood] ?? mood} danger={mood === 'severe' || mood === 'moderate'} />}
                           {epds != null && <Field label="EPDS" value={String(epds)} danger={epds >= 13} />}
@@ -263,7 +263,7 @@ export default function PostpartumPatientSection({ patientId }: { patientId: str
                     )}
 
                     {contraDisc && (
-                      <Sec title="Contracepcao">
+                      <Sec title="Contracepção">
                         <Grid>
                           <Field label="Discutida" value="Sim" />
                           {contraMethod && <Field label="Metodo" value={contraMethod} />}
@@ -275,8 +275,8 @@ export default function PostpartumPatientSection({ patientId }: { patientId: str
                       <Sec title="Recem-Nascido">
                         <Grid>
                           {nb.currentWeight && <Field label="Peso" value={`${nb.currentWeight}g`} />}
-                          {nb.feedingWell != null && <Field label="Amamentando bem" value={nb.feedingWell ? 'Sim' : 'Nao'} />}
-                          {nb.jaundice != null && <Field label="Ictericia" value={nb.jaundice ? 'Sim' : 'Nao'} danger={nb.jaundice} />}
+                          {nb.feedingWell != null && <Field label="Amamentando bem" value={nb.feedingWell ? 'Sim' : 'Não'} />}
+                          {nb.jaundice != null && <Field label="Ictericia" value={nb.jaundice ? 'Sim' : 'Não'} danger={nb.jaundice} />}
                           {nb.umbilicalStump && <Field label="Coto" value={nb.umbilicalStump === 'attached' ? 'Aderido' : nb.umbilicalStump === 'fallen' ? 'Caiu' : 'Infectado'} danger={nb.umbilicalStump === 'infected'} />}
                           {nb.heelPrickDone != null && <Field label="Pezinho" value={nb.heelPrickDone ? 'Feito' : 'Pendente'} />}
                           {nb.hearingScreenDone != null && <Field label="Orelhinha" value={nb.hearingScreenDone ? 'Feito' : 'Pendente'} />}
@@ -288,7 +288,7 @@ export default function PostpartumPatientSection({ patientId }: { patientId: str
                     )}
 
                     {(subj || plan) && (
-                      <Sec title="Avaliacao">
+                      <Sec title="Avaliação">
                         {subj && <div className="mb-2"><p className="text-[10px] text-gray-500 uppercase mb-0.5">Queixas</p><p className="text-xs text-gray-700">{subj}</p></div>}
                         {plan && <div><p className="text-[10px] text-gray-500 uppercase mb-0.5">Conduta</p><p className="text-xs text-gray-700">{plan}</p></div>}
                       </Sec>

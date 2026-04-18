@@ -110,7 +110,7 @@ export default function OnboardingTooltip({ flowName }: Props) {
               onClick={next}
               className="text-xs bg-lilac text-white px-4 py-1.5 rounded-lg hover:bg-primary-dark font-medium"
             >
-              {isLast ? 'Comecar' : 'Proximo'}
+              {isLast ? 'Começar' : 'Próximo'}
             </button>
           </div>
         </div>

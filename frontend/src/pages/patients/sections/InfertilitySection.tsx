@@ -510,7 +510,7 @@ function HsgDisplay({ data }: { data: Record<string, unknown> }) {
             <span className="text-gray-400">Cavidade uterina:</span> {cavity}
           </p>
         )}
-        {findings && <p className="whitespace-pre-wrap">{findings}</p>}
+        {findings && <p className="whitespace-pré-wrap">{findings}</p>}
       </div>
       {attachment && (
         <a

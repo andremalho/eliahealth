@@ -27,7 +27,7 @@ export class ClinicalCopilotController {
   @Post('post-consultation-check/:consultationId')
   generateCheck(
     @Param('consultationId', ParseUUIDPipe) consultationId: string,
-    @CurrentUser('sub') doctorId: string,
+    @CurrentUser('userId') doctorId: string,
     @CurrentUser('tenantId') tenantId: string,
   ) {
     return this.service.generatePostConsultationCheck(consultationId, tenantId, doctorId);
@@ -47,7 +47,7 @@ export class ClinicalCopilotController {
   resolveItem(
     @Param('itemId', ParseUUIDPipe) itemId: string,
     @Body() dto: ResolveCheckItemDto,
-    @CurrentUser('sub') doctorId: string,
+    @CurrentUser('userId') doctorId: string,
   ) {
     return this.service.resolveCheckItem(itemId, doctorId, dto.resolution, dto.resolutionNote);
   }
@@ -56,7 +56,7 @@ export class ClinicalCopilotController {
   @Patch('check/:checkId/reviewed')
   markReviewed(
     @Param('checkId', ParseUUIDPipe) checkId: string,
-    @CurrentUser('sub') doctorId: string,
+    @CurrentUser('userId') doctorId: string,
   ) {
     return this.service.markCheckAsReviewed(checkId, doctorId);
   }
@@ -64,7 +64,7 @@ export class ClinicalCopilotController {
   // GET /copilot/stats
   @Get('stats')
   getStats(
-    @CurrentUser('sub') doctorId: string,
+    @CurrentUser('userId') doctorId: string,
     @CurrentUser('tenantId') tenantId: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
@@ -77,7 +77,7 @@ export class ClinicalCopilotController {
   // GET /copilot/longitudinal-alerts
   @Get('longitudinal-alerts')
   getLongitudinalAlerts(
-    @CurrentUser('sub') doctorId: string,
+    @CurrentUser('userId') doctorId: string,
     @CurrentUser('tenantId') tenantId: string,
     @Query('unreadOnly') unreadOnly?: string,
     @Query('page') page?: string,

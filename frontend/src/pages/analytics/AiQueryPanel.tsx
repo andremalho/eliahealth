@@ -5,7 +5,8 @@ import { queryResearch, fetchQueryHistory } from '../../api/research.api';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { cn } from '../../utils/cn';
 
-const CHART_COLORS = ['#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#818cf8', '#7c3aed', '#4f46e5'];
+// Paleta Lunar Bloom para charts (editorial, coerente com brand system)
+const CHART_COLORS = ['#14161F', '#D97757', '#9CA89A', '#C9A977', '#B85A3D', '#E89A80', '#2A2C38'];
 
 export default function AiQueryPanel() {
   const [question, setQuestion] = useState('');
@@ -46,7 +47,7 @@ export default function AiQueryPanel() {
           </div>
           <button onClick={() => setShowHistory(!showHistory)}
             className="flex items-center gap-1 text-xs text-gray-400 hover:text-lilac">
-            <Clock className="w-3.5 h-3.5" /> Historico
+            <Clock className="w-3.5 h-3.5" /> Histórico
           </button>
         </div>
         <p className="text-xs text-gray-500 mt-1">Faca perguntas em linguagem natural sobre seus dados anonimizados</p>
@@ -57,7 +58,7 @@ export default function AiQueryPanel() {
           <input
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Ex: Qual a taxa de cesarea por faixa etaria?"
+            placeholder="Ex: Qual a taxa de cesárea por faixa etaria?"
             className="flex-1 px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lilac/30 focus:border-lilac"
             disabled={mutation.isPending}
           />
@@ -101,7 +102,7 @@ export default function AiQueryPanel() {
                       <XAxis dataKey={Object.keys(result.data[0]).find((k) => typeof result.data[0][k] === 'string') ?? 'name'} tick={{ fontSize: 11 }} />
                       <YAxis tick={{ fontSize: 11 }} />
                       <Tooltip />
-                      <Bar dataKey={Object.keys(result.data[0]).find((k) => typeof result.data[0][k] === 'number') ?? 'value'} fill="#6366f1" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey={Object.keys(result.data[0]).find((k) => typeof result.data[0][k] === 'number') ?? 'value'} fill="#14161F" radius={[2, 2, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}

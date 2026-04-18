@@ -28,14 +28,14 @@ const LOCHIA_AMOUNT = [
 
 const INVOLUTION = [
   { value: 'normal', label: 'Normal' },
-  { value: 'subinvolution', label: 'Subinvolucao' },
-  { value: 'not_palpable', label: 'Nao palpavel' },
+  { value: 'subinvolution', label: 'Subinvolução' },
+  { value: 'not_palpable', label: 'Não palpavel' },
 ];
 
 const WOUND_STATUS = [
-  { value: 'good', label: 'Boa cicatrizacao' },
+  { value: 'good', label: 'Boa cicatrização' },
   { value: 'dehiscence', label: 'Deiscencia' },
-  { value: 'infection', label: 'Infeccao' },
+  { value: 'infection', label: 'Infecção' },
   { value: 'hematoma', label: 'Hematoma' },
   { value: 'not_applicable', label: 'N/A' },
 ];
@@ -44,7 +44,7 @@ const BREASTFEEDING = [
   { value: 'exclusive', label: 'Exclusivo' },
   { value: 'predominant', label: 'Predominante' },
   { value: 'complemented', label: 'Complementado' },
-  { value: 'not_breastfeeding', label: 'Nao amamenta' },
+  { value: 'not_breastfeeding', label: 'Não amamenta' },
 ];
 
 const BREAST_CONDITION = [
@@ -233,7 +233,7 @@ export default function NewPostpartumModal({ pregnancyId, isFirst, initial, onCl
               {/* Útero e Lóquios */}
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-2">Utero e Loquios</h3>
               <div className="grid grid-cols-3 gap-3">
-                <div><label className="block text-xs font-medium text-gray-600 mb-1">Involucao uterina</label>
+                <div><label className="block text-xs font-medium text-gray-600 mb-1">Involução uterina</label>
                   <select {...register('uterineInvolution')} className={iCn}><option value="">—</option>
                     {INVOLUTION.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select></div>
@@ -264,27 +264,27 @@ export default function NewPostpartumModal({ pregnancyId, isFirst, initial, onCl
                   <select {...register('woundStatus')} className={iCn}><option value="">—</option>
                     {WOUND_STATUS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select></div>
-                <div><label className="block text-xs font-medium text-gray-600 mb-1">Observacoes da ferida</label>
+                <div><label className="block text-xs font-medium text-gray-600 mb-1">Observações da ferida</label>
                   <input {...register('woundNotes')} type="text" className={iCn} /></div>
               </div>
 
               {/* Mamas */}
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-2">Mamas e Amamentacao</h3>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-2">Mamas e Amamentação</h3>
               <div className="grid grid-cols-3 gap-3">
                 <div><label className="block text-xs font-medium text-gray-600 mb-1">Aleitamento</label>
                   <select {...register('breastfeedingStatus')} className={iCn}><option value="">—</option>
                     {BREASTFEEDING.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select></div>
-                <div><label className="block text-xs font-medium text-gray-600 mb-1">Condicao mamaria</label>
+                <div><label className="block text-xs font-medium text-gray-600 mb-1">Condição mamaria</label>
                   <select {...register('breastCondition')} className={iCn}><option value="">—</option>
                     {BREAST_CONDITION.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select></div>
-                <div><label className="block text-xs font-medium text-gray-600 mb-1">Observacoes</label>
+                <div><label className="block text-xs font-medium text-gray-600 mb-1">Observações</label>
                   <input {...register('breastfeedingNotes')} type="text" className={iCn} /></div>
               </div>
 
               {/* Saúde Mental */}
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-2">Saude Mental</h3>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-2">Saúde Mental</h3>
               <div className="grid grid-cols-3 gap-3">
                 <div><label className="block text-xs font-medium text-gray-600 mb-1">Screening de humor</label>
                   <select {...register('moodScreening')} className={iCn}><option value="">—</option>
@@ -292,19 +292,19 @@ export default function NewPostpartumModal({ pregnancyId, isFirst, initial, onCl
                   </select></div>
                 <div><label className="block text-xs font-medium text-gray-600 mb-1">EPDS (0-30)</label>
                   <input {...register('epdsScore')} type="number" min="0" max="30" className={iCn} /></div>
-                <div><label className="block text-xs font-medium text-gray-600 mb-1">Observacoes</label>
+                <div><label className="block text-xs font-medium text-gray-600 mb-1">Observações</label>
                   <input {...register('moodNotes')} type="text" className={iCn} /></div>
               </div>
 
               {/* Contracepção — apenas na 1ª consulta */}
               {(isFirst || initial?.contraceptionDiscussed || initial?.contraception_discussed) && (
                 <>
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-2">Contracepcao</h3>
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-2">Contracepção</h3>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="flex items-end pb-1">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input {...register('contraceptionDiscussed')} type="checkbox" className="w-4 h-4 rounded border-gray-300 text-lilac" />
-                        <span className="text-xs text-gray-700">Contracepcao discutida</span>
+                        <span className="text-xs text-gray-700">Contracepção discutida</span>
                       </label>
                     </div>
                     <div><label className="block text-xs font-medium text-gray-600 mb-1">Metodo escolhido</label>
@@ -314,13 +314,13 @@ export default function NewPostpartumModal({ pregnancyId, isFirst, initial, onCl
               )}
 
               {/* SOAP */}
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-2">Avaliacao</h3>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide pt-2">Avaliação</h3>
               <div><label className="block text-xs font-medium text-gray-600 mb-1">Queixas</label>
                 <textarea {...register('subjective')} rows={2} placeholder="Queixas da puerpera..." className={cn(iCn, 'resize-none')} /></div>
               <div><label className="block text-xs font-medium text-gray-600 mb-1">Conduta</label>
-                <textarea {...register('plan')} rows={2} placeholder="Conduta e orientacoes..." className={cn(iCn, 'resize-none')} /></div>
+                <textarea {...register('plan')} rows={2} placeholder="Conduta e orientações..." className={cn(iCn, 'resize-none')} /></div>
               <div><label className="block text-xs font-medium text-gray-600 mb-1 flex items-center gap-1"><Lock className="w-3 h-3" /> Notas confidenciais</label>
-                <textarea {...register('confidentialNotes')} rows={2} placeholder="Apenas visivel para equipe medica..." className={cn(iCn, 'resize-none bg-gray-50')} /></div>
+                <textarea {...register('confidentialNotes')} rows={2} placeholder="Apenas visivel para equipe médica..." className={cn(iCn, 'resize-none bg-gray-50')} /></div>
             </>
           ) : (
             <>
@@ -351,8 +351,8 @@ export default function NewPostpartumModal({ pregnancyId, isFirst, initial, onCl
                 ))}
               </div>
 
-              <div className="pt-2"><label className="block text-xs font-medium text-gray-600 mb-1">Observacoes sobre o RN</label>
-                <textarea {...register('nbNotes')} rows={3} placeholder="Observacoes sobre o recem-nascido..." className={cn(iCn, 'resize-none')} /></div>
+              <div className="pt-2"><label className="block text-xs font-medium text-gray-600 mb-1">Observações sobre o RN</label>
+                <textarea {...register('nbNotes')} rows={3} placeholder="Observações sobre o recem-nascido..." className={cn(iCn, 'resize-none')} /></div>
             </>
           )}
 

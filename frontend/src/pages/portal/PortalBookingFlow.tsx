@@ -78,7 +78,7 @@ export default function PortalBookingFlow({ alertId, alertType, gaMin, gaMax, on
       toast.success('Consulta agendada! Seu codigo de check-in: ' + (data.checkinToken ?? data.checkin_token));
       onClose();
     },
-    onError: () => toast.error('Horario nao disponivel'),
+    onError: () => toast.error('Horario não disponivel'),
   });
 
   const availableSlots = (slots ?? []).filter((s: any) => s.available);
@@ -88,7 +88,7 @@ export default function PortalBookingFlow({ alertId, alertType, gaMin, gaMax, on
       <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg mx-auto max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b">
           <h2 className="text-lg font-semibold text-navy">
-            {step === 'doctor' ? 'Escolher Medico' : step === 'info' ? 'Seus Dados' : step === 'insurance' ? 'Convenio' : step === 'documents' ? 'Documentos' : step === 'slot' ? 'Horario' : 'Confirmar'}
+            {step === 'doctor' ? 'Escolher Médico' : step === 'info' ? 'Seus Dados' : step === 'insurance' ? 'Convenio' : step === 'documents' ? 'Documentos' : step === 'slot' ? 'Horario' : 'Confirmar'}
           </h2>
           <button onClick={onClose} className="text-gray-400"><X className="w-5 h-5" /></button>
         </div>
@@ -97,7 +97,7 @@ export default function PortalBookingFlow({ alertId, alertType, gaMin, gaMax, on
         {alertType && (
           <div className="mx-6 mt-4 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
             <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-            <p className="text-xs text-amber-700">Solicitacao: {alertType}{gaMin && gaMax ? ` (${gaMin}-${gaMax} semanas)` : ''}</p>
+            <p className="text-xs text-amber-700">Solicitação: {alertType}{gaMin && gaMax ? ` (${gaMin}-${gaMax} semanas)` : ''}</p>
           </div>
         )}
 
@@ -169,7 +169,7 @@ export default function PortalBookingFlow({ alertId, alertType, gaMin, gaMax, on
                   className="w-full px-3 py-3 border rounded-lg text-base" />
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Numero da carteirinha *</label>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Número da carteirinha *</label>
                 <input value={insuranceMemberId} onChange={(e) => setInsuranceMemberId(e.target.value)}
                   className="w-full px-3 py-3 border rounded-lg text-base" />
               </div>
@@ -213,7 +213,7 @@ export default function PortalBookingFlow({ alertId, alertType, gaMin, gaMax, on
               </label>
               <button onClick={() => setStep('slot')}
                 className="w-full py-3 bg-lilac text-white font-medium rounded-lg">
-                {examRequestUrl ? 'Continuar' : 'Pular — nao tenho pedido'}
+                {examRequestUrl ? 'Continuar' : 'Pular — não tenho pedido'}
               </button>
             </div>
           )}
@@ -250,7 +250,7 @@ export default function PortalBookingFlow({ alertId, alertType, gaMin, gaMax, on
               <div className="bg-lilac/5 rounded-xl p-4 space-y-2">
                 <p className="text-sm font-semibold text-navy">Resumo do agendamento</p>
                 <div className="text-xs text-gray-600 space-y-1">
-                  <p><strong>Medico:</strong> {doctor?.name}</p>
+                  <p><strong>Médico:</strong> {doctor?.name}</p>
                   <p><strong>Data:</strong> {fmtDate(date)}</p>
                   <p><strong>Horario:</strong> {selectedSlot?.startTime} - {selectedSlot?.endTime}</p>
                   <p><strong>Tipo:</strong> {insuranceType === 'particular' ? 'Particular' : `Convenio — ${insuranceProvider}`}</p>
@@ -260,7 +260,7 @@ export default function PortalBookingFlow({ alertId, alertType, gaMin, gaMax, on
               </div>
               <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
                 <Shield className="w-4 h-4 text-emerald-600" />
-                <p className="text-[10px] text-emerald-700">Ao confirmar, sera gerado seu codigo de check-in. No dia da consulta, use o codigo para confirmar sua chegada sem precisar passar na recepcao.</p>
+                <p className="text-[10px] text-emerald-700">Ao confirmar, sera gerado seu codigo de check-in. No dia da consulta, use o codigo para confirmar sua chegada sem precisar passar na recepção.</p>
               </div>
               <button onClick={() => bookMut.mutate()} disabled={bookMut.isPending}
                 className="w-full py-3.5 bg-lilac text-white font-medium rounded-lg disabled:opacity-60 flex items-center justify-center gap-2">

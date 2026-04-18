@@ -8,8 +8,8 @@ import {
   generatePostConsultationCheck,
   resolveCheckItem,
   markCheckAsReviewed,
-  CopilotCheck,
-  CopilotCheckItem,
+  type CopilotCheck,
+  type CopilotCheckItem,
 } from '../../../api/clinical-copilot.api';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
@@ -22,28 +22,28 @@ interface Props {
 }
 
 const SEVERITY_CONFIG = {
-  action_required: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', label: 'Acao recomendada' },
-  attention: { icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', label: 'Atencao' },
+  action_required: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', label: 'Ação recomendada' },
+  attention: { icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', label: 'Atenção' },
   ok: { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', label: 'OK' },
 } as const;
 
 const CATEGORY_LABELS: Record<string, string> = {
   exam: 'Exame',
-  prescription: 'Prescricao',
+  prescription: 'Prescrição',
   screening: 'Rastreio',
   vaccine: 'Vacina',
   referral: 'Encaminhamento',
   monitoring: 'Monitoramento',
   follow_up: 'Acompanhamento',
   anamnesis_gap: 'Anamnese',
-  drug_interaction: 'Interacao medicamentosa',
-  contraindication: 'Contraindicacao',
+  drug_interaction: 'Interação medicamentosa',
+  contraindication: 'Contraindicação',
 };
 
 const RESOLUTION_OPTIONS = [
   { value: 'accepted', label: 'Aceitar sugestao', emoji: '✅' },
   { value: 'already_done', label: 'Ja foi feito', emoji: '✔️' },
-  { value: 'deferred', label: 'Adiar para proxima', emoji: '⏳' },
+  { value: 'deferred', label: 'Adiar para próxima', emoji: '⏳' },
   { value: 'ignored', label: 'Ignorar', emoji: '🚫' },
 ];
 
@@ -96,13 +96,13 @@ export default function CopilotCheckModal({ consultationId, onClose, onReviewCom
     <Modal
       open
       onClose={onClose}
-      title="Revisao pos-consulta"
+      title="Revisão pós-consulta"
       size="lg"
       footer={
         <div className="flex items-center justify-between w-full">
           <div className="text-xs text-gray-500 flex items-center gap-1">
             <Shield className="w-3 h-3" />
-            Copiloto clinico EliaHealth
+            Copiloto clínico EliaHealth
             {check?.generationTimeMs && (
               <span className="ml-2 flex items-center gap-1">
                 <Clock className="w-3 h-3" /> {(check.generationTimeMs / 1000).toFixed(1)}s
@@ -115,7 +115,7 @@ export default function CopilotCheckModal({ consultationId, onClose, onReviewCom
               onClick={() => reviewMut.mutate()}
               loading={reviewMut.isPending}
               disabled={!canFinish}
-              title={!canFinish ? `${unresolvedActionRequired} item(ns) obrigatorio(s) pendente(s)` : ''}
+              title={!canFinish ? `${unresolvedActionRequired} item(ns) obrigatório(s) pendente(s)` : ''}
             >
               Finalizar consulta
             </Button>
@@ -126,7 +126,7 @@ export default function CopilotCheckModal({ consultationId, onClose, onReviewCom
       {loading && (
         <div className="flex flex-col items-center justify-center py-16 gap-3">
           <Loader2 className="w-8 h-8 text-lilac animate-spin" />
-          <p className="text-sm text-gray-600">Analisando conduta clinica...</p>
+          <p className="text-sm text-gray-600">Analisando conduta clínica...</p>
           <p className="text-xs text-gray-400">Baseado em guidelines FEBRASGO, ACOG, NICE</p>
         </div>
       )}
@@ -147,12 +147,12 @@ export default function CopilotCheckModal({ consultationId, onClose, onReviewCom
           <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-100">
             {check.actionRequiredCount > 0 && (
               <span className="flex items-center gap-1 text-xs font-medium text-red-700 bg-red-50 px-2 py-1 rounded-full">
-                <XCircle className="w-3 h-3" /> {check.actionRequiredCount} acao
+                <XCircle className="w-3 h-3" /> {check.actionRequiredCount} ação
               </span>
             )}
             {check.attentionCount > 0 && (
               <span className="flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-1 rounded-full">
-                <AlertTriangle className="w-3 h-3" /> {check.attentionCount} atencao
+                <AlertTriangle className="w-3 h-3" /> {check.attentionCount} atenção
               </span>
             )}
             {check.okCount > 0 && (
@@ -165,7 +165,7 @@ export default function CopilotCheckModal({ consultationId, onClose, onReviewCom
           {/* Items */}
           {check.items.length === 0 ? (
             <div className="text-center py-8 text-sm text-gray-500">
-              Nenhuma recomendacao gerada para esta consulta.
+              Nenhuma recomendação gerada para esta consulta.
             </div>
           ) : (
             check.items.map((item) => (
@@ -245,7 +245,7 @@ function CheckItemCard({
 
           {item.suggestedAction && (
             <div className="bg-blue-50 border border-blue-100 rounded p-2.5">
-              <p className="text-xs font-medium text-blue-800 mb-0.5">Acao sugerida:</p>
+              <p className="text-xs font-medium text-blue-800 mb-0.5">Ação sugerida:</p>
               <p className="text-xs text-blue-700">{item.suggestedAction}</p>
             </div>
           )}
@@ -264,7 +264,7 @@ function CheckItemCard({
                         <div className="flex items-center gap-2 w-full">
                           <input
                             type="text"
-                            placeholder="Justificativa obrigatoria..."
+                            placeholder="Justificativa obrigatória..."
                             className="text-xs border border-gray-300 rounded px-2 py-1 flex-1 min-w-[200px]"
                             value={ignoreNote}
                             onChange={(e) => onIgnoreNoteChange(e.target.value)}

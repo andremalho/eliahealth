@@ -34,7 +34,7 @@ export const fetchPatientContent = async (gaWeek?: number) =>
   (await portalApi.get('/content/patient', { params: { gaWeek } })).data as EducationalContent[];
 
 export const CATEGORY_LABELS: Record<string, string> = {
-  pregnancy: 'Gravidez', postpartum: 'Pos-parto', gynecology: 'Ginecologia',
-  menopause: 'Menopausa', fertility: 'Fertilidade', nutrition: 'Nutricao',
-  exercise: 'Exercicio', mental_health: 'Saude Mental', general: 'Geral',
+  pregnancy: 'Gravidez', postpartum: 'Pós-parto', gynecology: 'Ginecologia',
+  menopause: 'Menopausa', fertility: 'Fertilidade', nutrition: 'Nutrição',
+  exercise: 'Exercicio', mental_health: 'Saúde Mental', general: 'Geral',
 };

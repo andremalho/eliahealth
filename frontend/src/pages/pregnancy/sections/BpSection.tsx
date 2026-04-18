@@ -56,15 +56,15 @@ export default function BpSection({ pregnancyId }: { pregnancyId: string }) {
         ) : mode === 'chart' ? (
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="date" fontSize={11} tick={{ fill: '#9ca3af' }} />
-              <YAxis fontSize={11} tick={{ fill: '#9ca3af' }} domain={[40, 200]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(20,22,31,0.08)" />
+              <XAxis dataKey="date" fontSize={10} tick={{ fill: 'rgba(20,22,31,0.55)' }} />
+              <YAxis fontSize={10} tick={{ fill: 'rgba(20,22,31,0.55)' }} domain={[40, 200]} />
               <Tooltip contentStyle={{ fontSize: 12 }} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <ReferenceLine y={refLines.hypertension.systolic} stroke="#fbbf24" strokeDasharray="5 5" label={{ value: '140', fontSize: 10, fill: '#fbbf24' }} />
-              <ReferenceLine y={refLines.hypertension.diastolic} stroke="#fbbf24" strokeDasharray="5 5" label={{ value: '90', fontSize: 10, fill: '#fbbf24' }} />
-              <Line type="monotone" dataKey="systolic" stroke="#ef4444" name="Sistólica" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="diastolic" stroke="#3b82f6" name="Diastólica" strokeWidth={2} dot={{ r: 3 }} />
+              <ReferenceLine y={refLines.hypertension.systolic} stroke="#C9A977" strokeDasharray="5 5" label={{ value: '140', fontSize: 10, fill: '#7A5F2E', fontFamily: 'JetBrains Mono' }} />
+              <ReferenceLine y={refLines.hypertension.diastolic} stroke="#C9A977" strokeDasharray="5 5" label={{ value: '90', fontSize: 10, fill: '#7A5F2E', fontFamily: 'JetBrains Mono' }} />
+              <Line type="monotone" dataKey="systolic" stroke="#B85A3D" name="Sistólica" strokeWidth={1.5} dot={{ r: 3, fill: '#B85A3D' }} />
+              <Line type="monotone" dataKey="diastolic" stroke="#14161F" name="Diastólica" strokeWidth={1.5} dot={{ r: 3, fill: '#14161F' }} />
             </LineChart>
           </ResponsiveContainer>
         ) : (

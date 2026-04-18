@@ -94,7 +94,7 @@ export default function ClinicalPage() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-navy">Consulta Clinica Medica</h1>
+            <h1 className="text-2xl font-semibold text-navy">Consulta Clínica Médica</h1>
             <p className="text-sm text-gray-500 mt-0.5">SOAP + sinais vitais + CID-10</p>
           </div>
           <button
@@ -186,12 +186,12 @@ export default function ClinicalPage() {
             <div className="flex items-center justify-center gap-2 p-4 border-t">
               <button disabled={listPage <= 1} onClick={() => setListPage(listPage - 1)} className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Anterior</button>
               <span className="text-xs text-gray-500">Pagina {listPage} de {patientList?.totalPages}</span>
-              <button disabled={listPage >= (patientList?.totalPages ?? 1)} onClick={() => setListPage(listPage + 1)} className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Proxima</button>
+              <button disabled={listPage >= (patientList?.totalPages ?? 1)} onClick={() => setListPage(listPage + 1)} className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Próxima</button>
             </div>
           )}
         </div>
       ) : items.length === 0 ? (
-        <Card><EmptyState icon={<ClipboardList className="w-12 h-12" />} title="Nenhuma consulta clinica"
+        <Card><EmptyState icon={<ClipboardList className="w-12 h-12" />} title="Nenhuma consulta clínica"
           action={<Button icon={<Plus className="w-4 h-4" />} onClick={() => setModalOpen(true)}>Nova consulta</Button>} /></Card>
       ) : (
         <div className="space-y-3">
@@ -223,7 +223,7 @@ export default function ClinicalPage() {
                     {(c.bpSystolic || c.bp_systolic) && <p className="text-xs"><strong>PA:</strong> {c.bpSystolic ?? c.bp_systolic}/{c.bpDiastolic ?? c.bp_diastolic}</p>}
                     {c.subjective && <div><p className="text-[10px] text-gray-500 uppercase">Subjetivo</p><p className="text-xs text-gray-700">{c.subjective}</p></div>}
                     {c.objective && <div><p className="text-[10px] text-gray-500 uppercase">Objetivo</p><p className="text-xs text-gray-700">{c.objective}</p></div>}
-                    {c.assessment && <div><p className="text-[10px] text-gray-500 uppercase">Avaliacao</p><p className="text-xs text-gray-700">{c.assessment}</p></div>}
+                    {c.assessment && <div><p className="text-[10px] text-gray-500 uppercase">Avaliação</p><p className="text-xs text-gray-700">{c.assessment}</p></div>}
                     {c.plan && <div><p className="text-[10px] text-gray-500 uppercase">Plano</p><p className="text-xs text-gray-700">{c.plan}</p></div>}
                     <div className="flex justify-end gap-1 pt-2 border-t">
                       <button onClick={() => { setEditing(c); setModalOpen(true); }}

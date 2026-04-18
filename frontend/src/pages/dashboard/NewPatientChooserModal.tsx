@@ -8,7 +8,7 @@ interface Props {
 const areas = [
   { key: 'obstetrics' as const, icon: Baby, label: 'Obstetricia', desc: 'Acompanhamento gestacional' },
   { key: 'gynecology' as const, icon: Heart, label: 'Ginecologia', desc: 'Consulta ginecologica' },
-  { key: 'clinical' as const, icon: Stethoscope, label: 'Clinica Medica', desc: 'Consulta clinica geral' },
+  { key: 'clinical' as const, icon: Stethoscope, label: 'Clínica Médica', desc: 'Consulta clínica geral' },
   { key: 'ultrasound' as const, icon: FileText, label: 'Ultrassonografia', desc: 'Laudo de ultrassom' },
 ];
 

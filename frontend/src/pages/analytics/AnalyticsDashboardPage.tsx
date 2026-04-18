@@ -16,10 +16,11 @@ import { Badge } from '../../components/ui/Badge';
 import { Skeleton } from '../../components/ui/Skeleton';
 import AiQueryPanel from './AiQueryPanel';
 
-const COLORS = ['#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#818cf8', '#4f46e5', '#7c3aed', '#5b21b6'];
-const WARM = ['#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#10b981', '#ec4899'];
+// Paleta Lunar Bloom para charts — tons editoriais coerentes
+const COLORS = ['#14161F', '#D97757', '#9CA89A', '#C9A977', '#B85A3D', '#E89A80', '#2A2C38', '#6B6C73'];
+const WARM = ['#C9A977', '#B85A3D', '#14161F', '#D97757', '#9CA89A', '#E89A80'];
 
-type Tab = 'visao_geral' | 'obstetrica' | 'ginecologica' | 'clinica' | 'populacional';
+type Tab = 'visao_geral' | 'obstetrica' | 'ginecologica' | 'clínica' | 'populacional';
 
 function pct(n: number | undefined): string { return `${((n ?? 0) * 100).toFixed(1)}%`; }
 
@@ -39,10 +40,10 @@ export default function AnalyticsDashboardPage() {
   const byZone = s.byZone ?? [];
 
   const tabs = [
-    { key: 'visao_geral', label: 'Visao Geral', icon: <Eye className="w-4 h-4" /> },
+    { key: 'visao_geral', label: 'Visão Geral', icon: <Eye className="w-4 h-4" /> },
     { key: 'obstetrica', label: 'Obstetrica', icon: <Baby className="w-4 h-4" /> },
     { key: 'ginecologica', label: 'Ginecologica', icon: <Heart className="w-4 h-4" /> },
-    { key: 'clinica', label: 'Clinica', icon: <Activity className="w-4 h-4" /> },
+    { key: 'clínica', label: 'Clínica', icon: <Activity className="w-4 h-4" /> },
     { key: 'populacional', label: 'Populacional', icon: <Users className="w-4 h-4" /> },
   ];
 
@@ -73,13 +74,13 @@ export default function AnalyticsDashboardPage() {
               <div className="space-y-6">
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                   <Stat icon={<Users className="w-5 h-5" />} label="Total" value={total} color="bg-lilac/10 text-lilac" />
-                  <Stat icon={<Baby className="w-5 h-5" />} label="Cesarea" value={pct(o.cesareanRate)} color="bg-amber-50 text-amber-600" />
-                  <Stat icon={<AlertTriangle className="w-5 h-5" />} label="Pre-eclampsia" value={pct(cond.preeclampsia)} color="bg-red-50 text-red-600" />
+                  <Stat icon={<Baby className="w-5 h-5" />} label="Cesárea" value={pct(o.cesareanRate)} color="bg-amber-50 text-amber-600" />
+                  <Stat icon={<AlertTriangle className="w-5 h-5" />} label="Pré-eclampsia" value={pct(cond.preeclampsia)} color="bg-red-50 text-red-600" />
                   <Stat icon={<Thermometer className="w-5 h-5" />} label="DMG" value={pct(cond.gestationalDiabetes ?? cond.gestational_diabetes)} color="bg-blue-50 text-blue-600" />
                   <Stat icon={<TrendingUp className="w-5 h-5" />} label="Alto risco" value={`${o.highRiskCount ?? 0}`} color="bg-red-50 text-red-600" />
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <ChartCard title="Condicoes Prevalentes">
+                  <ChartCard title="Condições Prevalentes">
                     <ResponsiveContainer width="100%" height={280}>
                       <BarChart data={[
                         { name: 'PE', value: (cond.preeclampsia ?? 0) * 100 },
@@ -89,7 +90,7 @@ export default function AnalyticsDashboardPage() {
                         { name: 'HELLP', value: (cond.hellpSyndrome ?? cond.hellp_syndrome ?? 0) * 100 },
                         { name: 'RCF', value: (cond.fgr ?? 0) * 100 },
                       ]} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(20,22,31,0.08)" />
                         <XAxis type="number" tick={{ fontSize: 11 }} unit="%" />
                         <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={100} />
                         <Tooltip formatter={(v: number) => `${v.toFixed(1)}%`} />
@@ -100,7 +101,7 @@ export default function AnalyticsDashboardPage() {
                   <ChartCard title="Tipo de Parto">
                     <ResponsiveContainer width="100%" height={280}>
                       <PieChart>
-                        <Pie data={byDelivery.map((d: any) => ({ name: d.deliveryType === 'cesarean' ? 'Cesarea' : d.deliveryType === 'vaginal' ? 'Vaginal' : d.deliveryType ?? d.delivery_type, value: d.count }))}
+                        <Pie data={byDelivery.map((d: any) => ({ name: d.deliveryType === 'cesarean' ? 'Cesárea' : d.deliveryType === 'vaginal' ? 'Vaginal' : d.deliveryType ?? d.delivery_type, value: d.count }))}
                           cx="50%" cy="50%" innerRadius={60} outerRadius={100} dataKey="value" label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}>
                           {byDelivery.map((_: any, i: number) => <Cell key={i} fill={COLORS[i]} />)}
                         </Pie>
@@ -114,7 +115,7 @@ export default function AnalyticsDashboardPage() {
             {tab === 'obstetrica' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Stat icon={<Baby className="w-5 h-5" />} label="Cesarea" value={pct(o.cesareanRate)} color="bg-amber-50 text-amber-600" />
+                  <Stat icon={<Baby className="w-5 h-5" />} label="Cesárea" value={pct(o.cesareanRate)} color="bg-amber-50 text-amber-600" />
                   <Stat icon={<AlertTriangle className="w-5 h-5" />} label="PE" value={pct(cond.preeclampsia)} color="bg-red-50 text-red-600" />
                   <Stat icon={<Activity className="w-5 h-5" />} label="DMG" value={pct(cond.gestationalDiabetes ?? cond.gestational_diabetes)} color="bg-blue-50 text-blue-600" />
                   <Stat icon={<Heart className="w-5 h-5" />} label="Prematuridade" value={pct(cond.pretermBirth ?? cond.preterm_birth)} color="bg-violet-50 text-violet-600" />
@@ -125,7 +126,7 @@ export default function AnalyticsDashboardPage() {
                       <PieChart>
                         <Pie data={[{ name: 'Alto Risco', value: o.highRiskCount ?? 0 }, { name: 'Baixo Risco', value: total - (o.highRiskCount ?? 0) }]}
                           cx="50%" cy="50%" innerRadius={50} outerRadius={90} dataKey="value" label>
-                          <Cell fill="#ef4444" /><Cell fill="#22c55e" />
+                          <Cell fill="#8B3A2F" /><Cell fill="#9CA89A" />
                         </Pie><Legend /><Tooltip />
                       </PieChart>
                     </ResponsiveContainer>
@@ -147,7 +148,7 @@ export default function AnalyticsDashboardPage() {
                 <Stat icon={<AlertTriangle className="w-5 h-5" />} label="BI-RADS 4+" value="—" color="bg-red-50 text-red-600" />
               </div>
             )}
-            {tab === 'clinica' && (
+            {tab === 'clínica' && (
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 <Stat icon={<Activity className="w-5 h-5" />} label="HAS" value={pct(cond.hypertension)} color="bg-red-50 text-red-600" />
                 <Stat icon={<Thermometer className="w-5 h-5" />} label="Diabetes" value={pct(cond.gestationalDiabetes ?? cond.gestational_diabetes)} color="bg-blue-50 text-blue-600" />
@@ -162,9 +163,9 @@ export default function AnalyticsDashboardPage() {
                   <ChartCard title="Faixa Etaria">
                     <ResponsiveContainer width="100%" height={280}>
                       <BarChart data={byAge.map((g: any) => ({ name: AGE_GROUP_LABELS[g.ageGroup ?? g.age_group] ?? g.ageGroup ?? g.age_group, count: g.count }))}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(20,22,31,0.08)" />
                         <XAxis dataKey="name" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip /><Bar dataKey="count" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                        <Tooltip /><Bar dataKey="count" fill="#14161F" radius={[6, 6, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </ChartCard>
@@ -185,9 +186,9 @@ export default function AnalyticsDashboardPage() {
                     {byIncome.length > 0 ? (
                       <ResponsiveContainer width="100%" height={250}>
                         <BarChart data={byIncome.map((r: any) => ({ name: INCOME_LABELS[r.incomeEstimate ?? r.income_estimate] ?? '?', count: r.count }))}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(20,22,31,0.08)" />
                           <XAxis dataKey="name" tick={{ fontSize: 9 }} /><YAxis tick={{ fontSize: 11 }} />
-                          <Tooltip /><Bar dataKey="count" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+                          <Tooltip /><Bar dataKey="count" fill="#D97757" radius={[6, 6, 0, 0]} />
                         </BarChart>
                       </ResponsiveContainer>
                     ) : <p className="text-sm text-gray-400 text-center py-20">Sem dados</p>}
@@ -195,9 +196,9 @@ export default function AnalyticsDashboardPage() {
                   <ChartCard title="Regiao">
                     <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={byRegion.map((r: any) => ({ name: r.region ?? r.state, count: r.count }))}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(20,22,31,0.08)" />
                         <XAxis dataKey="name" tick={{ fontSize: 11 }} /><YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip /><Bar dataKey="count" fill="#a78bfa" radius={[6, 6, 0, 0]} />
+                        <Tooltip /><Bar dataKey="count" fill="#9CA89A" radius={[6, 6, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </ChartCard>

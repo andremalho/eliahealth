@@ -29,12 +29,13 @@ export const INCOME_LABELS: Record<string, string> = {
   E: 'Classe E (<1 SM)',
 };
 
+// Paleta Lunar Bloom — gradiente Ink → Terracotta representando faixas de renda
 export const INCOME_COLORS: Record<string, string> = {
-  A: '#6366f1',
-  B: '#8b5cf6',
-  C: '#a78bfa',
-  D: '#c4b5fd',
-  E: '#ddd6fe',
+  A: '#14161F', // Ink       — classe alta
+  B: '#2A2C38', // Ink 2     — classe média-alta
+  C: '#B85A3D', // Terracotta deep
+  D: '#D97757', // Terracotta — signature
+  E: '#E89A80', // Terracotta soft
 };
 
 export const AGE_GROUP_LABELS: Record<string, string> = {

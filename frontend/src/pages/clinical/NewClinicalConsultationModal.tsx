@@ -64,12 +64,12 @@ export default function NewClinicalConsultationModal({ patientId, initial, onClo
   });
 
   return (
-    <Modal open onClose={onClose} title={isEdit ? 'Editar Consulta Clinica' : 'Nova Consulta Clinica'} size="lg"
+    <Modal open onClose={onClose} title={isEdit ? 'Editar Consulta Clínica' : 'Nova Consulta Clínica'} size="lg"
       footer={<><Button variant="ghost" onClick={onClose}>Cancelar</Button><Button loading={isSubmitting || mutation.isPending} onClick={handleSubmit((d) => mutation.mutate(d))}>Salvar</Button></>}>
       <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
         <div className="grid grid-cols-3 gap-3">
           <Input label="Data" type="date" required {...register('date')} />
-          <Input label="Especialidade" placeholder="Ex: Clinica geral" {...register('specialty')} />
+          <Input label="Especialidade" placeholder="Ex: Clínica geral" {...register('specialty')} />
           <Input label="Peso (kg)" type="number" placeholder="72.5" {...register('weightKg')} />
         </div>
 
@@ -88,10 +88,10 @@ export default function NewClinicalConsultationModal({ patientId, initial, onClo
         <p className="text-xs font-semibold text-gray-500 uppercase pt-2">SOAP</p>
         <Textarea label="S — Subjetivo (queixas)" rows={3} placeholder="Queixas da paciente..." {...register('subjective')} />
         <Textarea label="O — Objetivo (exame fisico)" rows={3} placeholder="Achados do exame fisico..." {...register('objective')} />
-        <Textarea label="A — Avaliacao (diagnostico)" rows={2} placeholder="Hipotese diagnostica / CID-10..." {...register('assessment')} />
-        <Input label="Diagnostico" placeholder="Ex: J06.9 — IVAS" {...register('diagnosis')} />
-        <Textarea label="P — Plano (conduta)" rows={3} placeholder="Prescricao, exames, retorno..." {...register('plan')} />
-        <Textarea label="Notas confidenciais" rows={2} placeholder="Apenas visivel para equipe medica..." {...register('confidentialNotes')} />
+        <Textarea label="A — Avaliação (diagnóstico)" rows={2} placeholder="Hipotese diagnostica / CID-10..." {...register('assessment')} />
+        <Input label="Diagnóstico" placeholder="Ex: J06.9 — IVAS" {...register('diagnosis')} />
+        <Textarea label="P — Plano (conduta)" rows={3} placeholder="Prescrição, exames, retorno..." {...register('plan')} />
+        <Textarea label="Notas confidenciais" rows={2} placeholder="Apenas visivel para equipe médica..." {...register('confidentialNotes')} />
       </form>
     </Modal>
   );

@@ -112,12 +112,12 @@ export default function ContraceptionSection({ patientId }: { patientId: string 
           <Info className={cn('w-4 h-4 shrink-0 mt-0.5', ppBreastfeeding ? 'text-amber-600' : 'text-blue-600')} />
           <div className="text-xs">
             <p className={cn('font-medium', ppBreastfeeding ? 'text-amber-700' : 'text-blue-700')}>
-              Puerpera — {recentPP.days_postpartum ?? recentPP.daysPostpartum}d pos-parto
+              Puerpera — {recentPP.days_postpartum ?? recentPP.daysPostpartum}d pós-parto
               {ppBreastfeeding && ' · Amamentando'}
             </p>
             {ppBreastfeeding && (
               <p className="text-amber-600 mt-0.5">
-                Contraceptivos hormonais combinados (CHC) nao sao recomendados durante amamentacao (OMS MEC Cat 3-4).
+                Contraceptivos hormonais combinados (CHC) não são recomendados durante amamentação (OMS MEC Cat 3-4).
                 Preferir metodos so de progestageno, DIU ou metodos de barreira.
               </p>
             )}
@@ -368,7 +368,7 @@ function Block({ label, children }: { label: string; children: React.ReactNode }
   return (
     <div>
       <p className="text-xs font-semibold text-gray-500 uppercase mb-1">{label}</p>
-      <p className="text-sm text-gray-700 whitespace-pre-wrap">{children}</p>
+      <p className="text-sm text-gray-700 whitespace-pré-wrap">{children}</p>
     </div>
   );
 }

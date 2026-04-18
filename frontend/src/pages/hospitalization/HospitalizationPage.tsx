@@ -38,7 +38,7 @@ export default function HospitalizationPage() {
 
   const addEvoMut = useMutation({
     mutationFn: () => addEvolution(evoModal!, evoForm),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['evolutions'] }); toast.success('Evolucao registrada'); setEvoModal(null); setEvoForm({}); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['evolutions'] }); toast.success('Evolução registrada'); setEvoModal(null); setEvoForm({}); },
   });
 
   const dischargeMut = useMutation({
@@ -52,13 +52,13 @@ export default function HospitalizationPage() {
     <div className="p-6 lg:p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-navy">Internacoes</h1>
+          <h1 className="text-2xl font-semibold text-navy">Internações</h1>
           <p className="text-sm text-gray-500">{items.length} paciente{items.length !== 1 ? 's' : ''} internada{items.length !== 1 ? 's' : ''}</p>
         </div>
       </div>
 
       {items.length === 0 ? (
-        <Card><EmptyState icon={<BedDouble className="w-12 h-12" />} title="Nenhuma internacao ativa" /></Card>
+        <Card><EmptyState icon={<BedDouble className="w-12 h-12" />} title="Nenhuma internação ativa" /></Card>
       ) : (
         <div className="space-y-3">
           {items.map((h: any) => {
@@ -85,12 +85,12 @@ export default function HospitalizationPage() {
                 {isExp && (
                   <div className="border-t px-5 py-4 space-y-4">
                     <div className="flex gap-2">
-                      <Button size="sm" icon={<Plus className="w-3.5 h-3.5" />} onClick={() => setEvoModal(h.id)}>Nova evolucao</Button>
+                      <Button size="sm" icon={<Plus className="w-3.5 h-3.5" />} onClick={() => setEvoModal(h.id)}>Nova evolução</Button>
                       <Button size="sm" variant="outline" icon={<LogOut className="w-3.5 h-3.5" />} onClick={() => setDischargeModal(h.id)}>Alta</Button>
                     </div>
 
                     {evoList.length === 0 ? (
-                      <p className="text-xs text-gray-400">Nenhuma evolucao registrada</p>
+                      <p className="text-xs text-gray-400">Nenhuma evolução registrada</p>
                     ) : (
                       <div className="space-y-2">
                         {evoList.map((e: any) => (
@@ -122,10 +122,10 @@ export default function HospitalizationPage() {
       )}
 
       {/* Evolution modal */}
-      <Modal open={!!evoModal} onClose={() => setEvoModal(null)} title="Nova Evolucao" size="lg"
+      <Modal open={!!evoModal} onClose={() => setEvoModal(null)} title="Nova Evolução" size="lg"
         footer={<><Button variant="ghost" onClick={() => setEvoModal(null)}>Cancelar</Button><Button loading={addEvoMut.isPending} onClick={() => addEvoMut.mutate()}>Salvar</Button></>}>
         <div className="space-y-3">
-          <Select label="Tipo" options={[{value:'medical',label:'Medica'},{value:'nursing',label:'Enfermagem'},{value:'postpartum',label:'Puerperal'},{value:'surgical',label:'Cirurgica'}]}
+          <Select label="Tipo" options={[{value:'medical',label:'Médica'},{value:'nursing',label:'Enfermagem'},{value:'postpartum',label:'Puerperal'},{value:'surgical',label:'Cirurgica'}]}
             value={evoForm.type ?? 'medical'} onChange={(e) => setEvoForm({ ...evoForm, type: e.target.value })} />
           <div className="grid grid-cols-3 gap-3">
             <Input label="PA Sist." type="number" value={evoForm.bpSystolic ?? ''} onChange={(e) => setEvoForm({ ...evoForm, bpSystolic: e.target.value })} />
@@ -148,8 +148,8 @@ export default function HospitalizationPage() {
         footer={<><Button variant="ghost" onClick={() => setDischargeModal(null)}>Cancelar</Button><Button variant="success" loading={dischargeMut.isPending} onClick={() => dischargeMut.mutate()}>Registrar alta</Button></>}>
         <div className="space-y-3">
           <Textarea label="Resumo da alta" rows={4} required value={dischargeForm.summary} onChange={(e) => setDischargeForm({ ...dischargeForm, summary: e.target.value })} />
-          <Input label="Diagnostico de alta" value={dischargeForm.diagnosis} onChange={(e) => setDischargeForm({ ...dischargeForm, diagnosis: e.target.value })} />
-          <Textarea label="Instrucoes pos-alta" rows={3} value={dischargeForm.instructions} onChange={(e) => setDischargeForm({ ...dischargeForm, instructions: e.target.value })} />
+          <Input label="Diagnóstico de alta" value={dischargeForm.diagnosis} onChange={(e) => setDischargeForm({ ...dischargeForm, diagnosis: e.target.value })} />
+          <Textarea label="Instruções pós-alta" rows={3} value={dischargeForm.instructions} onChange={(e) => setDischargeForm({ ...dischargeForm, instructions: e.target.value })} />
         </div>
       </Modal>
     </div>

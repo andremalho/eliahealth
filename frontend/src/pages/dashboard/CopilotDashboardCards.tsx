@@ -27,7 +27,7 @@ export default function CopilotDashboardCards() {
         <div id="urgent-actions-bar" className="bg-red-50 border border-red-200 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <XCircle className="w-4 h-4 text-red-600" />
-            <h3 className="text-sm font-semibold text-red-800">Acoes urgentes ({d.urgentActions.totalCount})</h3>
+            <h3 className="text-sm font-semibold text-red-800">Ações urgentes ({d.urgentActions.totalCount})</h3>
           </div>
           <div className="space-y-2">
             {d.urgentActions.items.slice(0, 3).map((a: any, i: number) => (
@@ -87,7 +87,7 @@ export default function CopilotDashboardCards() {
             </div>
             <div>
               <p className="text-lg font-bold text-navy">{d.copilotOverview.acceptanceRate}%</p>
-              <p className="text-[10px] text-gray-500">Aceitacao</p>
+              <p className="text-[10px] text-gray-500">Aceitação</p>
             </div>
           </div>
           {/* Acceptance rate bar */}
@@ -99,7 +99,7 @@ export default function CopilotDashboardCards() {
           </div>
           {d.copilotOverview.unreviewedChecklists > 0 && (
             <p className="text-xs text-amber-600 mt-2">
-              {d.copilotOverview.unreviewedChecklists} checklist(s) nao revisado(s)
+              {d.copilotOverview.unreviewedChecklists} checklist(s) não revisado(s)
             </p>
           )}
         </div>
@@ -121,7 +121,7 @@ export default function CopilotDashboardCards() {
               </div>
             )}
             {d.patientAttention.escalatedChats.count === 0 && (
-              <p className="text-gray-400 py-1">Nenhuma atencao especial necessaria</p>
+              <p className="text-gray-400 py-1">Nenhuma atenção especial necessaria</p>
             )}
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function CopilotDashboardCards() {
               <p className={cn('text-lg font-bold', d.chatbotStats.escalationsLast7Days > 0 ? 'text-red-600' : 'text-navy')}>
                 {d.chatbotStats.escalationsLast7Days}
               </p>
-              <p className="text-[10px] text-gray-500">Escalacoes</p>
+              <p className="text-[10px] text-gray-500">Escalações</p>
             </div>
           </div>
         </div>

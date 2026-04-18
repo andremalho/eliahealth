@@ -17,7 +17,7 @@ export default function CheckinPage() {
       setResult('success');
     } catch (err: any) {
       setResult('error');
-      setErrorMsg(err?.response?.data?.message ?? 'Codigo invalido ou check-in ja realizado');
+      setErrorMsg(err?.response?.data?.message ?? 'Código inválido ou check-in já realizado');
     } finally {
       setLoading(false);
     }
@@ -81,7 +81,7 @@ export default function CheckinPage() {
             </button>
 
             <p className="text-center text-[10px] text-gray-400 mt-4">
-              O codigo foi enviado no momento do agendamento. Se nao tem o codigo, procure a recepcao.
+              O codigo foi enviado no momento do agendamento. Se não tem o codigo, procure a recepção.
             </p>
           </div>
         )}

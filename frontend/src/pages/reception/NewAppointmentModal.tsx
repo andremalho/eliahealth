@@ -166,7 +166,7 @@ export default function NewAppointmentModal({ preSelectedPatient, onClose }: Pro
 
           {/* Doctor */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Medico(a) *</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Médico(a) *</label>
             <select {...register('doctorId', { required: true })} className={iCn}>
               <option value="">Selecione...</option>
               {(doctors ?? []).map((d) => (
@@ -223,8 +223,8 @@ export default function NewAppointmentModal({ preSelectedPatient, onClose }: Pro
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Observacoes</label>
-            <textarea {...register('notes')} rows={2} placeholder="Observacoes opcionais..." className={cn(iCn, 'resize-none')} />
+            <label className="block text-xs font-medium text-gray-600 mb-1">Observações</label>
+            <textarea {...register('notes')} rows={2} placeholder="Observações opcionais..." className={cn(iCn, 'resize-none')} />
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
@@ -244,7 +244,7 @@ function InfoRow({ label, value }: { label: string; value?: string }) {
   return (
     <div className="flex items-baseline gap-2">
       <span className="text-gray-400 w-20 shrink-0">{label}</span>
-      <span className="text-gray-800">{value || <span className="text-gray-300 italic">nao informado</span>}</span>
+      <span className="text-gray-800">{value || <span className="text-gray-300 italic">não informado</span>}</span>
     </div>
   );
 }

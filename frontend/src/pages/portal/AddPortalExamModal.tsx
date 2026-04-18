@@ -53,7 +53,7 @@ export default function AddPortalExamModal({ onClose }: { onClose: () => void })
       qc.invalidateQueries({ queryKey: ['portal-patient-exams'] });
       qc.invalidateQueries({ queryKey: ['portal-lab-results'] });
       toast.success('Exames enviados com sucesso', {
-        description: 'Sua equipe medica vai revisar os resultados.',
+        description: 'Sua equipe médica vai revisar os resultados.',
       });
       onClose();
     },

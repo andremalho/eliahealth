@@ -22,7 +22,7 @@ export default function PortalContentSection({ gaWeek }: Props) {
     <div className="bg-white rounded-2xl shadow-sm p-4">
       <div className="flex items-center gap-2 mb-3">
         <BookOpen className="w-4 h-4 text-lilac" />
-        <h3 className="text-sm font-semibold text-navy">Para voce</h3>
+        <h3 className="text-sm font-semibold text-navy">Para você</h3>
       </div>
       <div className="space-y-2">
         {items.slice(0, 5).map((c) => {

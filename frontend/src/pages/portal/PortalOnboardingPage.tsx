@@ -42,12 +42,12 @@ export default function PortalOnboardingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!lgpdConsent) {
-      setError('Voce precisa aceitar os termos para continuar');
+      setError('Você precisa aceitar os termos para continuar');
       return;
     }
     const cleanCpf = form.cpf.replace(/\D/g, '');
     if (cleanCpf.length !== 11) {
-      setError('CPF invalido');
+      setError('CPF inválido');
       return;
     }
     setError(null);
@@ -85,7 +85,7 @@ export default function PortalOnboardingPage() {
       <div className="flex-1 -mt-8 px-4 max-w-md mx-auto w-full pb-8">
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
           <p className="text-sm text-gray-500 mb-2">
-            Preencha seus dados para acessar o portal. Essas informacoes sao confidenciais e protegidas.
+            Preencha seus dados para acessar o portal. Essas informações são confidenciais e protegidas.
           </p>
 
           <Field label="Nome completo" required>
@@ -168,7 +168,7 @@ export default function PortalOnboardingPage() {
               type="text"
               value={form.address}
               onChange={(e) => set('address', e.target.value)}
-              placeholder="Rua, numero, complemento"
+              placeholder="Rua, número, complemento"
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-lilac/30 focus:border-lilac"
             />
           </Field>
@@ -194,7 +194,7 @@ export default function PortalOnboardingPage() {
                 className="mt-0.5 w-4 h-4 rounded border-gray-300 text-lilac focus:ring-lilac/50"
               />
               <span className="text-xs text-gray-600">
-                Aceito que meus dados anonimizados sejam utilizados para fins de pesquisa cientifica (opcional).
+                Aceito que meus dados anonimizados sejam utilizados para fins de pesquisa científica (opcional).
               </span>
             </label>
           </div>

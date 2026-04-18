@@ -3,7 +3,7 @@ import {
   fetchOnboardingProgress,
   updateOnboardingProgress,
 } from '../../api/doctor-onboarding.api';
-import { getStepsByFlow, OnboardingStep } from './onboarding-steps';
+import { getStepsByFlow, type OnboardingStep } from './onboarding-steps';
 
 export function useOnboarding(flowName: string) {
   const [currentStep, setCurrentStep] = useState(0);

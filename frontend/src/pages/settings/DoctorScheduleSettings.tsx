@@ -116,7 +116,7 @@ export default function DoctorScheduleSettings() {
                   className="px-2 py-1.5 border rounded text-sm">
                   {TIMES.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
-                <span className="text-xs text-gray-400">ate</span>
+                <span className="text-xs text-gray-400">até</span>
                 <select value={s.endTime} onChange={(e) => updateDay(i, 'endTime', e.target.value)}
                   className="px-2 py-1.5 border rounded text-sm">
                   {TIMES.map((t) => <option key={t} value={t}>{t}</option>)}

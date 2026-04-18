@@ -2,9 +2,13 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import {
-  Heart, LogOut, Calendar, Loader2, AlertCircle, Activity, Droplets,
+  LogOut, Calendar, Loader2, AlertCircle, Activity, Droplets,
   Syringe, FileText, Stethoscope, Plus, FlaskConical, Baby, MessageSquareText,
 } from 'lucide-react';
+import Logo from '../../components/Logo';
+
+const PORTAL_GRAIN =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.9'/></svg>";
 import {
   fetchDashboard, fetchPortalProfile, fetchPortalConsultations, fetchPortalVaccines,
   fetchPortalLabResults, fetchPortalUltrasounds, fetchPortalBp, fetchPortalGlucose,
@@ -128,22 +132,72 @@ export default function PortalHomePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-lilac/10 to-white">
-        <Loader2 className="w-8 h-8 text-lilac animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#F5EFE6' }}>
+        <div
+          style={{
+            width: 32,
+            height: 32,
+            border: '2px solid rgba(20,22,31,0.1)',
+            borderTopColor: '#D97757',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+          }}
+        />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-lilac/10 to-white p-6">
-        <AlertCircle className="w-12 h-12 text-amber-500 mb-3" />
-        <p className="text-navy font-medium text-center mb-2">Não foi possível carregar seus dados</p>
-        <p className="text-xs text-gray-500 text-center">
-          Pode ser que ainda não exista uma gestação cadastrada para você.<br />
-          Entre em contato com sua equipe médica.
+      <div
+        className="min-h-screen flex flex-col items-center justify-center p-8"
+        style={{ background: '#F5EFE6', fontFamily: "'Figtree', sans-serif" }}
+      >
+        <AlertCircle className="mb-4" style={{ width: 36, height: 36, color: '#8B3A2F' }} />
+        <h2
+          style={{
+            fontFamily: "'Fraunces', serif",
+            fontSize: 22,
+            fontWeight: 450,
+            color: '#14161F',
+            margin: '0 0 10px',
+            textAlign: 'center',
+            letterSpacing: '-0.02em',
+          }}
+        >
+          Não foi possível carregar seus dados
+        </h2>
+        <p
+          style={{
+            fontSize: 13,
+            color: 'rgba(20,22,31,0.62)',
+            textAlign: 'center',
+            lineHeight: 1.55,
+            maxWidth: 340,
+            margin: 0,
+          }}
+        >
+          Pode ser que ainda não exista uma gestação cadastrada para você. Entre em contato com sua equipe médica.
         </p>
-        <button onClick={handleLogout} className="mt-6 px-4 py-2 bg-lilac text-white text-sm rounded-lg">Sair</button>
+        <button
+          onClick={handleLogout}
+          style={{
+            marginTop: 28,
+            padding: '14px 28px',
+            background: '#14161F',
+            color: '#F5EFE6',
+            border: 'none',
+            borderRadius: 2,
+            fontSize: 12,
+            fontWeight: 600,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            fontFamily: "'Figtree', sans-serif",
+          }}
+        >
+          Sair
+        </button>
       </div>
     );
   }
@@ -167,31 +221,123 @@ export default function PortalHomePage() {
   const ppList = Array.isArray(postpartum) ? postpartum : [];
   const summaryList = summaries?.data ?? [];
 
+  const firstName = patient?.fullName ? toTitleCase(patient.fullName.split(' ')[0]) : 'gestante';
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-lilac/10 to-white pb-12">
-      {/* Header */}
-      <header className="bg-navy text-white px-5 pt-8 pb-12 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-lilac/20 -mr-20 -mt-20" />
-        <div className="relative flex items-start justify-between">
+    <div
+      className="min-h-screen pb-12"
+      style={{ background: '#F5EFE6', fontFamily: "'Figtree', sans-serif", color: '#14161F' }}
+    >
+      {/* ══════════ Header editorial ══════════ */}
+      <header
+        className="relative overflow-hidden"
+        style={{
+          background: '#14161F',
+          color: '#F5EFE6',
+          padding: '36px 20px 72px',
+        }}
+      >
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            opacity: 0.05,
+            mixBlendMode: 'overlay',
+            backgroundImage: `url("${PORTAL_GRAIN}")`,
+          }}
+        />
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            top: '-40%',
+            right: '-20%',
+            width: '70%',
+            height: '180%',
+            background: 'radial-gradient(closest-side, rgba(217,119,87,0.22), transparent 70%)',
+            filter: 'blur(50px)',
+          }}
+        />
+        <div className="relative flex items-start justify-between max-w-md mx-auto">
           <div>
-            <div className="flex items-center gap-2">
-              <Heart className="w-5 h-5 text-lilac" fill="currentColor" />
-              <h1 className="text-xl font-bold">eliahealth</h1>
+            <Logo size="sm" variant="light" product="health" />
+            <div
+              style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 10,
+                letterSpacing: '0.3em',
+                textTransform: 'uppercase',
+                color: 'rgba(245,239,230,0.6)',
+                marginTop: 20,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#D97757' }} aria-hidden />
+              Portal da paciente
             </div>
-            <p className="text-sm text-lilac/80 mt-1">
-              Olá, {patient?.fullName ? toTitleCase(patient.fullName.split(' ')[0]) : 'gestante'} 👋
-            </p>
+            <h1
+              style={{
+                fontFamily: "'Fraunces', serif",
+                fontSize: 'clamp(1.7rem, 5vw, 2.1rem)',
+                fontWeight: 400,
+                letterSpacing: '-0.025em',
+                color: '#F5EFE6',
+                marginTop: 10,
+                marginBottom: 0,
+                lineHeight: 1.1,
+              }}
+            >
+              Olá, <span style={{ fontStyle: 'italic', color: '#E89A80' }}>{firstName}</span>.
+            </h1>
           </div>
-          <button onClick={handleLogout} className="p-2 text-white/70" title="Sair">
+          <button
+            onClick={handleLogout}
+            title="Sair"
+            style={{
+              padding: 8,
+              color: 'rgba(245,239,230,0.7)',
+              border: '1px solid transparent',
+              background: 'none',
+              cursor: 'pointer',
+              transition: 'border-color 0.25s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(245,239,230,0.2)'}
+            onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.borderColor = 'transparent'}
+          >
             <LogOut className="w-4 h-4" />
           </button>
         </div>
       </header>
 
-      <div className="-mt-8 px-4 max-w-md mx-auto space-y-3">
+      <div className="px-4 max-w-md mx-auto space-y-3" style={{ marginTop: -40 }}>
         {/* Cartão principal */}
-        <div className="bg-white rounded-2xl shadow-lg p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wide">Sua gestação</p>
+        <div
+          style={{
+            background: '#FDFAF3',
+            border: '1px solid rgba(20,22,31,0.08)',
+            padding: 22,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 10,
+              letterSpacing: '0.28em',
+              textTransform: 'uppercase',
+              color: '#D97757',
+              marginBottom: 14,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+            }}
+          >
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#D97757' }} aria-hidden />
+            Sua gestação
+          </div>
           <div className="grid grid-cols-2 gap-3 mt-3">
             <div className="bg-lilac/5 rounded-xl p-3">
               <p className="text-[10px] text-gray-500 uppercase">Idade gestacional</p>
@@ -299,18 +445,18 @@ export default function PortalHomePage() {
 
         {/* Consultas Puerperais */}
         {ppList.length > 0 && (
-          <Section title="Consultas pos-parto" icon={Baby} count={ppList.length}>
+          <Section title="Consultas pós-parto" icon={Baby} count={ppList.length}>
             <div className="space-y-3">
               {ppList.map((c: any) => {
                 const days = c.days_postpartum ?? 0;
                 const bp = c.bp_systolic ? `${c.bp_systolic}/${c.bp_diastolic}` : null;
-                const bfLabels: Record<string, string> = { exclusive: 'Exclusivo', predominant: 'Predominante', complemented: 'Complementado', not_breastfeeding: 'Nao amamenta' };
+                const bfLabels: Record<string, string> = { exclusive: 'Exclusivo', predominant: 'Predominante', complemented: 'Complementado', not_breastfeeding: 'Não amamenta' };
                 const moodLabels: Record<string, string> = { normal: 'Normal', mild: 'Leve', moderate: 'Moderado', severe: 'Grave' };
                 const alerts = c.alerts ?? [];
                 return (
                   <div key={c.id ?? c.date} className="border-b border-gray-100 pb-3 last:border-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="px-2 py-0.5 bg-lilac/10 text-lilac text-[10px] font-semibold rounded-full">{days}d pos-parto</span>
+                      <span className="px-2 py-0.5 bg-lilac/10 text-lilac text-[10px] font-semibold rounded-full">{days}d pós-parto</span>
                       <span className="text-xs text-gray-500">{fmtDate(c.date)}</span>
                     </div>
                     <div className="flex gap-2 flex-wrap text-[10px]">

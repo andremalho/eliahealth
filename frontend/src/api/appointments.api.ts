@@ -1,13 +1,13 @@
 import api from './client';
 
-export type AppointmentCategory = 'primeira_consulta' | 'retorno' | 'particular' | 'convenio' | 'urgencia' | 'encaixe';
+export type AppointmentCategory = 'primeira_consulta' | 'retorno' | 'particular' | 'convenio' | 'urgência' | 'encaixe';
 
 export type AppointmentSpecialty = 'obstetrics' | 'gynecology' | 'clinical' | 'ultrasound';
 
 export const SPECIALTY_LABELS: Record<AppointmentSpecialty, string> = {
   obstetrics: 'Obstetricia',
   gynecology: 'Ginecologia',
-  clinical: 'Clinica Medica',
+  clinical: 'Clínica Médica',
   ultrasound: 'Ultrassonografia',
 };
 
@@ -106,7 +106,7 @@ export const CATEGORY_LABELS: Record<string, string> = {
   retorno: 'Retorno',
   particular: 'Particular',
   convenio: 'Convenio',
-  urgencia: 'Urgencia',
+  urgência: 'Urgência',
   encaixe: 'Encaixe',
 };
 
@@ -115,7 +115,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   retorno: 'bg-emerald-100 text-emerald-700',
   particular: 'bg-amber-100 text-amber-800',
   convenio: 'bg-violet-100 text-violet-700',
-  urgencia: 'bg-red-100 text-red-700',
+  urgência: 'bg-red-100 text-red-700',
   encaixe: 'bg-orange-100 text-orange-700',
 };
 
@@ -132,7 +132,7 @@ export const PROCEDURE_LABELS: Record<string, string> = {
   iui: 'IIU',
   trigger: 'Trigger',
   beta_hcg: 'Beta HCG',
-  stimulation_start: 'Estimulacao',
+  stimulation_start: 'Estimulação',
   gyn_procedure: 'Procedimento',
   return: 'Retorno',
 };
@@ -164,6 +164,6 @@ export const CATEGORY_DOT_COLORS: Record<string, string> = {
   retorno: 'bg-emerald-500',
   particular: 'bg-amber-500',
   convenio: 'bg-violet-500',
-  urgencia: 'bg-red-500',
+  urgência: 'bg-red-500',
   encaixe: 'bg-orange-500',
 };

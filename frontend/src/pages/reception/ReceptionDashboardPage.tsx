@@ -129,7 +129,7 @@ export default function ReceptionDashboardPage() {
           <h1 className="text-2xl font-semibold text-navy">{greeting()}, {userName}</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
-            {hasAssignment && <> · {doctorIds.length} medico{doctorIds.length > 1 ? 's' : ''}</>}
+            {hasAssignment && <> · {doctorIds.length} médico{doctorIds.length > 1 ? 's' : ''}</>}
           </p>
         </div>
         <button onClick={() => setModalOpen(true)}
@@ -141,8 +141,8 @@ export default function ReceptionDashboardPage() {
       {!hasAssignment && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-6 text-center">
           <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
-          <p className="text-sm font-medium text-amber-700">Voce ainda nao foi vinculada a nenhum medico</p>
-          <p className="text-xs text-amber-600 mt-1">Solicite ao medico ou administrador que vincule sua conta.</p>
+          <p className="text-sm font-medium text-amber-700">Você ainda não foi vinculada a nenhum médico</p>
+          <p className="text-xs text-amber-600 mt-1">Solicite ao médico ou administrador que vincule sua conta.</p>
         </div>
       )}
 

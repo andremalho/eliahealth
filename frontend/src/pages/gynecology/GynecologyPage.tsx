@@ -22,9 +22,9 @@ type ModuleKey = 'gynecology' | 'menstrual' | 'contraception' | 'infertility' | 
 const MODULES: { key: ModuleKey; label: string; icon: React.ElementType }[] = [
   { key: 'gynecology', label: 'Ginecologia', icon: Stethoscope },
   { key: 'menstrual', label: 'Ciclo / SUA', icon: Activity },
-  { key: 'contraception', label: 'Contracepcao', icon: Pill },
+  { key: 'contraception', label: 'Contracepção', icon: Pill },
   { key: 'infertility', label: 'Infertilidade', icon: Sparkles },
-  { key: 'art', label: 'Reproducao Assistida', icon: Baby },
+  { key: 'art', label: 'Reprodução Assistida', icon: Baby },
   { key: 'menopause', label: 'Menopausa', icon: Flower2 },
   { key: 'preventive', label: 'Rastreios', icon: ClipboardCheck },
 ];
@@ -194,7 +194,7 @@ export default function GynecologyPage() {
               className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Anterior</button>
             <span className="text-xs text-gray-500">Pagina {listPage} de {patientList?.totalPages}</span>
             <button disabled={listPage >= (patientList?.totalPages ?? 1)} onClick={() => setListPage(listPage + 1)}
-              className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Proxima</button>
+              className="px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 rounded disabled:opacity-40">Próxima</button>
           </div>
         )}
       </div>

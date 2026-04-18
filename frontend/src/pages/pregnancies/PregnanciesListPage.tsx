@@ -55,8 +55,8 @@ export default function PregnanciesListPage() {
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-navy">Gestacoes</h1>
-          <p className="text-sm text-gray-500 mt-1">{items.length} gestacao{items.length !== 1 ? 'es' : ''}</p>
+          <h1 className="text-2xl font-semibold text-navy">Gestações</h1>
+          <p className="text-sm text-gray-500 mt-1">{items.length} gestação{items.length !== 1 ? 'es' : ''}</p>
         </div>
         <button
           onClick={() => setModalOpen(true)}
@@ -121,7 +121,7 @@ export default function PregnanciesListPage() {
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center py-16 text-gray-400">
               <Users className="w-12 h-12 mb-3" />
-              <p className="font-medium">Nenhuma gestacao encontrada</p>
+              <p className="font-medium">Nenhuma gestação encontrada</p>
             </div>
           ) : (
             items.map((p) => {

@@ -12,9 +12,9 @@ const UF_OPTIONS = [
 ];
 
 const schema = z.object({
-  fullName: z.string().min(1, 'Nome obrigatorio'),
+  fullName: z.string().min(1, 'Nome obrigatório'),
   cpf: z.string().regex(/^\d{11}$/, 'CPF deve ter 11 digitos'),
-  email: z.string().email('E-mail invalido').optional().or(z.literal('')),
+  email: z.string().email('E-mail inválido').optional().or(z.literal('')),
   phone: z.string().optional(),
   dateOfBirth: z.string().optional(),
   maritalStatus: z.string().optional(),
@@ -38,7 +38,7 @@ interface Props {
 const specialtyTitles: Record<string, string> = {
   obstetrics: 'Obstetricia',
   gynecology: 'Ginecologia',
-  clinical: 'Clinica Medica',
+  clinical: 'Clínica Médica',
   ultrasound: 'Ultrassonografia',
 };
 
@@ -78,7 +78,7 @@ export default function NewPatientBaseModal({ specialty, onClose, onCreated }: P
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-semibold text-navy">Identificacao — {specialtyTitles[specialty]}</h2>
+          <h2 className="text-lg font-semibold text-navy">Identificação — {specialtyTitles[specialty]}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
@@ -125,7 +125,7 @@ export default function NewPatientBaseModal({ specialty, onClose, onCreated }: P
                 <option value="viuva">Viuva</option>
               </select>
             </Field>
-            <Field label="Profissao">
+            <Field label="Profissão">
               <input {...register('profession')} placeholder="Ex: Professora" className={inputCn(false)} />
             </Field>
             <Field label="Escolaridade">
@@ -134,19 +134,19 @@ export default function NewPatientBaseModal({ specialty, onClose, onCreated }: P
                 <option value="fundamental">Fundamental</option>
                 <option value="medio">Medio</option>
                 <option value="superior">Superior</option>
-                <option value="pos_graduacao">Pos-graduacao</option>
+                <option value="pos_graduacao">Pós-graduação</option>
               </select>
             </Field>
           </div>
 
           {/* Endereco */}
           <Field label="Endereco">
-            <input {...register('address')} placeholder="Rua, numero, complemento" className={inputCn(false)} />
+            <input {...register('address')} placeholder="Rua, número, complemento" className={inputCn(false)} />
           </Field>
 
           <div className="grid grid-cols-3 gap-4">
             <Field label="Cidade">
-              <input {...register('city')} placeholder="Sao Paulo" className={inputCn(false)} />
+              <input {...register('city')} placeholder="São Paulo" className={inputCn(false)} />
             </Field>
             <Field label="UF">
               <select {...register('state')} className={inputCn(false)}>

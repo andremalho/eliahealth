@@ -26,7 +26,7 @@ export class ConsultationSummaryController {
   generate(
     @Param('consultationId', ParseUUIDPipe) consultationId: string,
     @CurrentUser('tenantId') tenantId: string,
-    @CurrentUser('sub') doctorId: string,
+    @CurrentUser('userId') doctorId: string,
   ) {
     return this.service.generateSummary(consultationId, tenantId, doctorId);
   }
@@ -70,7 +70,7 @@ export class ConsultationSummaryController {
   @Roles(UserRole.PHYSICIAN)
   approve(
     @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser('sub') doctorId: string,
+    @CurrentUser('userId') doctorId: string,
     @Body() dto: UpdateConsultationSummaryDto,
   ) {
     return this.service.approveSummary(id, doctorId, dto.summaryText, dto.deliveryChannel);

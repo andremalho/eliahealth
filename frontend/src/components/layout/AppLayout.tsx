@@ -20,22 +20,22 @@ const clinicalNavItems: NavItem[] = [
   { to: '/dashboard', icon: Home, label: 'Inicio' },
   { to: '/pregnancies', icon: Baby, label: 'Obstetricia', module: 'prenatal' },
   { to: '/gynecology', icon: Heart, label: 'Ginecologia', module: 'gynecology' },
-  { to: '/clinical', icon: Stethoscope, label: 'Clinica Medica', module: 'clinical_general' },
+  { to: '/clinical', icon: Stethoscope, label: 'Clínica Médica', module: 'clinical_general' },
   { to: '/ultrasound', icon: FileText, label: 'Ultrassonografia', module: 'ultrasound' },
-  { to: '/hospitalization', icon: BedDouble, label: 'Internacoes', module: 'hospitalization' },
+  { to: '/hospitalization', icon: BedDouble, label: 'Internações', module: 'hospitalization' },
   { to: '/chat', icon: MessageSquare, label: 'Mensagens' },
   { to: '/birth-calendar', icon: Calendar, label: 'Calendario' },
   { to: '/billing', icon: DollarSign, label: 'Faturamento', module: 'tiss_billing' },
   { to: '/teams', icon: Users2, label: 'Equipes' },
   { to: '/analytics', icon: BarChart3, label: 'Pesquisa', module: 'research' },
-  { to: '/settings', icon: Settings, label: 'Configuracoes' },
+  { to: '/settings', icon: Settings, label: 'Configurações' },
 ];
 
 const receptionNavItems: NavItem[] = [
-  { to: '/reception', icon: Home, label: 'Recepcao' },
+  { to: '/reception', icon: Home, label: 'Recepção' },
   { to: '/reception/agenda', icon: Calendar, label: 'Agenda' },
   { to: '/reception/patients', icon: Activity, label: 'Pacientes' },
-  { to: '/settings', icon: Settings, label: 'Configuracoes' },
+  { to: '/settings', icon: Settings, label: 'Configurações' },
 ];
 
 export default function AppLayout() {

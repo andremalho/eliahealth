@@ -11,7 +11,7 @@ export class CopilotDashboardController {
 
   @Get()
   getDashboard(
-    @CurrentUser('sub') doctorId: string,
+    @CurrentUser('userId') doctorId: string,
     @CurrentUser('tenantId') tenantId: string,
   ) {
     return this.service.getDashboardData(doctorId, tenantId);

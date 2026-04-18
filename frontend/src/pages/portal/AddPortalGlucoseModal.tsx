@@ -47,7 +47,7 @@ export default function AddPortalGlucoseModal({ onClose }: { onClose: () => void
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['portal-glucose'] });
       toast.success('Glicemia registrada', {
-        description: data?.isAltered ? 'Valor alterado — informe sua equipe medica' : undefined,
+        description: data?.isAltered ? 'Valor alterado — informe sua equipe médica' : undefined,
       });
       onClose();
     },

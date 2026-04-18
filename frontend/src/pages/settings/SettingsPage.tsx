@@ -14,7 +14,7 @@ export default function SettingsPage() {
   const tabs: { key: Tab; label: string; icon: React.ElementType }[] = [
     { key: 'profile', label: 'Perfil', icon: User },
     { key: 'schedule', label: 'Agenda', icon: Calendar },
-    { key: 'notifications', label: 'Notificacoes', icon: Bell },
+    { key: 'notifications', label: 'Notificações', icon: Bell },
     { key: 'security', label: 'Seguranca', icon: Shield },
   ];
 
@@ -22,7 +22,7 @@ export default function SettingsPage() {
     <div className="p-6 lg:p-8 max-w-4xl mx-auto">
       <div className="flex items-center gap-2 mb-6">
         <Settings className="w-6 h-6 text-lilac" />
-        <h1 className="text-2xl font-semibold text-navy">Configuracoes</h1>
+        <h1 className="text-2xl font-semibold text-navy">Configurações</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6">
@@ -62,7 +62,7 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <Field label="Nome" value={user?.name ?? '—'} />
                 <Field label="Email" value={user?.email ?? '—'} />
-                <Field label="Funcao" value={user?.role === 'physician' ? 'Medico(a)' : user?.role === 'nurse' ? 'Enfermeiro(a)' : user?.role ?? '—'} />
+                <Field label="Função" value={user?.role === 'physician' ? 'Médico(a)' : user?.role === 'nurse' ? 'Enfermeiro(a)' : user?.role ?? '—'} />
               </div>
               <p className="text-xs text-gray-400 mt-6">
                 Para alterar seus dados, entre em contato com o administrador do sistema.
@@ -72,22 +72,22 @@ export default function SettingsPage() {
 
           {tab === 'notifications' && (
             <>
-              <h2 className="text-lg font-semibold text-navy mb-4">Notificacoes</h2>
+              <h2 className="text-lg font-semibold text-navy mb-4">Notificações</h2>
               <div className="space-y-4">
-                <Toggle label="Alertas de PA elevada" description="Receber notificacao quando uma gestante registrar PA >= 140/90" defaultChecked />
-                <Toggle label="Novos exames da paciente" description="Receber notificacao quando uma paciente enviar exame pelo portal" defaultChecked />
-                <Toggle label="Partos proximos (7 dias)" description="Receber lembrete de partos previstos para a proxima semana" defaultChecked />
-                <Toggle label="Alertas do copiloto" description="Receber alertas gerados pela IA sobre padroes clinicos" defaultChecked={false} />
+                <Toggle label="Alertas de PA elevada" description="Receber notificação quando uma gestante registrar PA >= 140/90" defaultChecked />
+                <Toggle label="Novos exames da paciente" description="Receber notificação quando uma paciente enviar exame pelo portal" defaultChecked />
+                <Toggle label="Partos proximos (7 dias)" description="Receber lembrete de partos previstos para a próxima semana" defaultChecked />
+                <Toggle label="Alertas do copiloto" description="Receber alertas gerados pela IA sobre padrões clinicos" defaultChecked={false} />
               </div>
               <p className="text-xs text-gray-400 mt-6">
-                Configuracoes de notificacao salvas localmente. Integracao com email em breve.
+                Configurações de notificação salvas localmente. Integração com email em breve.
               </p>
             </>
           )}
 
           {tab === 'schedule' && (
             <>
-              <h2 className="text-lg font-semibold text-navy mb-4">Configuracao de Agenda</h2>
+              <h2 className="text-lg font-semibold text-navy mb-4">Configuração de Agenda</h2>
               <DoctorScheduleSettings />
             </>
           )}
@@ -97,16 +97,16 @@ export default function SettingsPage() {
               <h2 className="text-lg font-semibold text-navy mb-4">Seguranca</h2>
               <div className="space-y-4">
                 <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-700">Autenticacao</p>
+                  <p className="text-sm font-medium text-gray-700">Autenticação</p>
                   <p className="text-xs text-gray-500 mt-1">Login via Google OAuth ou email/senha</p>
                 </div>
                 <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm font-medium text-gray-700">Sessao</p>
-                  <p className="text-xs text-gray-500 mt-1">Token JWT com expiracao de 8 horas</p>
+                  <p className="text-sm font-medium text-gray-700">Sessão</p>
+                  <p className="text-xs text-gray-500 mt-1">Token JWT com expiração de 8 horas</p>
                 </div>
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="text-sm font-medium text-gray-700">Dados</p>
-                  <p className="text-xs text-gray-500 mt-1">Todos os dados sao encriptados em transito (TLS) e em repouso. Conformidade LGPD.</p>
+                  <p className="text-xs text-gray-500 mt-1">Todos os dados são encriptados em transito (TLS) e em repouso. Conformidade LGPD.</p>
                 </div>
               </div>
             </>

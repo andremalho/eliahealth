@@ -26,7 +26,7 @@ export class ConsultationsController {
   create(
     @Param('pregnancyId', ParseUUIDPipe) pregnancyId: string,
     @Body() dto: CreateConsultationDto,
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('userId') userId: string,
     @CurrentUser('tenantId') tenantId: string,
   ) {
     return this.consultationsService.create(pregnancyId, dto, userId, tenantId);

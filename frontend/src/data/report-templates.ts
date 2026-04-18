@@ -98,37 +98,37 @@ const grp = (id: string, label: string, fields: ReportField[]): ReportField =>
 // ══════════════════════════════════════════════════════════════
 
 const secCabecalho: ReportSection = {
-  id: 'cabecalho',
+  id: 'cabeçalho',
   title: 'Dados do Exame',
   fields: [
     field('data_exame', 'Data do Exame', 'date', { required: true }),
-    area('indicacao', 'Indicacao Clinica', 'Motivo do exame / hipotese diagnostica', true),
+    area('indicação', 'Indicação Clínica', 'Motivo do exame / hipotese diagnostica', true),
     select('via', 'Via de Exame', [
       'Transabdominal', 'Transvaginal', 'Transabdominal + Transvaginal', 'Transperineal',
     ], { required: true }),
     txt('equipamento', 'Equipamento / Transdutor', 'Ex.: GE Voluson E10, sonda convex 3,5 MHz'),
-    select('qualidade_imagem', 'Qualidade Tecnica da Imagem', [
+    select('qualidade_imagem', 'Qualidade Técnica da Imagem', [
       'Otima', 'Boa', 'Regular — limitada por habitus materno',
-      'Regular — limitada por posicao fetal', 'Regular — limitada por gases intestinais',
-      'Prejudicada — resultados com limitacao diagnostica',
+      'Regular — limitada por posição fetal', 'Regular — limitada por gases intestinais',
+      'Prejudicada — resultados com limitação diagnostica',
     ]),
   ],
 };
 
 const secConclusao: ReportSection = {
-  id: 'conclusao',
-  title: 'Conclusao / Impressao Diagnostica',
+  id: 'conclusão',
+  title: 'Conclusão / Impressão Diagnostica',
   fields: [
-    area('conclusao_principal', 'Impressao Diagnostica', 'Descricao conclusiva do exame', true),
+    area('conclusao_principal', 'Impressão Diagnostica', 'Descrição conclusiva do exame', true),
     area('achados_adicionais', 'Achados Adicionais / Incidentais'),
-    area('recomendacoes', 'Recomendacoes / Conduta Sugerida'),
-    bool('correlacao_clinica', 'Correlacao Clinica Recomendada'),
+    area('recomendações', 'Recomendações / Conduta Sugerida'),
+    bool('correlacao_clinica', 'Correlação Clínica Recomendada'),
   ],
 };
 
 const secGestacaoMultipla: ReportSection = {
   id: 'gestacao_multipla',
-  title: 'Gestacao Multipla — Dados Gerais',
+  title: 'Gestação Multipla — Dados Gerais',
   apenasMultipla: true,
   fields: [
     select('tipo_gemelaridade', 'Tipo de Gemelaridade', [
@@ -149,16 +149,16 @@ const secGestacaoMultipla: ReportSection = {
     select('ttts', 'TTTS', [
       'Ausente', 'Estagio I', 'Estagio II', 'Estagio III', 'Estagio IV', 'Estagio V', 'N/A — dicorionica',
     ]),
-    area('comentarios_multipla', 'Comentarios — Gestacao Multipla'),
+    area('comentarios_multipla', 'Comentarios — Gestação Multipla'),
   ],
 };
 
 const secDadosGestacao = (extraFields: ReportField[] = []): ReportSection => ({
   id: 'dados_gestacao',
-  title: 'Dados da Gestacao',
+  title: 'Dados da Gestação',
   fields: [
-    num('num_fetos', 'Numero de Fetos', undefined, { required: true, min: 1, max: 4 }),
-    select('localizacao_gestacao', 'Localizacao da Gestacao', [
+    num('num_fetos', 'Número de Fetos', undefined, { required: true, min: 1, max: 4 }),
+    select('localizacao_gestacao', 'Localização da Gestação', [
       'Intrauterina topica', 'Suspeita de ectopica', 'Cesariana scar pregnancy',
       'Cervical', 'Abdominal', 'Indeterminada',
     ], { required: true }),
@@ -184,14 +184,14 @@ const makeFetoBiometria = (p: string, label: string): ReportField =>
     txt(`feto_${p}_cf_p`, 'CF — Percentil'),
     num(`feto_${p}_pe`, 'Peso Estimado (PE)', 'g', { required: true }),
     txt(`feto_${p}_pe_p`, 'PE — Percentil'),
-    select(`feto_${p}_crescimento`, 'Classificacao do Crescimento', [
+    select(`feto_${p}_crescimento`, 'Classificação do Crescimento', [
       'AIG (p10-p90)', 'PIG (< p10)', 'PIG severo (< p3)', 'GIG (> p90)', 'Macrossomico (> 4000g)',
     ], { required: true }),
   ]);
 
 const makeFetoPosicao = (p: string, label: string): ReportField =>
-  grp(`feto_${p}_posicao`, `${label} — Posicao`, [
-    select(`feto_${p}_apresentacao`, 'Apresentacao', ['Cefalica', 'Pelvica', 'Cormica / Transversa', 'Obliqua'], { required: true }),
+  grp(`feto_${p}_posicao`, `${label} — Posição`, [
+    select(`feto_${p}_apresentacao`, 'Apresentação', ['Cefalica', 'Pelvica', 'Cormica / Transversa', 'Obliqua'], { required: true }),
     select(`feto_${p}_dorso`, 'Dorso', ['Anterior', 'Posterior', 'Direito', 'Esquerdo', 'Variavel']),
     select(`feto_${p}_mov`, 'Movimentos Fetais', ['Presentes e normais', 'Reduzidos', 'Ausentes durante o exame']),
   ]);
@@ -222,24 +222,24 @@ const makeDopplerFeto = (p: string, label: string): ReportField =>
     ]),
     grp(`feto_${p}_rcp`, 'RCP', [
       num(`feto_${p}_rcp_val`, 'RCP (IP-ACM / IP-AU)'),
-      select(`feto_${p}_rcp_int`, 'Interpretacao', ['Normal (> p5)', 'Reduzida (< p5) — redistribuicao cerebral']),
+      select(`feto_${p}_rcp_int`, 'Interpretação', ['Normal (> p5)', 'Reduzida (< p5) — redistribuição cerebral']),
     ]),
     grp(`feto_${p}_dv`, 'Ducto Venoso', [
       num(`feto_${p}_dv_ipv`, 'IPV'),
-      select(`feto_${p}_dv_a`, 'Onda "a"', ['Positiva (normal)', 'Ausente', 'Invertida', 'Nao avaliado'], { required: true }),
+      select(`feto_${p}_dv_a`, 'Onda "a"', ['Positiva (normal)', 'Ausente', 'Invertida', 'Não avaliado'], { required: true }),
     ]),
   ]);
 
 const makePlacenta = (p: string, label: string): ReportField =>
   grp(`feto_${p}_placenta`, `${label} — Placenta`, [
-    select(`feto_${p}_plac_local`, 'Localizacao', [
+    select(`feto_${p}_plac_local`, 'Localização', [
       'Fundica', 'Anterior', 'Posterior', 'Lateral direita', 'Lateral esquerda',
-      'Baixa insercao (< 20mm do OCI)', 'Previa marginal', 'Previa total',
+      'Baixa inserção (< 20mm do OCI)', 'Previa marginal', 'Previa total',
     ], { required: true }),
     select(`feto_${p}_plac_gran`, 'Grau (Grannum)', ['Grau 0', 'Grau I', 'Grau II', 'Grau III']),
     select(`feto_${p}_cordao`, 'Cordao Umbilical', [
       '3 vasos (normal)', 'Arteria umbilical unica (2 vasos)',
-      'Insercao marginal', 'Insercao velamentosa suspeita', 'Circular de cordao',
+      'Inserção marginal', 'Inserção velamentosa suspeita', 'Circular de cordao',
     ], { required: true }),
   ]);
 
@@ -258,10 +258,10 @@ export const obstetricoInicial: ReportTemplate = {
     secCabecalho,
     {
       id: 'dados_gestacao_inicial',
-      title: 'Dados da Gestacao',
+      title: 'Dados da Gestação',
       fields: [
-        num('num_fetos_ini', 'Numero de Embrioes / Fetos Viaveis', undefined, { required: true, min: 0, max: 4 }),
-        select('localizacao_ini', 'Localizacao da Implantacao', [
+        num('num_fetos_ini', 'Número de Embrioes / Fetos Viaveis', undefined, { required: true, min: 0, max: 4 }),
+        select('localizacao_ini', 'Localização da Implantação', [
           'Intrauterina — topica', 'Intrauterina — baixa',
           'Suspeita de ectopica', 'Cesariana scar pregnancy', 'Indeterminada',
         ], { required: true }),
@@ -280,7 +280,7 @@ export const obstetricoInicial: ReportTemplate = {
           num('emb_a_ccn', 'CCN', 'mm', { required: true }),
           txt('emb_a_ig_ccn', 'IG pelo CCN'),
           select('emb_a_bcf', 'BCF', [
-            'Presente — frequencia regular', 'Presente — bradicardia (< 100bpm)',
+            'Presente — frequência regular', 'Presente — bradicardia (< 100bpm)',
             'Ausente — IG < 6 semanas', 'Ausente — obito embrionario',
           ], { required: true }),
           num('emb_a_fcf', 'FCF', 'bpm', { min: 80, max: 220 }),
@@ -296,7 +296,7 @@ export const obstetricoInicial: ReportTemplate = {
         txt('utero_ini', 'Utero'),
         txt('ovario_d_ini', 'Ovario Direito'),
         txt('ovario_e_ini', 'Ovario Esquerdo'),
-        select('corpo_luteo', 'Corpo Luteo', ['Identificado — aspecto normal', 'Cisto hemorragico', 'Nao identificado']),
+        select('corpo_luteo', 'Corpo Luteo', ['Identificado — aspecto normal', 'Cisto hemorragico', 'Não identificado']),
       ],
     },
     secConclusao,
@@ -350,7 +350,7 @@ export const dopplerObstetrico: ReportTemplate = {
   sections: [
     secCabecalho,
     { id: 'dados_doppler', title: 'Dados', fields: [
-      num('num_fetos_dop', 'Numero de Fetos', undefined, { required: true, min: 1, max: 4 }),
+      num('num_fetos_dop', 'Número de Fetos', undefined, { required: true, min: 1, max: 4 }),
       txt('ig_doppler', 'IG'),
     ]},
     secGestacaoMultipla,
@@ -377,7 +377,7 @@ export const morfologicoPrimeiroTrimestre: ReportTemplate = {
   guideline_refs: [
     'ISUOG 11-14 week scan 2023 (UOG 61:127-143)',
     'FMF Combined Test Protocol',
-    'FMF Pre-eclampsia Screening Algorithm (Akolekar 2013)',
+    'FMF Pré-eclampsia Screening Algorithm (Akolekar 2013)',
     'ISUOG cervical length assessment 2022',
   ],
   sections: [
@@ -387,29 +387,29 @@ export const morfologicoPrimeiroTrimestre: ReportTemplate = {
       field('dpp_1t', 'DPP', 'date'),
     ]),
     secGestacaoMultipla,
-    // ── Dados maternos para calculo de risco ──
-    { id: 'dados_maternos_1t', title: 'Dados Maternos (para calculo de risco)', fields: [
+    // ── Dados maternos para cálculo de risco ──
+    { id: 'dados_maternos_1t', title: 'Dados Maternos (para cálculo de risco)', fields: [
       num('idade_materna', 'Idade Materna', 'anos', { required: true, guideline: 'FMF — risco a priori baseado na idade' }),
-      num('peso_materno', 'Peso', 'kg', { required: true, guideline: 'FMF — correcao de MoM por peso' }),
+      num('peso_materno', 'Peso', 'kg', { required: true, guideline: 'FMF — correção de MoM por peso' }),
       num('altura_materna', 'Altura', 'cm'),
       select('etnia', 'Etnia', ['Caucasiana', 'Afrodescendente', 'Asiatica', 'Mista', 'Outra'], { guideline: 'FMF — ajuste de risco por etnia' }),
-      select('concepcao', 'Tipo de Concepcao', ['Espontanea', 'FIV/ICSI', 'Inducao de ovulacao', 'Doacao de ovulos']),
-      select('tabagismo', 'Tabagismo', ['Nao fumante', 'Fumante atual', 'Ex-fumante']),
-      bool('dm_pregestacional', 'Diabetes Mellitus Pre-gestacional'),
-      bool('has_cronico', 'Hipertensao Arterial Cronica'),
+      select('concepção', 'Tipo de Concepção', ['Espontanea', 'FIV/ICSI', 'Indução de ovulação', 'Doação de ovulos']),
+      select('tabagismo', 'Tabagismo', ['Não fumante', 'Fumante atual', 'Ex-fumante']),
+      bool('dm_pregestacional', 'Diabetes Mellitus Pré-gestacional'),
+      bool('has_cronico', 'Hipertensão Arterial Crônica'),
       bool('les', 'LES / Sindrome Antifosfolipide'),
-      select('hx_pe', 'Historia Previa de Pre-eclampsia', [
-        'Nenhuma', 'PE em gestacao anterior', 'PE precoce (< 34s) em gestacao anterior',
+      select('hx_pe', 'História Previa de Pré-eclampsia', [
+        'Nenhuma', 'PE em gestação anterior', 'PE precoce (< 34s) em gestação anterior',
         'Eclampsia / HELLP previa',
       ], { guideline: 'FMF — principal fator de risco para PE' }),
       select('paridade', 'Paridade', ['Nulipara', 'Multipara sem PE previa', 'Multipara com PE previa']),
-      bool('hx_familiar_pe', 'Historia Familiar de PE (mae/irma)'),
+      bool('hx_familiar_pe', 'História Familiar de PE (mae/irma)'),
     ]},
     // ── Rastreamento de Aneuploidias (Feto A) ──
     { id: 'rastr_a', title: 'Feto A — Rastreamento de Aneuploidias', fields: [
       num('feto_a_ccn_morf', 'CCN', 'mm', { required: true, guideline: 'FMF — 45-84mm (11+0 a 13+6 semanas)' }),
       txt('feto_a_ig_ccn', 'IG pelo CCN'),
-      num('feto_a_tn_morf', 'TN', 'mm', { required: true, guideline: 'ISUOG/FMF — calipers inner-to-inner, posicao neutra, 3 medidas' }),
+      num('feto_a_tn_morf', 'TN', 'mm', { required: true, guideline: 'ISUOG/FMF — calipers inner-to-inner, posição neutra, 3 medidas' }),
       num('feto_a_tn_mom', 'TN — MoM', undefined, { guideline: 'FMF — MoM ajustado por CCN' }),
       select('feto_a_osso_nasal', 'Osso Nasal', [
         'Presente e normal', 'Hipoplasico (< 2.5mm)', 'Ausente',
@@ -418,7 +418,7 @@ export const morfologicoPrimeiroTrimestre: ReportTemplate = {
       select('feto_a_dv_onda_a', 'Onda "a" Ducto Venoso', [
         'Positiva (normal)', 'Ausente', 'Invertida',
       ], { guideline: 'FMF — onda "a" invertida: LR 3.2 para T21' }),
-      select('feto_a_tr_regurg', 'Regurgitacao Tricuspide', [
+      select('feto_a_tr_regurg', 'Regurgitação Tricuspide', [
         'Ausente (normal)', 'Presente',
       ], { guideline: 'FMF — presente em ~55% T21, ~1% euploides' }),
       num('feto_a_fcf_1t', 'FCF', 'bpm', { min: 80, max: 220 }),
@@ -439,25 +439,25 @@ export const morfologicoPrimeiroTrimestre: ReportTemplate = {
         num('plgf_mom', 'PlGF — MoM'),
       ]),
     ]},
-    // ── Calculo de Risco de Trissomias ──
-    { id: 'risco_trissomias', title: 'Calculo de Risco — Trissomias (Teste Combinado FMF)', fields: [
+    // ── Cálculo de Risco de Trissomias ──
+    { id: 'risco_trissomias', title: 'Cálculo de Risco — Trissomias (Teste Combinado FMF)', fields: [
       grp('risco_t21_grp', 'Trissomia 21 (Sindrome de Down)', [
         txt('risco_a_priori_t21', 'Risco a Priori (pela idade)', 'Ex.: 1:250'),
         txt('risco_ajustado_t21', 'Risco Ajustado (teste combinado)', 'Ex.: 1:1500'),
-        select('risco_t21_class', 'Classificacao', [
+        select('risco_t21_class', 'Classificação', [
           'Baixo risco (> 1:1000)', 'Risco intermediario (1:101 a 1:1000)',
           'Alto risco (<= 1:100)',
         ], { required: true, guideline: 'FMF — alto risco: invasivo; intermediario: NIPT; baixo: rotina' }),
       ]),
       grp('risco_t18_grp', 'Trissomia 18 (Sindrome de Edwards)', [
         txt('risco_ajustado_t18', 'Risco Ajustado', 'Ex.: 1:5000'),
-        select('risco_t18_class', 'Classificacao', [
+        select('risco_t18_class', 'Classificação', [
           'Baixo risco (> 1:100)', 'Alto risco (<= 1:100)',
         ]),
       ]),
       grp('risco_t13_grp', 'Trissomia 13 (Sindrome de Patau)', [
         txt('risco_ajustado_t13', 'Risco Ajustado', 'Ex.: 1:8000'),
-        select('risco_t13_class', 'Classificacao', [
+        select('risco_t13_class', 'Classificação', [
           'Baixo risco (> 1:100)', 'Alto risco (<= 1:100)',
         ]),
       ]),
@@ -467,14 +467,14 @@ export const morfologicoPrimeiroTrimestre: ReportTemplate = {
         'Procedimento invasivo (BVC/amniocentese) oferecido — alto risco',
         'Aconselhamento genetico recomendado',
       ]),
-      area('obs_trissomia', 'Observacoes sobre rastreamento'),
+      area('obs_trissomia', 'Observações sobre rastreamento'),
     ]},
-    // ── Rastreamento de Pre-eclampsia (FMF) ──
-    { id: 'rastr_pe_1t', title: 'Rastreamento de Pre-eclampsia (Algoritmo FMF)', fields: [
-      grp('pressao_arterial_1t', 'Pressao Arterial Materna', [
+    // ── Rastreamento de Pré-eclampsia (FMF) ──
+    { id: 'rastr_pe_1t', title: 'Rastreamento de Pré-eclampsia (Algoritmo FMF)', fields: [
+      grp('pressao_arterial_1t', 'Pressão Arterial Materna', [
         num('pa_sistolica_1t', 'PA Sistolica', 'mmHg', { required: true }),
         num('pa_diastolica_1t', 'PA Diastolica', 'mmHg', { required: true }),
-        num('map_1t', 'MAP (Pressao Arterial Media)', 'mmHg', { guideline: 'MAP = (PAS + 2*PAD) / 3' }),
+        num('map_1t', 'MAP (Pressão Arterial Media)', 'mmHg', { guideline: 'MAP = (PAS + 2*PAD) / 3' }),
         num('map_mom', 'MAP — MoM', undefined, { guideline: 'FMF — ajustado por IG, peso, etnia' }),
       ]),
       grp('doppler_uterinas_1t', 'Arterias Uterinas', [
@@ -485,26 +485,26 @@ export const morfologicoPrimeiroTrimestre: ReportTemplate = {
       ]),
       grp('risco_pe_resultado', 'Resultado do Rastreamento', [
         txt('risco_pe_precoce', 'Risco PE Precoce (< 34 semanas)', 'Ex.: 1:50'),
-        txt('risco_pe_preterme', 'Risco PE Pre-termo (< 37 semanas)', 'Ex.: 1:120'),
+        txt('risco_pe_preterme', 'Risco PE Pré-termo (< 37 semanas)', 'Ex.: 1:120'),
         txt('risco_pe_termo', 'Risco PE a Termo', 'Ex.: 1:80'),
-        select('risco_pe_class', 'Classificacao', [
+        select('risco_pe_class', 'Classificação', [
           'Baixo risco (> 1:100 para PE precoce)',
           'Alto risco (<= 1:100 para PE precoce)',
         ], { required: true, guideline: 'FMF — alto risco: AAS 150mg/noite a partir de 12-16 semanas' }),
         select('conduta_pe', 'Conduta', [
           'Seguimento de rotina — baixo risco',
           'AAS 150mg/noite (12-36 semanas) — alto risco',
-          'AAS + monitoramento pressao arterial intensificado',
-          'Avaliacao especializada',
+          'AAS + monitoramento pressão arterial intensificado',
+          'Avaliação especializada',
         ]),
       ]),
     ]},
     // ── Arterias Uterinas (imagem) ──
-    { id: 'uta_1t', title: 'Arterias Uterinas — Imagens e Observacoes', fields: [
+    { id: 'uta_1t', title: 'Arterias Uterinas — Imagens e Observações', fields: [
       select('uta_notch_1t', 'Incisura Protodiastolica (Notch)', [
         'Ausente bilateralmente', 'Unilateral', 'Bilateral',
       ]),
-      area('uta_obs_1t', 'Observacoes sobre Arterias Uterinas'),
+      area('uta_obs_1t', 'Observações sobre Arterias Uterinas'),
     ]},
     secConclusao,
   ],
@@ -533,7 +533,7 @@ export const morfologicoSegundoTrimestre: ReportTemplate = {
 
 export const avaliacaoCervical: ReportTemplate = {
   id: 'avaliacao_cervical',
-  name: 'Avaliacao do Colo Uterino (Cervicometria)',
+  name: 'Avaliação do Colo Uterino (Cervicometria)',
   version: '1.0',
   reviewed_at: '2025-04',
   category: 'obstetrica',
@@ -548,49 +548,49 @@ export const avaliacaoCervical: ReportTemplate = {
       txt('ig_cervix', 'IG'),
       field('dpp_cervix', 'DPP', 'date'),
     ]),
-    { id: 'indicacao_cervix', title: 'Indicacao e Historia', fields: [
-      multiselect('ind_cervix', 'Indicacao', [
-        'Rastreamento de rotina (19-24 semanas)', 'Historia de parto pretermino',
-        'Conizacao / LEEP previa', 'Cerclagem previa', 'Incompetencia istmo-cervical',
-        'Gestacao multipla', 'Encurtamento em exame anterior',
-        'Contracao / ameaca de parto pretermino', 'Seguimento apos progesterona',
+    { id: 'indicacao_cervix', title: 'Indicação e História', fields: [
+      multiselect('ind_cervix', 'Indicação', [
+        'Rastreamento de rotina (19-24 semanas)', 'História de parto pretermino',
+        'Conização / LEEP previa', 'Cerclagem previa', 'Incompetencia istmo-cervical',
+        'Gestação multipla', 'Encurtamento em exame anterior',
+        'Contração / ameaca de parto pretermino', 'Seguimento após progesterona',
       ]),
-      select('hx_parto_pretermino', 'Historia de Parto Pretermino Espontaneo', [
+      select('hx_parto_pretermino', 'História de Parto Pretermino Espontaneo', [
         'Nenhum', '1 parto < 37 semanas', '1 parto < 34 semanas',
         '2+ partos pretermos', 'Perda de 2o trimestre (16-24 semanas)',
       ], { guideline: 'ISUOG — principal fator de risco para colo curto' }),
       select('cirurgia_cervical', 'Cirurgia Cervical Previa', [
-        'Nenhuma', 'Conizacao a frio', 'LEEP/CAF', 'Traquelectomia', 'Cerclagem previa',
+        'Nenhuma', 'Conização a frio', 'LEEP/CAF', 'Traquelectomia', 'Cerclagem previa',
       ]),
       select('uso_progesterona', 'Uso de Progesterona', [
-        'Nao', 'Progesterona vaginal (200mg/noite)',
+        'Não', 'Progesterona vaginal (200mg/noite)',
         'Progesterona vaginal (100mg)', 'Caproato de 17-OHP IM semanal',
       ]),
       bool('cerclagem_insitu', 'Cerclagem in situ'),
     ]},
     { id: 'medida_cervical', title: 'Medida Cervical (TVU)', fields: [
-      select('tecnica_cervix', 'Tecnica', [
-        'TVU — bexiga vazia, sem pressao, 3+ medidas, menor valor',
+      select('tecnica_cervix', 'Técnica', [
+        'TVU — bexiga vazia, sem pressão, 3+ medidas, menor valor',
         'Transabdominal (complementar)',
-        'TVU nao possivel — via transabdominal apenas',
-      ], { required: true, guideline: 'ISUOG — TVU padrao; bexiga vazia; imagem sagital; 3 min observacao' }),
+        'TVU não possivel — via transabdominal apenas',
+      ], { required: true, guideline: 'ISUOG — TVU padrão; bexiga vazia; imagem sagital; 3 min observação' }),
       num('cc_medida_1', 'Medida 1', 'mm', { required: true }),
       num('cc_medida_2', 'Medida 2', 'mm'),
       num('cc_medida_3', 'Medida 3', 'mm'),
       num('cc_menor', 'Menor Medida (utilizada)', 'mm', { required: true, guideline: 'ISUOG — usar a menor das 3 medidas' }),
-      select('cc_classificacao', 'Classificacao do Comprimento', [
+      select('cc_classificacao', 'Classificação do Comprimento', [
         'Normal (>= 25mm)', 'Encurtado (15-24mm) — zona de alerta',
-        'Curto (< 15mm) — alto risco', 'Muito curto (< 10mm) — risco critico',
+        'Curto (< 15mm) — alto risco', 'Muito curto (< 10mm) — risco crítico',
         'Dilatado / sem canal — incompetencia cervical',
       ], { required: true, guideline: 'ISUOG/FIGO — < 25mm: risco aumentado de parto pretermino' }),
     ]},
     { id: 'morfologia_cervical', title: 'Morfologia do Colo', fields: [
       select('orificio_int_cervix', 'Orificio Cervical Interno (OCI)', [
-        'Fechado', 'Aberto (dilatacao <= 5mm)', 'Aberto (dilatacao > 5mm)', 'Indeterminado',
+        'Fechado', 'Aberto (dilatação <= 5mm)', 'Aberto (dilatação > 5mm)', 'Indeterminado',
       ], { required: true }),
       select('funneling', 'Funneling / Afunilamento', [
         'Ausente', 'Presente — em forma de Y', 'Presente — em forma de V',
-        'Presente — em forma de U (grave)', 'Herniacao de membranas',
+        'Presente — em forma de U (grave)', 'Herniação de membranas',
       ], { required: true, guideline: 'ISUOG — funneling: sinal de incompetencia; medir comprimento funcional' }),
       num('funneling_comp', 'Comprimento do Funnel', 'mm'),
       num('cc_funcional', 'Comprimento Cervical Funcional', 'mm', {
@@ -599,30 +599,30 @@ export const avaliacaoCervical: ReportTemplate = {
       select('sludge', 'Sludge no Canal Cervical', [
         'Ausente', 'Presente — debris ecogenicos no canal',
       ], { guideline: 'Sludge: associado a risco aumentado de PPT e corioamnionite' }),
-      select('dynamic_changes', 'Alteracoes Dinamicas (3 min observacao)', [
-        'Ausentes — colo estavel', 'Encurtamento transitorio com pressao fudica',
+      select('dynamic_changes', 'Alterações Dinamicas (3 min observação)', [
+        'Ausentes — colo estavel', 'Encurtamento transitorio com pressão fudica',
         'Funneling intermitente', 'Encurtamento progressivo durante o exame',
-      ], { guideline: 'ISUOG — observar 3 min; pressao fudica opcional' }),
+      ], { guideline: 'ISUOG — observar 3 min; pressão fudica opcional' }),
     ]},
-    { id: 'risco_conduta_cervix', title: 'Avaliacao de Risco e Conduta', fields: [
+    { id: 'risco_conduta_cervix', title: 'Avaliação de Risco e Conduta', fields: [
       select('risco_ppt', 'Risco de Parto Pretermino', [
         'Baixo — CC >= 25mm, sem fatores de risco',
         'Intermediario — CC 15-24mm ou fatores de risco isolados',
-        'Alto — CC < 15mm, ou CC < 25mm + historia de PPT',
-        'Muito alto — CC < 10mm ou funneling com historia',
+        'Alto — CC < 15mm, ou CC < 25mm + história de PPT',
+        'Muito alto — CC < 10mm ou funneling com história',
       ], { required: true }),
       select('conduta_cervix', 'Conduta Recomendada', [
         'Seguimento de rotina — rastreamento na morfo 2T',
-        'Repeticao em 2 semanas — monitoramento seriado',
+        'Repetição em 2 semanas — monitoramento seriado',
         'Iniciar progesterona vaginal (200mg/noite)',
         'Progesterona + monitoramento seriado a cada 2 semanas',
-        'Avaliacao para cerclagem (< 24 semanas + historia)',
-        'Pessario cervical — avaliar indicacao',
-        'Internacao + corticoide (se viabilidade fetal)',
-        'Encaminhar para centro de referencia',
+        'Avaliação para cerclagem (< 24 semanas + história)',
+        'Pessario cervical — avaliar indicação',
+        'Internação + corticoide (se viabilidade fetal)',
+        'Encaminhar para centro de referência',
       ], { guideline: 'FIGO 2019 — progesterona se < 25mm singleton; cerclagem se < 25mm + hx PPT' }),
-      num('retorno_semanas', 'Retorno para reavaliacao em', 'semanas'),
-      area('obs_cervix', 'Observacoes e plano individualizado'),
+      num('retorno_semanas', 'Retorno para reavaliação em', 'semanas'),
+      area('obs_cervix', 'Observações e plano individualizado'),
     ]},
     secConclusao,
   ],
@@ -638,7 +638,7 @@ export const ecocardiografiaFetal: ReportTemplate = {
   sections: [
     secCabecalho,
     { id: 'dados_eco', title: 'Dados', fields: [
-      num('num_fetos_eco', 'Numero de Fetos', undefined, { required: true, min: 1, max: 4 }),
+      num('num_fetos_eco', 'Número de Fetos', undefined, { required: true, min: 1, max: 4 }),
       txt('ig_eco', 'IG'),
     ]},
     secGestacaoMultipla,
@@ -647,7 +647,7 @@ export const ecocardiografiaFetal: ReportTemplate = {
       select('feto_a_ritmo_eco', 'Ritmo', ['Regular e sinusal', 'Extrassistolia', 'TSV', 'Bradicardia', 'Bloqueio AV'], { required: true }),
       select('feto_a_situs_eco', 'Situs', ['Solitus', 'Inversus', 'Ambiguus'], { required: true }),
       num('feto_a_eixo_eco', 'Eixo Cardiaco', 'graus', { required: true }),
-      select('feto_a_4c_eco', '4 Camaras', ['Normal', 'Desequilibrio', 'DSAV suspeito', 'Nao avaliavel'], { required: true }),
+      select('feto_a_4c_eco', '4 Camaras', ['Normal', 'Desequilibrio', 'DSAV suspeito', 'Não avaliavel'], { required: true }),
       select('feto_a_vstd_eco', 'VSTD', ['Normal', 'Alterado'], { required: true }),
       select('feto_a_vste_eco', 'VSTE', ['Normal', 'Alterado'], { required: true }),
       select('feto_a_3vt_eco', '3VT', ['Normal', 'Alterado'], { required: true }),
@@ -666,7 +666,7 @@ export const neurossonografiaFetal: ReportTemplate = {
   sections: [
     secCabecalho,
     { id: 'dados_neuro', title: 'Dados', fields: [
-      num('num_fetos_neuro', 'Numero de Fetos', undefined, { required: true, min: 1, max: 4 }),
+      num('num_fetos_neuro', 'Número de Fetos', undefined, { required: true, min: 1, max: 4 }),
       txt('ig_neuro', 'IG'),
     ]},
     secGestacaoMultipla,
@@ -677,7 +677,7 @@ export const neurossonografiaFetal: ReportTemplate = {
       num('feto_a_cer_dt_neuro', 'Diam. Transverso Cerebelar', 'mm', { required: true }),
       num('feto_a_cm_neuro', 'Cisterna Magna', 'mm', { required: true }),
       select('feto_a_vermis_neuro', 'Vermis Cerebelar', ['Normal', 'Hipoplasico', 'Ausente — Dandy-Walker'], { required: true }),
-      select('feto_a_cc_neuro_c', 'Corpo Caloso', ['Completo', 'Agenesia total', 'Agenesia parcial', 'Nao avaliavel'], { required: true }),
+      select('feto_a_cc_neuro_c', 'Corpo Caloso', ['Completo', 'Agenesia total', 'Agenesia parcial', 'Não avaliavel'], { required: true }),
     ]},
     secConclusao,
   ],
@@ -693,9 +693,9 @@ export const perfilBiofisicoFetal: ReportTemplate = {
   sections: [
     secCabecalho,
     { id: 'dados_pbf', title: 'Dados', fields: [
-      num('num_fetos_pbf', 'Numero de Fetos', undefined, { required: true, min: 1, max: 4 }),
+      num('num_fetos_pbf', 'Número de Fetos', undefined, { required: true, min: 1, max: 4 }),
       txt('ig_pbf', 'IG'),
-      num('duracao_pbf', 'Duracao da Observacao', 'minutos'),
+      num('duracao_pbf', 'Duração da Observação', 'minutos'),
     ]},
     secGestacaoMultipla,
     { id: 'pbf_a', title: 'Feto A — PBF', fields: [
@@ -704,11 +704,11 @@ export const perfilBiofisicoFetal: ReportTemplate = {
       select('feto_a_tf_pts', 'Tonus Fetal', ['2 — Normal', '0 — Alterado'], { required: true }),
       num('feto_a_mbv_pbf', 'MBV', 'cm', { required: true }),
       select('feto_a_la_pts', 'Liquido Amniotico', ['2 — Normal (MBV >= 2cm)', '0 — Alterado (MBV < 2cm)'], { required: true }),
-      select('feto_a_ctg_pts', 'CTG', ['2 — Reativo', '0 — Nao reativo', 'N/A — nao realizado']),
-      num('feto_a_pontuacao', 'Pontuacao Total', undefined, { required: true, min: 0, max: 10 }),
-      select('feto_a_interp_pbf', 'Interpretacao', [
+      select('feto_a_ctg_pts', 'CTG', ['2 — Reativo', '0 — Não reativo', 'N/A — não realizado']),
+      num('feto_a_pontuacao', 'Pontuação Total', undefined, { required: true, min: 0, max: 10 }),
+      select('feto_a_interp_pbf', 'Interpretação', [
         '10/10 ou 8/10 (LA normal) — risco baixo',
-        '8/10 (LA reduzido) — comprometimento cronico',
+        '8/10 (LA reduzido) — comprometimento crônico',
         '6/10 — equivocado; repetir em 24h',
         '4/10 — asfixia possivel',
         '2/10 — asfixia quase certa',
@@ -733,8 +733,8 @@ export const pelvicoTransvaginal: ReportTemplate = {
   sections: [
     secCabecalho,
     { id: 'utero_gine', title: 'Utero', fields: [
-      select('utero_posicao', 'Posicao', ['AVF', 'RVF', 'Antevertido', 'Retrovertido', 'Axial']),
-      txt('utero_dimensoes', 'Dimensoes (L x AP x T)', 'Ex.: 7,0 x 3,5 x 4,2 cm'),
+      select('utero_posicao', 'Posição', ['AVF', 'RVF', 'Antevertido', 'Retrovertido', 'Axial']),
+      txt('utero_dimensoes', 'Dimensões (L x AP x T)', 'Ex.: 7,0 x 3,5 x 4,2 cm'),
       select('utero_miometrio', 'Miometrio', ['Homogeneo', 'Heterogeneo', 'Adenomiose focal', 'Adenomiose difusa']),
       area('miomas_desc', 'Miomas', 'Ausentes / Presentes'),
     ]},
@@ -747,7 +747,7 @@ export const pelvicoTransvaginal: ReportTemplate = {
     ]},
     { id: 'ovario_d_gine', title: 'Ovario Direito', fields: [
       bool('od_vis', 'Visualizado'),
-      txt('od_dimensoes', 'Dimensoes'),
+      txt('od_dimensoes', 'Dimensões'),
       num('od_volume', 'Volume', 'cm3'),
       select('od_aspecto', 'Aspecto', [
         'Normal', 'Folículo dominante', 'Corpo luteo', 'Cisto simples',
@@ -756,7 +756,7 @@ export const pelvicoTransvaginal: ReportTemplate = {
     ]},
     { id: 'ovario_e_gine', title: 'Ovario Esquerdo', fields: [
       bool('oe_vis', 'Visualizado'),
-      txt('oe_dimensoes', 'Dimensoes'),
+      txt('oe_dimensoes', 'Dimensões'),
       num('oe_volume', 'Volume', 'cm3'),
       select('oe_aspecto', 'Aspecto', [
         'Normal', 'Cisto simples', 'Endometrioma suspeito', 'Teratoma suspeito', 'Massa complexa',
@@ -778,19 +778,19 @@ export const pelvicoEndometriose: ReportTemplate = {
   guideline_refs: ['IDEA/ISUOG 2016', 'SRU 2024'],
   sections: [
     secCabecalho,
-    { id: 'preparo', title: 'Preparo e Tecnica', fields: [
-      select('preparo_intestinal', 'Preparo Intestinal', ['Realizado', 'Nao realizado', 'Parcial']),
+    { id: 'preparo', title: 'Preparo e Técnica', fields: [
+      select('preparo_intestinal', 'Preparo Intestinal', ['Realizado', 'Não realizado', 'Parcial']),
       select('sliding_sign', 'Sliding Sign', [
-        'Positivo bilateral', 'Negativo bilateral — obliteracao', 'Negativo unilateral', 'Indeterminado',
+        'Positivo bilateral', 'Negativo bilateral — obliteração', 'Negativo unilateral', 'Indeterminado',
       ], { required: true }),
     ]},
     { id: 'compartimento_post', title: 'Compartimento Posterior', fields: [
       select('fds_posterior', 'Fundo de Saco', ['Patente', 'Parcialmente obliterado', 'Totalmente obliterado'], { required: true }),
-      select('lus', 'Ligamentos Uterossacros', ['Nao espessados', 'Espessados D', 'Espessados E', 'Bilateral', 'Nodulo D', 'Nodulo E'], { required: true }),
-      select('retossigmoide', 'Retossigmoide', ['Nao comprometido', 'Nodulo intestinal', 'Espessamento de parede'], { required: true }),
+      select('lus', 'Ligamentos Uterossacros', ['Não espessados', 'Espessados D', 'Espessados E', 'Bilateral', 'Nodulo D', 'Nodulo E'], { required: true }),
+      select('retossigmoide', 'Retossigmoide', ['Não comprometido', 'Nodulo intestinal', 'Espessamento de parede'], { required: true }),
     ]},
     { id: 'compartimento_ant', title: 'Compartimento Anterior', fields: [
-      select('bexiga_endo', 'Bexiga', ['Normal', 'Implante parede posterior', 'Invasao mucosa']),
+      select('bexiga_endo', 'Bexiga', ['Normal', 'Implante parede posterior', 'Invasão mucosa']),
     ]},
     secConclusao,
   ],
@@ -806,16 +806,16 @@ export const mamas: ReportTemplate = {
   sections: [
     secCabecalho,
     { id: 'mama_d', title: 'Mama Direita', fields: [
-      select('md_geral', 'Aspecto Geral', ['Normal', 'Lesao focal', 'Espessamento focal', 'Cistos difusos']),
-      txt('md_lesao_dim', 'Lesao — Dimensoes'),
-      select('md_birads', 'BI-RADS Lesao', [
+      select('md_geral', 'Aspecto Geral', ['Normal', 'Lesão focal', 'Espessamento focal', 'Cistos difusos']),
+      txt('md_lesao_dim', 'Lesão — Dimensões'),
+      select('md_birads', 'BI-RADS Lesão', [
         'BI-RADS 1', 'BI-RADS 2', 'BI-RADS 3', 'BI-RADS 4A', 'BI-RADS 4B', 'BI-RADS 4C', 'BI-RADS 5', 'BI-RADS 6',
       ]),
     ]},
     { id: 'mama_e', title: 'Mama Esquerda', fields: [
-      select('me_geral', 'Aspecto Geral', ['Normal', 'Lesao focal', 'Espessamento focal', 'Cistos difusos']),
-      txt('me_lesao_dim', 'Lesao — Dimensoes'),
-      select('me_birads', 'BI-RADS Lesao', [
+      select('me_geral', 'Aspecto Geral', ['Normal', 'Lesão focal', 'Espessamento focal', 'Cistos difusos']),
+      txt('me_lesao_dim', 'Lesão — Dimensões'),
+      select('me_birads', 'BI-RADS Lesão', [
         'BI-RADS 1', 'BI-RADS 2', 'BI-RADS 3', 'BI-RADS 4A', 'BI-RADS 4B', 'BI-RADS 4C', 'BI-RADS 5', 'BI-RADS 6',
       ]),
     ]},
@@ -845,20 +845,20 @@ export const tireoide: ReportTemplate = {
   sections: [
     secCabecalho,
     { id: 'glandula', title: 'Glandula Tireoide', fields: [
-      txt('ld_dim', 'Lobo D — Dimensoes'),
+      txt('ld_dim', 'Lobo D — Dimensões'),
       num('ld_vol', 'Volume Lobo D', 'mL'),
-      txt('le_dim', 'Lobo E — Dimensoes'),
+      txt('le_dim', 'Lobo E — Dimensões'),
       num('le_vol', 'Volume Lobo E', 'mL'),
       num('istmo_esp', 'Istmo — Espessura', 'mm'),
       num('vol_total', 'Volume Total', 'mL'),
       select('ecotextura', 'Ecotextura', ['Homogenea', 'Heterogenea — Hashimoto?', 'Heterogenea — Graves?', 'Nodular']),
     ]},
     { id: 'nodulos', title: 'Nodulos', fields: [
-      select('num_nodulos', 'Numero', ['Nenhum', '1', '2', '3', '4+']),
+      select('num_nodulos', 'Número', ['Nenhum', '1', '2', '3', '4+']),
       grp('nodulo_1', 'Nodulo 1', [
-        select('n1_local', 'Localizacao', ['Lobo D superior', 'Lobo D medio', 'Lobo D inferior', 'Lobo E superior', 'Lobo E medio', 'Lobo E inferior', 'Istmo']),
-        txt('n1_dim', 'Dimensoes'),
-        num('n1_pts', 'Pontuacao TI-RADS', undefined, { min: 0, max: 11 }),
+        select('n1_local', 'Localização', ['Lobo D superior', 'Lobo D medio', 'Lobo D inferior', 'Lobo E superior', 'Lobo E medio', 'Lobo E inferior', 'Istmo']),
+        txt('n1_dim', 'Dimensões'),
+        num('n1_pts', 'Pontuação TI-RADS', undefined, { min: 0, max: 11 }),
         select('n1_tirads', 'Categoria', ['TR1', 'TR2', 'TR3', 'TR4', 'TR5'], { required: true }),
       ]),
     ]},
@@ -877,10 +877,10 @@ export const abdomeTotal: ReportTemplate = {
     secCabecalho,
     { id: 'figado', title: 'Figado', fields: [
       num('figado_lsc', 'Lobo D (LSC)', 'cm'),
-      select('figado_asp', 'Aspecto', ['Normal', 'Esteatose leve', 'Esteatose mod/grave', 'Heterogeneo — cirrose?', 'Lesao focal']),
+      select('figado_asp', 'Aspecto', ['Normal', 'Esteatose leve', 'Esteatose mod/grave', 'Heterogeneo — cirrose?', 'Lesão focal']),
     ]},
     { id: 'vb', title: 'Vesicula e Vias Biliares', fields: [
-      select('vesicula', 'Vesicula', ['Normal', 'Colecistolitiase', 'Barro biliar', 'Paredes espessadas', 'Ausente (pos-colecistectomia)']),
+      select('vesicula', 'Vesicula', ['Normal', 'Colecistolitiase', 'Barro biliar', 'Paredes espessadas', 'Ausente (pós-colecistectomia)']),
       num('coledoco', 'Coledoco — Diametro', 'mm'),
     ]},
     { id: 'rins', title: 'Rins', fields: [
@@ -888,7 +888,7 @@ export const abdomeTotal: ReportTemplate = {
       txt('rim_e', 'Rim Esquerdo'),
     ]},
     { id: 'baco', title: 'Baco', fields: [
-      num('baco_dim', 'Maior Dimensao', 'cm'),
+      num('baco_dim', 'Maior Dimensão', 'cm'),
       select('baco_asp', 'Aspecto', ['Normal', 'Esplenomegalia leve', 'Esplenomegalia moderada']),
     ]},
     secConclusao,
@@ -918,7 +918,7 @@ export const rinsViasUrinarias: ReportTemplate = {
     ]},
     { id: 'bexiga_ru', title: 'Bexiga', fields: [
       select('bexiga_ru_asp', 'Aspecto', ['Normal', 'Paredes espessadas', 'Trabeculada', 'Litiase']),
-      num('residuo_ru', 'Residuo Pos-miccional', 'mL'),
+      num('residuo_ru', 'Residuo Pós-miccional', 'mL'),
     ]},
     secConclusao,
   ],
@@ -934,7 +934,7 @@ export const abdomeInferior: ReportTemplate = {
   sections: [
     secCabecalho,
     { id: 'bexiga_ai', title: 'Bexiga', fields: [
-      select('bexiga_ai', 'Aspecto', ['Normal', 'Paredes espessadas', 'Litiase', 'Lesao mural']),
+      select('bexiga_ai', 'Aspecto', ['Normal', 'Paredes espessadas', 'Litiase', 'Lesão mural']),
     ]},
     { id: 'orgaos_pelve', title: 'Orgaos Pelvicos', fields: [
       txt('utero_ai', 'Utero'),
